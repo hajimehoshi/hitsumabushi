@@ -75,9 +75,9 @@ var c_closefd byte
 //go:cgo_import_static c_gettid
 var c_gettid byte
 
-//go:linkname c_malloc c_malloc
-//go:cgo_import_static c_malloc
-var c_malloc byte
+//go:linkname c_calloc c_calloc
+//go:cgo_import_static c_calloc
+var c_calloc byte
 
 //go:linkname c_nanotime1 c_nanotime1
 //go:cgo_import_static c_nanotime1

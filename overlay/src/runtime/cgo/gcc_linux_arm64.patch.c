@@ -248,9 +248,8 @@ void c_gettid(uint64_t *ret) {
   *ret = (uint64_t)(pthread_self());
 }
 
-void c_malloc(void **ret, size_t size) {
-  // Use calloc to clear the allocated region.
-  *ret = calloc(size, 1);
+void c_calloc(void **ret, size_t num, size_t size) {
+  *ret = calloc(num, size);
 }
 
 void c_nanotime1(int64_t *ret) {

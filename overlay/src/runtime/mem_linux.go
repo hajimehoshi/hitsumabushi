@@ -45,16 +45,16 @@ func sysReserve(v unsafe.Pointer, n uintptr) unsafe.Pointer {
 		return nil
 	}
 	var ptr unsafe.Pointer
-	malloc(&ptr, n)
+	calloc(&ptr, n, 1)
 	return ptr
 }
 
 //go:nosplit
 //go:cgo_unsafe_args
-func malloc(ptr *unsafe.Pointer, n uintptr) {
-	libcCall(unsafe.Pointer(abi.FuncPCABI0(malloc_trampoline)), unsafe.Pointer(&ptr))
+func calloc(ptr *unsafe.Pointer, n uintptr, size uintptr) {
+	libcCall(unsafe.Pointer(abi.FuncPCABI0(calloc_trampoline)), unsafe.Pointer(&ptr))
 }
-func malloc_trampoline()
+func calloc_trampoline()
 
 func sysMap(v unsafe.Pointer, n uintptr, sysStat *sysMemStat) {
 	sysStat.add(int64(n))

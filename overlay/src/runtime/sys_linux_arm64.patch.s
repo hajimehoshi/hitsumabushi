@@ -220,10 +220,11 @@ TEXT runtime·sched_getaffinity(SB),NOSPLIT|NOFRAME,$0
 	RET
 //--to
 //--append
-TEXT runtime·malloc_trampoline(SB),NOSPLIT,$0
+TEXT runtime·calloc_trampoline(SB),NOSPLIT,$0
 	MOVD	8(R0), R1
+	MOVD	16(R0), R2
 	MOVD	0(R0), R0
-	BL	c_malloc(SB)
+	BL	c_calloc(SB)
 	RET
 
 TEXT runtime·nanotime1_trampoline(SB),NOSPLIT,$0
