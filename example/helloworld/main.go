@@ -8,5 +8,5 @@ func HelloWorld() {
 }
 
 func main() {
-	// -biuldmode=c-archive requires a main package.
+	// -buildmode=c-archive requires a main package.
 }
