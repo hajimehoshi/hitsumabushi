@@ -14,8 +14,8 @@ done:
 	RET
 //--to
 TEXT runtime·open_trampoline(SB),NOSPLIT,$0
-	MOVD	8(R0), R1
-	MOVD	12(R0), R2
+	MOVW	8(R0), R1
+	MOVW	12(R0), R2
 	MOVD	0(R0), R0
 	BL	c_open(SB)
 	RET
@@ -47,7 +47,7 @@ TEXT runtime·write1(SB),NOSPLIT|NOFRAME,$0-28
 //--to
 TEXT runtime·write1_trampoline(SB),NOSPLIT,$0
 	MOVD	8(R0), R1
-	MOVD	16(R0), R2
+	MOVW	16(R0), R2
 	MOVD	0(R0), R0
 	BL	c_write1(SB)
 	RET
@@ -63,8 +63,8 @@ TEXT runtime·read(SB),NOSPLIT|NOFRAME,$0-28
 //--to
 TEXT runtime·read_trampoline(SB),NOSPLIT,$0
 	MOVD	8(R0), R1
-	MOVD	16(R0), R2
-	MOVD	0(R0), R0
+	MOVW	16(R0), R2
+	MOVW	0(R0), R0
 	BL	c_read(SB)
 	RET
 //--from
