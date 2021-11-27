@@ -82,6 +82,7 @@ x_cgo_init(G *g, void (*setg)(void*), void **tlsg, void **tlsbase)
 	}
 	pthread_attr_init(attr);
 	pthread_attr_setstacksize(attr, 16 * 4096); // Hack for some special environments
+	// TODO: Take care other pthread_attr_getstacksize calls.
 	pthread_attr_getstacksize(attr, &size);
 	g->stacklo = (uintptr)&size - size + 4096;
 	pthread_attr_destroy(attr);
