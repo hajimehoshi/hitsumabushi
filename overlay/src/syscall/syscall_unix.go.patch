@@ -10,8 +10,16 @@ func Syscall(trap, a1, a2, a3 uintptr) (r1, r2 uintptr, err Errno) {
 			}
 		}
 		println("unexpected fcntl:", a1, a2, a3)
+	case SYS_WRITE:
+		if a1 == uintptr(Stdout) || a1 == uintptr(Stderr) {
+			r := write1(a1, unsafe.Pointer(a2), int32(a3))
+			return uintptr(r), 0, 0
+		}
 	}
 	println("not implemented syscall", trap)
 	panic("syscall")
 	return 0, 0, 0
 }
+
+//go:linkname write1 runtime.write1
+func write1(fd uintptr, p unsafe.Pointer, n int32) int32
