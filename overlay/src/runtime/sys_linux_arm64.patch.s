@@ -190,6 +190,32 @@ finish:
 	MOVD	R3, ret+0(FP)
 	RET
 //--to
+TEXT runtime·nanotime1_trampoline(SB),NOSPLIT,$0
+	MOVD	0(R0), R0
+	BL	c_nanotime1(SB)
+	RET
+//--from
+TEXT runtime·futex(SB),NOSPLIT|NOFRAME,$0
+	MOVD	addr+0(FP), R0
+	MOVW	op+8(FP), R1
+	MOVW	val+12(FP), R2
+	MOVD	ts+16(FP), R3
+	MOVD	addr2+24(FP), R4
+	MOVW	val3+32(FP), R5
+	MOVD	$SYS_futex, R8
+	SVC
+	MOVW	R0, ret+40(FP)
+	RET
+//--to
+TEXT runtime·futex_trampoline(SB),NOSPLIT,$0
+	MOVD	8(R0), R1
+	MOVD	12(R0), R2
+	MOVD	16(R0), R3
+	MOVD	24(R0), R4
+	MOVD	32(R0), R5
+	MOVD	0(R0), R0
+	BL	c_futex(SB)
+	RET
 //--from
 TEXT runtime·sigaltstack(SB),NOSPLIT|NOFRAME,$0
 	MOVD	new+0(FP), R0
@@ -209,6 +235,9 @@ TEXT runtime·osyield(SB),NOSPLIT|NOFRAME,$0
 	SVC
 	RET
 //--to
+TEXT runtime·osyield_trampoline(SB),NOSPLIT,$0
+	BL	c_osyield(SB)
+	RET
 //--from
 TEXT runtime·sched_getaffinity(SB),NOSPLIT|NOFRAME,$0
 	MOVD	pid+0(FP), R0
@@ -219,66 +248,16 @@ TEXT runtime·sched_getaffinity(SB),NOSPLIT|NOFRAME,$0
 	MOVW	R0, ret+24(FP)
 	RET
 //--to
-//--append
-TEXT runtime·calloc_trampoline(SB),NOSPLIT,$0
-	MOVD	8(R0), R1
-	MOVD	16(R0), R2
-	MOVD	0(R0), R0
-	BL	c_calloc(SB)
-	RET
-
-TEXT runtime·nanotime1_trampoline(SB),NOSPLIT,$0
-	MOVD	0(R0), R0
-	BL	c_nanotime1(SB)
-	RET
-
 TEXT runtime·sched_getaffinity_trampoline(SB),NOSPLIT,$0
 	MOVD	8(R0), R1
 	MOVD	16(R0), R2
 	MOVD	0(R0), R0
 	BL	c_sched_getaffinity(SB)
 	RET
-
-TEXT runtime·osyield_trampoline(SB),NOSPLIT,$0
-	BL	c_osyield(SB)
-	RET
-
-TEXT runtime·pthread_mutex_init_trampoline(SB),NOSPLIT,$0
-	MOVD	8(R0), R1
-	MOVD	0(R0), R0
-	BL	pthread_mutex_init(SB)
-	RET
-
-TEXT runtime·pthread_mutex_lock_trampoline(SB),NOSPLIT,$0
-	MOVD	0(R0), R0
-	BL	pthread_mutex_lock(SB)
-	RET
-
-TEXT runtime·pthread_mutex_unlock_trampoline(SB),NOSPLIT,$0
-	MOVD	0(R0), R0
-	BL	pthread_mutex_unlock(SB)
-	RET
-
-TEXT runtime·pthread_cond_init_trampoline(SB),NOSPLIT,$0
-	MOVD	8(R0), R1
-	MOVD	0(R0), R0
-	BL	pthread_cond_init(SB)
-	RET
-
-TEXT runtime·pthread_cond_wait_trampoline(SB),NOSPLIT,$0
-	MOVD	8(R0), R1
-	MOVD	0(R0), R0
-	BL	pthread_cond_wait(SB)
-	RET
-
-TEXT runtime·pthread_cond_signal_trampoline(SB),NOSPLIT,$0
-	MOVD	0(R0), R0
-	BL	pthread_cond_signal(SB)
-	RET
-
-TEXT runtime·pthread_cond_timedwait_relative_np_trampoline(SB),NOSPLIT,$0
+//--append
+TEXT runtime·calloc_trampoline(SB),NOSPLIT,$0
 	MOVD	8(R0), R1
 	MOVD	16(R0), R2
 	MOVD	0(R0), R0
-	BL	c_pthread_cond_timedwait_relative_np(SB)
+	BL	c_calloc(SB)
 	RET

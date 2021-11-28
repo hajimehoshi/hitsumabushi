@@ -9,128 +9,15 @@ import (
 	"unsafe"
 )
 //--from
-type mOS struct{}
-//--to
-type mOS struct {
-	initialized bool
-	mutex       pthreadmutex
-	cond        pthreadcond
-	count       int
-}
-//--from
 //go:noescape
 func futex(addr unsafe.Pointer, op int32, val uint32, ts, addr2 unsafe.Pointer, val3 uint32) int32
-
-// Linux futex.
-//
-//	futexsleep(uint32 *addr, uint32 val)
-//	futexwakeup(uint32 *addr)
-//
-// Futexsleep atomically checks if *addr == val and if so, sleeps on addr.
-// Futexwakeup wakes up threads sleeping on addr.
-// Futexsleep is allowed to wake up spuriously.
-
-const (
-	_FUTEX_PRIVATE_FLAG = 128
-	_FUTEX_WAIT_PRIVATE = 0 | _FUTEX_PRIVATE_FLAG
-	_FUTEX_WAKE_PRIVATE = 1 | _FUTEX_PRIVATE_FLAG
-)
-
-// Atomically,
-//	if(*addr == val) sleep
-// Might be woken up spuriously; that's allowed.
-// Don't sleep longer than ns; ns < 0 means forever.
-//go:nosplit
-func futexsleep(addr *uint32, val uint32, ns int64) {
-	// Some Linux kernels have a bug where futex of
-	// FUTEX_WAIT returns an internal error code
-	// as an errno. Libpthread ignores the return value
-	// here, and so can we: as it says a few lines up,
-	// spurious wakeups are allowed.
-	if ns < 0 {
-		futex(unsafe.Pointer(addr), _FUTEX_WAIT_PRIVATE, val, nil, nil, 0)
-		return
-	}
-
-	var ts timespec
-	ts.setNsec(ns)
-	futex(unsafe.Pointer(addr), _FUTEX_WAIT_PRIVATE, val, unsafe.Pointer(&ts), nil, 0)
-}
-
-// If any procs are sleeping on addr, wake up at most cnt.
-//go:nosplit
-func futexwakeup(addr *uint32, cnt uint32) {
-	ret := futex(unsafe.Pointer(addr), _FUTEX_WAKE_PRIVATE, cnt, nil, nil, 0)
-	if ret >= 0 {
-		return
-	}
-
-	// I don't know that futex wakeup can return
-	// EAGAIN or EINTR, but if it does, it would be
-	// safe to loop and call futex again.
-	systemstack(func() {
-		print("futexwakeup addr=", addr, " returned ", ret, "\n")
-	})
-
-	*(*int32)(unsafe.Pointer(uintptr(0x1006))) = 0x1006
-}
 //--to
 //go:nosplit
-func semacreate(mp *m) {
-	if mp.initialized {
-		return
-	}
-	mp.initialized = true
-	if err := pthread_mutex_init(&mp.mutex, nil); err != 0 {
-		throw("pthread_mutex_init")
-	}
-	if err := pthread_cond_init(&mp.cond, nil); err != 0 {
-		throw("pthread_cond_init")
-	}
+//go:cgo_unsafe_args
+func futex(addr unsafe.Pointer, op int32, val uint32, ts, addr2 unsafe.Pointer, val3 uint32) int32 {
+	return libcCall(unsafe.Pointer(abi.FuncPCABI0(futex_trampoline)), unsafe.Pointer(&addr))
 }
-
-//go:nosplit
-func semasleep(ns int64) int32 {
-	var start int64
-	if ns >= 0 {
-		start = nanotime()
-	}
-	mp := getg().m
-	pthread_mutex_lock(&mp.mutex)
-	for {
-		if mp.count > 0 {
-			mp.count--
-			pthread_mutex_unlock(&mp.mutex)
-			return 0
-		}
-		if ns >= 0 {
-			spent := nanotime() - start
-			if spent >= ns {
-				pthread_mutex_unlock(&mp.mutex)
-				return -1
-			}
-			var t timespec
-			t.setNsec(ns - spent)
-			err := pthread_cond_timedwait_relative_np(&mp.cond, &mp.mutex, &t)
-			if err == _ETIMEDOUT {
-				pthread_mutex_unlock(&mp.mutex)
-				return -1
-			}
-		} else {
-			pthread_cond_wait(&mp.cond, &mp.mutex)
-		}
-	}
-}
-
-//go:nosplit
-func semawakeup(mp *m) {
-	pthread_mutex_lock(&mp.mutex)
-	mp.count++
-	if mp.count > 0 {
-		pthread_cond_signal(&mp.cond)
-	}
-	pthread_mutex_unlock(&mp.mutex)
-}
+func futex_trampoline()
 //--from
 func sysargs(argc int32, argv **byte) {
 	n := argc + 1

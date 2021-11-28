@@ -236,12 +236,66 @@ static void close_pseudo_file(int32_t fd) {
   pseudo_files[index].fd = 0;
 }
 
+static const int kPseudoFutexWait = 0;
+static const int kPseudoFutexWake = 1;
+
+static void pseudo_futex(int mode, const struct timespec *reltime) {
+  static pthread_mutex_t mutex = PTHREAD_MUTEX_INITIALIZER;
+  pthread_mutex_lock(&mutex);
+
+  // TODO: uaddr is now ignored and only one pthread_cond_t is used.
+  // This is not efficient. Fix this if possible.
+  static pthread_cond_t cond = PTHREAD_COND_INITIALIZER;
+
+  switch (mode) {
+  case kPseudoFutexWait:
+    if (reltime) {
+      struct timespec abstime;
+      clock_gettime(CLOCK_REALTIME, &abstime);
+      abstime.tv_sec += reltime->tv_sec;
+      abstime.tv_nsec += reltime->tv_nsec;
+      if (1000000000 <= abstime.tv_nsec) {
+        abstime.tv_sec += 1;
+        abstime.tv_nsec -= 1000000000;
+      }
+      pthread_cond_timedwait(&cond, &mutex, &abstime);
+    } else {
+      pthread_cond_wait(&cond, &mutex);
+    }
+    break;
+  case kPseudoFutexWake:
+    pthread_cond_broadcast(&cond);
+    break;
+  }
+
+  pthread_mutex_unlock(&mutex);
+}
+
 int32_t c_closefd(int32_t fd) {
   if (fd >= kFDOffset) {
     close_pseudo_file(fd);
     return 0;
   }
   fprintf(stderr, "syscall close(%d) is not implemented\n", fd);
+  return 0;
+}
+
+int32_t c_futex(uint32_t *uaddr, int32_t futex_op, uint32_t val,
+                const struct timespec *timeout,
+                uint32_t *uaddr2, uint32_t val3) {
+  enum {
+    kFutexWaitPrivate = 128,
+    kFutexWakePrivate = 129,
+  };
+
+  switch (futex_op) {
+  case kFutexWaitPrivate:
+    pseudo_futex(kPseudoFutexWait, timeout);
+    break;
+  case kFutexWakePrivate:
+    pseudo_futex(kPseudoFutexWake, NULL);
+    break;
+  }
   return 0;
 }
 
@@ -320,18 +374,4 @@ int32_t c_write1(uintptr_t fd, void *p, int32_t n) {
   }
   pthread_mutex_unlock(&m);
   return ret;
-}
-
-// pthread
-
-void c_pthread_cond_timedwait_relative_np(int *ret, pthread_cond_t *cond, pthread_mutex_t *mutex, const struct timespec *reltime) {
-  struct timespec abstime;
-  clock_gettime(CLOCK_REALTIME, &abstime);
-  abstime.tv_sec += reltime->tv_sec;
-  abstime.tv_nsec += reltime->tv_nsec;
-  if (1000000000 <= abstime.tv_nsec) {
-    abstime.tv_sec += 1;
-    abstime.tv_nsec -= 1000000000;
-  }
-  *ret = pthread_cond_timedwait(cond, mutex, &abstime);
 }
