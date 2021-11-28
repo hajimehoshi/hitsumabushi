@@ -1,0 +1,17 @@
+//--from
+func Syscall(trap, a1, a2, a3 uintptr) (r1, r2 uintptr, err Errno)
+//--to
+func Syscall(trap, a1, a2, a3 uintptr) (r1, r2 uintptr, err Errno) {
+	switch trap {
+	case SYS_FCNTL:
+		if a1 == uintptr(Stdin) || a1 == uintptr(Stdout) || a1 == uintptr(Stderr) {
+			if a2 == F_GETFL {
+				return 0, 0, 0
+			}
+		}
+		println("unexpected fcntl:", a1, a2, a3)
+	}
+	println("not implemented syscall", trap)
+	panic("syscall")
+	return 0, 0, 0
+}
