@@ -67,6 +67,10 @@ func madvise(addr unsafe.Pointer, n uintptr, flags int32) int32
 //go:noescape
 func exitThread(wait *uint32)
 
+//go:linkname c_calloc c_calloc
+//go:cgo_import_static c_calloc
+var c_calloc byte
+
 //go:linkname c_closefd c_closefd
 //go:cgo_import_static c_closefd
 var c_closefd byte
@@ -74,10 +78,6 @@ var c_closefd byte
 //go:linkname c_gettid c_gettid
 //go:cgo_import_static c_gettid
 var c_gettid byte
-
-//go:linkname c_calloc c_calloc
-//go:cgo_import_static c_calloc
-var c_calloc byte
 
 //go:linkname c_nanotime1 c_nanotime1
 //go:cgo_import_static c_nanotime1
