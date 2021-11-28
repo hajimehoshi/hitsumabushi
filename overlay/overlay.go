@@ -34,10 +34,6 @@ func GenOverlayJSON() (string, error) {
 		if info.IsDir() {
 			return nil
 		}
-		ext := filepath.Ext(path)
-		if ext != ".go" && ext != ".c" && ext != ".h" && ext != ".s" {
-			return nil
-		}
 
 		const (
 			modTypeReplace = ".replace"
@@ -48,11 +44,16 @@ func GenOverlayJSON() (string, error) {
 
 		origFilename := filepath.Base(path)
 		for _, m := range []string{modTypeAppend, modTypePatch} {
-			if strings.HasSuffix(origFilename[:len(origFilename)-len(ext)], m) {
-				origFilename = origFilename[:len(origFilename)-len(ext)-len(m)] + ext
+			if strings.HasSuffix(origFilename, m) {
+				origFilename = origFilename[:len(origFilename)-len(m)]
 				modType = m
 				break
 			}
+		}
+
+		ext := filepath.Ext(origFilename)
+		if ext != ".go" && ext != ".c" && ext != ".h" && ext != ".s" {
+			return nil
 		}
 
 		shortPath, err := filepath.Rel(dir, path)
