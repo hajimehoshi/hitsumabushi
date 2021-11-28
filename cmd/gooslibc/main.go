@@ -11,7 +11,9 @@ import (
 )
 
 var (
-	flagO = flag.String("o", "", "output")
+	flagO    = flag.String("o", "", "output")
+	flagTest = flag.Bool("test", false, "run test")
+	flagV    = flag.Bool("v", false, "-v")
 )
 
 func main() {
@@ -32,11 +34,21 @@ func build() error {
 	}
 
 	// c-archive
-	args := []string{
-		"build",
-		"-buildmode=c-archive",
-		"-o=" + *flagO,
-		"-overlay=" + overlayJSON,
+	var args []string
+	if *flagTest {
+		args = []string{
+			"test",
+			"-c",
+		}
+	} else {
+		args = []string{
+			"build",
+			"-buildmode=c-archive",
+		}
+	}
+	args = append(args, "-overlay="+overlayJSON, "-o="+*flagO)
+	if *flagV {
+		args = append(args, "-v")
 	}
 	args = append(args, flag.Args()...)
 	cmd := exec.Command("go", args...)
