@@ -1,5 +1,7 @@
 # GOOS=libc
 
+Go version: 1.17.3
+
 On Arm Linux, run these commands:
 
 ```
