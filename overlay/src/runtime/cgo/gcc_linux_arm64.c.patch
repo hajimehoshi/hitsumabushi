@@ -328,7 +328,8 @@ int32_t c_open(char *name, int32_t mode, int32_t perm) {
     return open_pseudo_file(hpage_pmd_size, sizeof(hpage_pmd_size) / sizeof(char));
   }
   fprintf(stderr, "syscall open(%s, %d, %d) is not implemented\n", name, mode, perm);
-  return -1;
+  const static int kENOENT = 0x2;
+  return kENOENT;
 }
 
 int32_t c_osyield() {
@@ -340,7 +341,8 @@ int32_t c_read(int32_t fd, void *p, int32_t n) {
     return read_pseudo_file(fd, p, n);
   }
   fprintf(stderr, "syscall read(%d, %p, %d) is not implemented\n", fd, p, n);
-  return 0;
+  const static int kEBADF = 0x9;
+  return kEBADF;
 }
 
 int32_t c_sched_getaffinity(pid_t pid, size_t cpusetsize, void *mask) {
