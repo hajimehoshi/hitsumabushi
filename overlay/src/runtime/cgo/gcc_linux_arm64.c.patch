@@ -366,9 +366,11 @@ int32_t c_write1(uintptr_t fd, void *p, int32_t n) {
   switch (fd) {
   case 1:
     ret = fwrite(p, 1, n, stdout);
+    fflush(stdout);
     break;
   case 2:
     ret = fwrite(p, 1, n, stderr);
+    fflush(stderr);
     break;
   default:
     fprintf(stderr, "syscall write(%lu, %p, %d) is not implemented\n", fd, p, n);
