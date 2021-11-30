@@ -1,9 +1,0 @@
-//--from
-func argv_index(argv **byte, i int32) *byte {
-	return *(**byte)(add(unsafe.Pointer(argv), uintptr(i)*sys.PtrSize))
-}
-//--to
-func argv_index(argv **byte, i int32) *byte {
-	// Unfortunately, the given args are not reliable on some machines. Always return nil.
-	return nil
-}
