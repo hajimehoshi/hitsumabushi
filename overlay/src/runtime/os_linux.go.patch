@@ -15,7 +15,10 @@ func futex(addr unsafe.Pointer, op int32, val uint32, ts, addr2 unsafe.Pointer, 
 //go:nosplit
 //go:cgo_unsafe_args
 func futex(addr unsafe.Pointer, op int32, val uint32, ts, addr2 unsafe.Pointer, val3 uint32) int32 {
-	return libcCall(unsafe.Pointer(abi.FuncPCABI0(futex_trampoline)), unsafe.Pointer(&addr))
+	ret := libcCall(unsafe.Pointer(abi.FuncPCABI0(futex_trampoline)), unsafe.Pointer(&addr))
+	KeepAlive(addr)
+	KeepAlive(addr2)
+	return ret
 }
 func futex_trampoline()
 //--from
@@ -186,7 +189,9 @@ func sched_getaffinity(pid, len uintptr, buf *byte) int32
 //go:nosplit
 //go:cgo_unsafe_args
 func sched_getaffinity(pid, len uintptr, buf *byte) int32 {
-	return libcCall(unsafe.Pointer(abi.FuncPCABI0(sched_getaffinity_trampoline)), unsafe.Pointer(&pid))
+	ret := libcCall(unsafe.Pointer(abi.FuncPCABI0(sched_getaffinity_trampoline)), unsafe.Pointer(&pid))
+	KeepAlive(buf)
+	return ret
 }
 func sched_getaffinity_trampoline()
 //--from

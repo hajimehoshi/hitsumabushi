@@ -18,6 +18,7 @@ func nanotime1() int64 {
 	var ret int64
 	var ret2 = &ret
 	libcCall(unsafe.Pointer(abi.FuncPCABI0(nanotime1_trampoline)), unsafe.Pointer(&ret2))
+	KeepAlive(ret2)
 	return ret
 }
 func nanotime1_trampoline()

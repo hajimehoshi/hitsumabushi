@@ -17,7 +17,9 @@ import (
 //go:nosplit
 //go:cgo_unsafe_args
 func read(fd int32, p unsafe.Pointer, n int32) int32 {
-	return libcCall(unsafe.Pointer(abi.FuncPCABI0(read_trampoline)), unsafe.Pointer(&fd))
+	ret := libcCall(unsafe.Pointer(abi.FuncPCABI0(read_trampoline)), unsafe.Pointer(&fd))
+	KeepAlive(p)
+	return ret
 }
 func read_trampoline()
 
@@ -47,14 +49,18 @@ func usleep_no_g(usec uint32) {
 //go:nosplit
 //go:cgo_unsafe_args
 func write1(fd uintptr, p unsafe.Pointer, n int32) int32 {
-	return libcCall(unsafe.Pointer(abi.FuncPCABI0(write1_trampoline)), unsafe.Pointer(&fd))
+	ret := libcCall(unsafe.Pointer(abi.FuncPCABI0(write1_trampoline)), unsafe.Pointer(&fd))
+	KeepAlive(p)
+	return ret
 }
 func write1_trampoline()
 
 //go:nosplit
 //go:cgo_unsafe_args
 func open(name *byte, mode, perm int32) int32 {
-	return libcCall(unsafe.Pointer(abi.FuncPCABI0(open_trampoline)), unsafe.Pointer(&name))
+	ret := libcCall(unsafe.Pointer(abi.FuncPCABI0(open_trampoline)), unsafe.Pointer(&name))
+	KeepAlive(name)
+	return ret
 }
 func open_trampoline()
 
