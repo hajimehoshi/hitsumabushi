@@ -1,6 +1,7 @@
 package overlay
 
 import (
+	"bytes"
 	"encoding/json"
 	"fmt"
 	"io"
@@ -144,10 +145,12 @@ func GenOverlayJSON() (string, error) {
 }
 
 func goPkgDir(pkg string) (string, error) {
+	var buf bytes.Buffer
 	cmd := exec.Command("go", "list", "-f", "{{.Dir}}", pkg)
+	cmd.Stderr = &buf
 	out, err := cmd.Output()
 	if err != nil {
-		return "", err
+		return "", fmt.Errorf("%v\n%s", err, buf.String())
 	}
 	return strings.TrimSpace(string(out)), nil
 }
