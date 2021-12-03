@@ -1,6 +1,6 @@
 # GOOS=libc
 
-Go version: 1.17.3
+Go version: 1.17.4
 
 On Arm Linux, run these commands:
 
