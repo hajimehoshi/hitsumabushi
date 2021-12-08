@@ -39,6 +39,7 @@ func build() error {
 		args = []string{
 			"test",
 			"-c",
+			"-vet=off", // See golang/go#44957, golang/go#50044
 		}
 	} else {
 		args = []string{
