@@ -1,0 +1,6 @@
+//--from
+//go:build aix || darwin || dragonfly || freebsd || linux || netbsd || openbsd || solaris
+// +build aix darwin dragonfly freebsd linux netbsd openbsd solaris
+//--to
+//go:build aix || darwin || dragonfly || freebsd || netbsd || openbsd || solaris
+// +build aix darwin dragonfly freebsd netbsd openbsd solaris
