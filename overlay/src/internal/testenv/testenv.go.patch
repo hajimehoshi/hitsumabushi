@@ -1,0 +1,12 @@
+//--from
+func HasExec() bool {
+	switch runtime.GOOS {
+	case "js", "ios":
+		return false
+	}
+	return true
+}
+//--to
+func HasExec() bool {
+	return false
+}
