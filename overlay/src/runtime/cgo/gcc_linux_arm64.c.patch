@@ -15,6 +15,7 @@
 #include "libcgo.h"
 #include "libcgo_unix.h"
 
+#include <stdatomic.h>
 #include <unistd.h> // for usleep
 //--from
 void
@@ -239,7 +240,7 @@ static void close_pseudo_file(int32_t fd) {
 static const int kPseudoFutexWait = 0;
 static const int kPseudoFutexWake = 1;
 
-static void pseudo_futex(uint32_t *uaddr, int mode, uint32_t val, const struct timespec *reltime) {
+static void pseudo_futex(_Atomic uint32_t *uaddr, int mode, uint32_t val, const struct timespec *reltime) {
   static pthread_mutex_t mutex = PTHREAD_MUTEX_INITIALIZER;
   static pthread_cond_t cond = PTHREAD_COND_INITIALIZER;
 
@@ -251,8 +252,7 @@ static void pseudo_futex(uint32_t *uaddr, int mode, uint32_t val, const struct t
 
   switch (mode) {
   case kPseudoFutexWait:
-    // TODO: Read this atomically?
-    if (*uaddr == val) {
+    if (atomic_load(uaddr) == val) {
       if (reltime) {
         struct timespec abstime;
         clock_gettime(CLOCK_REALTIME, &abstime);
@@ -306,7 +306,7 @@ int32_t c_closefd(int32_t fd) {
   return 0;
 }
 
-int32_t c_futex(uint32_t *uaddr, int32_t futex_op, uint32_t val,
+int32_t c_futex(_Atomic uint32_t *uaddr, int32_t futex_op, uint32_t val,
                 const struct timespec *timeout,
                 uint32_t *uaddr2, uint32_t val3) {
   enum {
