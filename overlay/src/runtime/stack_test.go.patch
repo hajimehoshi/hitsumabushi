@@ -35,3 +35,25 @@ func TestStackWrapperStackPanic(t *testing.T) {
 func TestStackWrapperStackPanic(t *testing.T) {
 	t.Skip("handling nil pointer access is not supported in this environment")
 }
+//--from
+func TestTracebackInlineExcluded(t *testing.T) {
+	defer func() {
+		recover()
+		buf := make([]byte, 4<<10)
+		stk := string(buf[:Stack(buf, false)])
+
+		t.Log(stk)
+
+		if not := "tracebackExcluded"; strings.Contains(stk, not) {
+			t.Errorf("found but did not expect %q", not)
+		}
+		if want := "tracebackNotExcluded"; !strings.Contains(stk, want) {
+			t.Errorf("expected %q in stack", want)
+		}
+	}()
+	tracebackExcluded()
+}
+//--to
+func TestTracebackInlineExcluded(t *testing.T) {
+	t.Skip("handling nil pointer access is not supported in this environment")
+}
