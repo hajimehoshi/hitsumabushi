@@ -237,19 +237,101 @@ static void close_pseudo_file(int32_t fd) {
   pseudo_files[index].fd = 0;
 }
 
-static const int kPseudoFutexWait = 0;
-static const int kPseudoFutexWake = 1;
+typedef struct futex_value {
+  _Atomic uint32_t* uaddr;
+  pthread_mutex_t   mutex;
+  pthread_cond_t    cond;
+  int               count;
+} futex_value;
 
-static void pseudo_futex(_Atomic uint32_t *uaddr, int mode, uint32_t val, const struct timespec *reltime) {
+static pthread_mutex_t* get_futex_values_mutex() {
   static pthread_mutex_t mutex = PTHREAD_MUTEX_INITIALIZER;
-  static pthread_cond_t cond = PTHREAD_COND_INITIALIZER;
+  return &mutex;
+}
 
-  int ret = pthread_mutex_lock(&mutex);
+enum { kFutexValuesNum = 1024, };
+
+static futex_value* get_futex_value(int index) {
+  static futex_value futex_values[kFutexValuesNum];
+  return &futex_values[index];
+}
+
+static futex_value* futex_value_lock(_Atomic uint32_t *uaddr) {
+  futex_value *fv = NULL;
+
+  pthread_mutex_lock(get_futex_values_mutex());
+
+  for (int i = 0; i < kFutexValuesNum; i++) {
+    if (get_futex_value(i)->uaddr == uaddr) {
+      fv = get_futex_value(i);
+      break;
+    }
+    if (!get_futex_value(i)->uaddr) {
+      fv = get_futex_value(i);
+      fv->uaddr = uaddr;
+      int ret = pthread_mutex_init(&fv->mutex, NULL);
+      if (ret) {
+        fprintf(stderr, "pthread_mutex_init failed: %d\n", ret);
+        abort();
+      }
+      ret = pthread_cond_init(&fv->cond, NULL);
+      if (ret) {
+        fprintf(stderr, "pthread_cond_init failed: %d\n", ret);
+        abort();
+      }
+      break;
+    }
+  }
+
+  int ret = pthread_mutex_lock(&fv->mutex);
   if (ret) {
     fprintf(stderr, "pthread_mutex_lock failed: %d\n", ret);
     abort();
   }
 
+  if (fv) {
+    fv->count++;
+  }
+
+  pthread_mutex_unlock(get_futex_values_mutex());
+
+  return fv;
+}
+
+static void futex_value_unlock(futex_value* fv) {
+  pthread_mutex_lock(get_futex_values_mutex());
+
+  fv->count--;
+  int to_remove = fv->count == 0;
+  int ret = pthread_mutex_unlock(&fv->mutex);
+  if (ret) {
+    fprintf(stderr, "pthread_mutex_unlock failed: %d\n", ret);
+    abort();
+  }
+
+  if (to_remove) {
+    fv->uaddr = NULL;
+    int ret = pthread_mutex_destroy(&fv->mutex);
+    if (ret) {
+      fprintf(stderr, "pthread_mutex_destroy failed: %d\n", ret);
+      abort();
+    }
+    ret = pthread_cond_destroy(&fv->cond);
+    if (ret) {
+      fprintf(stderr, "pthread_cond_destroy failed: %d\n", ret);
+      abort();
+    }
+  }
+
+  pthread_mutex_unlock(get_futex_values_mutex());
+}
+
+enum {
+  kPseudoFutexWait = 0,
+  kPseudoFutexWake = 1,
+};
+
+static void pseudo_futex(_Atomic uint32_t *uaddr, int mode, uint32_t val, const struct timespec *reltime) {
   struct timespec abstime;
   if (reltime) {
     clock_gettime(CLOCK_REALTIME, &abstime);
@@ -261,11 +343,17 @@ static void pseudo_futex(_Atomic uint32_t *uaddr, int mode, uint32_t val, const 
     }
   }
 
+  futex_value* fv = futex_value_lock(uaddr);
+  if (!fv) {
+    fprintf(stderr, "too many futex calls\n");
+    abort();
+  }
+
   switch (mode) {
   case kPseudoFutexWait:
     if (reltime) {
       if (atomic_load(uaddr) == val) {
-        int ret = pthread_cond_timedwait(&cond, &mutex, &abstime);
+        int ret = pthread_cond_timedwait(&fv->cond, &fv->mutex, &abstime);
         if (ret && ret != ETIMEDOUT) {
           fprintf(stderr, "pthread_cond_timedwait failed: %d\n", ret);
           abort();
@@ -273,7 +361,7 @@ static void pseudo_futex(_Atomic uint32_t *uaddr, int mode, uint32_t val, const 
       }
     } else {
       if (atomic_load(uaddr) == val) {
-        int ret = pthread_cond_wait(&cond, &mutex);
+        int ret = pthread_cond_wait(&fv->cond, &fv->mutex);
         if (ret) {
           fprintf(stderr, "pthread_cond_wait failed: %d\n", ret);
           abort();
@@ -287,7 +375,7 @@ static void pseudo_futex(_Atomic uint32_t *uaddr, int mode, uint32_t val, const 
       abort();
     }
     // TODO: broadcasting is not efficient. Use a mutex for each uaddr.
-    int ret = pthread_cond_broadcast(&cond);
+    int ret = pthread_cond_broadcast(&fv->cond);
     if (ret) {
       fprintf(stderr, "pthread_cond_broadcast failed: %d\n", ret);
       abort();
@@ -295,11 +383,7 @@ static void pseudo_futex(_Atomic uint32_t *uaddr, int mode, uint32_t val, const 
     break;
   }
 
-  ret = pthread_mutex_unlock(&mutex);
-  if (ret) {
-    fprintf(stderr, "pthread_mutex_unlock failed: %d\n", ret);
-    abort();
-  }
+  futex_value_unlock(fv);
 }
 
 int32_t c_closefd(int32_t fd) {
