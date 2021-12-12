@@ -10,8 +10,18 @@ func Syscall(trap, a1, a2, a3 uintptr) (r1, r2 uintptr, err Errno) {
 			}
 		}
 		println("unexpected fcntl:", a1, a2, a3)
+	case SYS_READ:
+		if a1 == uintptr(Stdin) {
+			if a3 == 0 {
+				return 0, 0, 0
+			}
+			// TODO: Implement this
+		}
 	case SYS_WRITE:
 		if a1 == uintptr(Stdout) || a1 == uintptr(Stderr) {
+			if a3 == 0 {
+				return 0, 0, 0
+			}
 			r := write1(a1, unsafe.Pointer(a2), int32(a3))
 			return uintptr(r), 0, 0
 		}
