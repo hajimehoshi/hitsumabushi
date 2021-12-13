@@ -5,22 +5,8 @@ import (
 )
 //--to
 import (
-	"internal/abi"
 	"unsafe"
 )
-//--from
-//go:noescape
-func futex(addr unsafe.Pointer, op int32, val uint32, ts, addr2 unsafe.Pointer, val3 uint32) int32
-//--to
-//go:nosplit
-//go:cgo_unsafe_args
-func futex(addr unsafe.Pointer, op int32, val uint32, ts, addr2 unsafe.Pointer, val3 uint32) int32 {
-	ret := libcCall(unsafe.Pointer(abi.FuncPCABI0(futex_trampoline)), unsafe.Pointer(&addr))
-	KeepAlive(addr)
-	KeepAlive(addr2)
-	return ret
-}
-func futex_trampoline()
 //--from
 func sysargs(argc int32, argv **byte) {
 	n := argc + 1
@@ -155,18 +141,6 @@ func getRandomData(r []byte) {
 	}
 }
 //--from
-func gettid() uint32
-//--to
-//go:nosplit
-//go:cgo_unsafe_args
-func gettid() uint64 {
-	var ret uint64
-	var ret2 = &ret
-	libcCall(unsafe.Pointer(abi.FuncPCABI0(gettid_trampoline)), unsafe.Pointer(&ret2))
-	return ret
-}
-func gettid_trampoline();
-//--from
 //go:noescape
 func sigaltstack(new, old *stackt)
 //--to
@@ -182,24 +156,43 @@ func sigprocmask(how int32, new, old *sigset) {
 	// Do nothing.
 	// rtsigprocmask(how, new, old, int32(unsafe.Sizeof(*new)))
 }
-//--from
-//go:noescape
-func sched_getaffinity(pid, len uintptr, buf *byte) int32
-//--to
-//go:nosplit
-//go:cgo_unsafe_args
-func sched_getaffinity(pid, len uintptr, buf *byte) int32 {
-	ret := libcCall(unsafe.Pointer(abi.FuncPCABI0(sched_getaffinity_trampoline)), unsafe.Pointer(&pid))
-	KeepAlive(buf)
-	return ret
-}
-func sched_getaffinity_trampoline()
-//--from
-func osyield()
-//--to
-//go:nosplit
-//go:cgo_unsafe_args
-func osyield() {
-	libcCall(unsafe.Pointer(abi.FuncPCABI0(osyield_trampoline)), nil)
-}
-func osyield_trampoline()
+//--append
+//go:linkname c_calloc c_calloc
+//go:cgo_import_static c_calloc
+var c_calloc byte
+
+//go:linkname c_closefd c_closefd
+//go:cgo_import_static c_closefd
+var c_closefd byte
+
+//go:linkname c_gettid c_gettid
+//go:cgo_import_static c_gettid
+var c_gettid byte
+
+//go:linkname c_nanotime1 c_nanotime1
+//go:cgo_import_static c_nanotime1
+var c_nanotime1 byte
+
+//go:linkname c_open c_open
+//go:cgo_import_static c_open
+var c_open byte
+
+//go:linkname c_osyield c_osyield
+//go:cgo_import_static c_osyield
+var c_osyield byte
+
+//go:linkname c_read c_read
+//go:cgo_import_static c_read
+var c_read byte
+
+//go:linkname c_sched_getaffinity c_sched_getaffinity
+//go:cgo_import_static c_sched_getaffinity
+var c_sched_getaffinity byte
+
+//go:linkname c_usleep c_usleep
+//go:cgo_import_static c_usleep
+var c_usleep byte
+
+//go:linkname c_write1 c_write1
+//go:cgo_import_static c_write1
+var c_write1 byte

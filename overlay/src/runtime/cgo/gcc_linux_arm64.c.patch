@@ -330,18 +330,19 @@ int32_t c_futex(_Atomic uint32_t *uaddr, int32_t futex_op, uint32_t val,
   return 0;
 }
 
-void c_gettid(uint64_t *ret) {
-  *ret = (uint64_t)(pthread_self());
+uint32_t c_gettid() {
+  return (uint32_t)(pthread_self());
 }
 
-void c_calloc(void **ret, size_t num, size_t size) {
-  *ret = calloc(num, size);
+uintptr_t c_calloc(size_t num, size_t size) {
+  void *ptr = calloc(num, size);
+  return (uintptr_t)ptr;
 }
 
-void c_nanotime1(int64_t *ret) {
+int64_t c_nanotime1() {
   struct timespec tp;
   clock_gettime(CLOCK_MONOTONIC, &tp);
-  *ret = (int64_t)(tp.tv_sec) * 1000000000ll + (int64_t)tp.tv_nsec;
+  return (int64_t)(tp.tv_sec) * 1000000000ll + (int64_t)tp.tv_nsec;
 }
 
 int32_t c_open(char *name, int32_t mode, int32_t perm) {
@@ -386,8 +387,8 @@ int32_t c_sched_getaffinity(pid_t pid, size_t cpusetsize, void *mask) {
   return 1;
 }
 
-int32_t c_usleep(useconds_t usec) {
-  return usleep(usec);
+void c_usleep(useconds_t usec) {
+  usleep(usec);
 }
 
 int32_t c_write1(uintptr_t fd, void *p, int32_t n) {
