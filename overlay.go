@@ -21,16 +21,16 @@ func currentDir() string {
 	return filepath.Dir(currentPath)
 }
 
-type overlay struct {
-	Replace map[string]string
-}
-
 var reGoVersion = regexp.MustCompile(`^go(\d+\.\d+)(\.\d+)?$`)
 
 // GenOverlayJSON generates a JSON file for go-build's `-overlay` option.
 // GenOverlayJSON returns a JSON file content, or an error if generating it fails.
 // Now the generated JSON works only for Arm64 so far.
 func GenOverlayJSON() ([]byte, error) {
+	type overlay struct {
+		Replace map[string]string
+	}
+
 	m := reGoVersion.FindStringSubmatch(runtime.Version())
 	dir := filepath.Join(currentDir(), m[1])
 	replaces := map[string]string{}
