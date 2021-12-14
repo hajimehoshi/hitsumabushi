@@ -12,5 +12,5 @@ On Arm Linux, run these commands:
 
 ```
 cd example/helloworld
-./build.sh
+./run.sh
 ```
