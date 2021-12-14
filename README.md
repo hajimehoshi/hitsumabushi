@@ -1,6 +1,6 @@
 # Hitsumabushi (ひつまぶし)
 
-Run Go programs (almost) everywhere.
+Hitsumabushi provides a JSON file for go-build's `-overlay` option in order to run Go programs (almost) everywhere.
 
 Go version: 1.17.4
 
