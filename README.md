@@ -1,4 +1,6 @@
-# GOOS=libc
+# Hitsumabushi (ひつまぶし)
+
+Run Go programs (almost) everywhere.
 
 Go version: 1.17.4
 
