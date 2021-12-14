@@ -7,7 +7,7 @@ import (
 	"os"
 	"os/exec"
 
-	"github.com/hajimehoshi/gooslibc/overlay"
+	"github.com/hajimehoshi/hitsumabushi"
 )
 
 var (
@@ -28,7 +28,7 @@ func build() error {
 		return fmt.Errorf("-o must be speicified")
 	}
 
-	overlayJSON, err := overlay.GenOverlayJSON()
+	overlayJSON, err := hitsumabushi.GenOverlayJSON()
 	if err != nil {
 		return err
 	}

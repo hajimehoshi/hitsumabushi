@@ -1,4 +1,4 @@
-package overlay
+package hitsumabushi
 
 import (
 	"bytes"
@@ -9,6 +9,7 @@ import (
 	"os"
 	"os/exec"
 	"path/filepath"
+	"regexp"
 	"runtime"
 	"strings"
 )
@@ -22,8 +23,11 @@ type overlay struct {
 	Replace map[string]string
 }
 
+var reGoVersion = regexp.MustCompile(`^go(\d+\.\d+)(\.\d+)?$`)
+
 func GenOverlayJSON() (string, error) {
-	dir := filepath.Join(currentDir(), "src")
+	m := reGoVersion.FindStringSubmatch(runtime.Version())
+	dir := filepath.Join(currentDir(), m[1])
 	replaces := map[string]string{}
 
 	tmpDir, err := os.MkdirTemp("", "")
