@@ -27,6 +27,9 @@ type overlay struct {
 
 var reGoVersion = regexp.MustCompile(`^go(\d+\.\d+)(\.\d+)?$`)
 
+// GenOverlayJSON generates a JSON file for go-build's `-overlay` option.
+// GenOverlayJSON returns a JSON file name, or an error if generating it fails.
+// Now the generated JSON works only for Arm64 so far.
 func GenOverlayJSON() (string, error) {
 	m := reGoVersion.FindStringSubmatch(runtime.Version())
 	dir := filepath.Join(currentDir(), m[1])
