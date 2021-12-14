@@ -136,7 +136,7 @@ func GenOverlayJSON() (string, error) {
 		return "", err
 	}
 
-	f, err := os.CreateTemp("", "overlay.json")
+	f, err := os.CreateTemp("", "overlay.*.json")
 	if err != nil {
 		return "", err
 	}
