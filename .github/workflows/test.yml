@@ -27,5 +27,5 @@ jobs:
 
     - name: Test
       run: |
-        ./test.sh math
-        ./test.sh runtime -test.short
+        ./test_qemu.sh math
+        ./test_qemu.sh runtime -test.short
