@@ -1,0 +1,7 @@
+//--from
+package big
+//--to
+//go:build ignore
+// +build ignore
+
+package big

@@ -28,4 +28,5 @@ jobs:
     - name: Test
       run: |
         ./test_qemu.sh math
+        ./test_qemu.sh math/big
         ./test_qemu.sh runtime -test.short
