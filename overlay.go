@@ -20,11 +20,22 @@ type Option func(*config)
 
 type config struct {
 	testPkgs []string
+	numCPU   int
 }
 
+// TestPkg represents a package for testing.
+// When generating a JSON, importing `runtime/cgo` is inserted in the testing package.
 func TestPkg(pkg string) Option {
 	return func(cfg *config) {
 		cfg.testPkgs = append(cfg.testPkgs, pkg)
+	}
+}
+
+// NumCPU represents a number of CPU.
+// The default value is 4.
+func NumCPU(numCPU int) Option {
+	return func(cfg *config) {
+		cfg.numCPU = numCPU
 	}
 }
 
@@ -37,13 +48,16 @@ var reGoVersion = regexp.MustCompile(`^go(\d+\.\d+)(\.\d+)?$`)
 
 // GenOverlayJSON generates a JSON file for go-build's `-overlay` option.
 // GenOverlayJSON returns a JSON file content, or an error if generating it fails.
+//
 // Now the generated JSON works only for Arm64 so far.
 func GenOverlayJSON(options ...Option) ([]byte, error) {
 	type overlay struct {
 		Replace map[string]string
 	}
 
-	var cfg config
+	cfg := config{
+		numCPU: 4,
+	}
 	for _, op := range options {
 		op(&cfg)
 	}
@@ -148,6 +162,40 @@ func GenOverlayJSON(options ...Option) ([]byte, error) {
 
 		default:
 			return fmt.Errorf("hitsumabushi: unexpected modType: %s", modType)
+		}
+
+		// The number of CPU is defined at runtime/cgo/gcc_linux_arm64.c
+		if pkg == "runtime/cgo" && origFilename == "gcc_linux_arm64.c" {
+			numBytes := (cfg.numCPU-1)/8 + 1
+			tmpl := `
+int32_t c_sched_getaffinity(pid_t pid, size_t cpusetsize, void *mask) {
+{{.Masking}}
+  // https://man7.org/linux/man-pages/man2/sched_setaffinity.2.html
+  // > On success, the raw sched_getaffinity() system call returns the
+  // > number of bytes placed copied into the mask buffer;
+  return {{.NumBytes}};
+}
+`
+			n := cfg.numCPU
+			var masking string
+			for i := 0; i < numBytes; i++ {
+				mask := 0
+				m := 8
+				if n < m {
+					m = n
+				}
+				for j := 0; j < m; j++ {
+					mask |= 1 << j
+				}
+				masking += fmt.Sprintf("  ((char*)mask)[%d] = 0x%x;\n", i, mask)
+				n -= 8
+			}
+
+			tmpl = strings.ReplaceAll(tmpl, "{{.Masking}}", masking)
+			tmpl = strings.ReplaceAll(tmpl, "{{.NumBytes}}", fmt.Sprintf("%d", numBytes))
+			if _, err := tmp.Write([]byte(tmpl)); err != nil {
+				return err
+			}
 		}
 
 		replaces[origPath] = tmp.Name()
