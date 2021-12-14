@@ -15,10 +15,21 @@ jobs:
     - name: Checkout
       uses: actions/checkout@v2
 
+    - name: Set up the prerequisites
+      run: |
+        sudo apt-get update
+        sudo apt-get install -y gcc-aarch64-linux-gnu qemu-user
+
     - name: Set up Go
       uses: actions/setup-go@v2
       with:
         go-version: ${{ matrix.go }}
 
-    - name: Build
-      run: go build -v .
+    - name: Test
+      run: |
+        OVERLAY_JSON=$(go run ./genoverlayjson.go)
+        env GOOS=linux GOARCH=arm64 CGO_ENABLED=1 CC=aarch64-linux-gnu-gcc \
+            CGO_CFLAGS='-fno-common -fno-short-enums -ffunction-sections -fdata-sections -fPIC -g -O3' \
+            go test -c -vet=off -overlay=$OVERLAY_JSON -o=test runtime
+        env QEMU_LD_PREFIX=/usr/aarch64-linux-gnu/ \
+            qemu-aarch64 ./test -test.v -test.short
