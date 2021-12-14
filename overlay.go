@@ -209,7 +209,7 @@ func goPkgDir(pkg string) (string, error) {
 
 func goTestFile(pkg string) (string, error) {
 	var buf bytes.Buffer
-	cmd := exec.Command("go", "list", "-f", "{{.Dir}}" + string(filepath.Separator) + "{{index .XTestGoFiles 0}}", pkg)
+	cmd := exec.Command("go", "list", "-f", "{{.Dir}}"+string(filepath.Separator)+"{{index .XTestGoFiles 0}}", pkg)
 	cmd.Stderr = &buf
 	out, err := cmd.Output()
 	if err != nil {
