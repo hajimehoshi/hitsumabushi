@@ -6,8 +6,8 @@
 package main
 
 import (
-	"fmt"
 	"log"
+	"os"
 
 	"github.com/hajimehoshi/hitsumabushi"
 )
@@ -23,6 +23,8 @@ func build() error {
 	if err != nil {
 		return err
 	}
-	fmt.Println(overlayJSON)
+	if _, err := os.Stdout.Write(overlayJSON); err != nil {
+		return err
+	}
 	return nil
 }

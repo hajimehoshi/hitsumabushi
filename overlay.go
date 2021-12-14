@@ -28,16 +28,16 @@ type overlay struct {
 var reGoVersion = regexp.MustCompile(`^go(\d+\.\d+)(\.\d+)?$`)
 
 // GenOverlayJSON generates a JSON file for go-build's `-overlay` option.
-// GenOverlayJSON returns a JSON file name, or an error if generating it fails.
+// GenOverlayJSON returns a JSON file content, or an error if generating it fails.
 // Now the generated JSON works only for Arm64 so far.
-func GenOverlayJSON() (string, error) {
+func GenOverlayJSON() ([]byte, error) {
 	m := reGoVersion.FindStringSubmatch(runtime.Version())
 	dir := filepath.Join(currentDir(), m[1])
 	replaces := map[string]string{}
 
 	tmpDir, err := os.MkdirTemp("", "")
 	if err != nil {
-		return "", err
+		return nil, err
 	}
 
 	if err := filepath.Walk(dir, func(path string, info fs.FileInfo, err error) error {
@@ -130,27 +130,16 @@ func GenOverlayJSON() (string, error) {
 			}
 
 		default:
-			return fmt.Errorf("unexpected modType: %s", modType)
+			return fmt.Errorf("hitsumabushi: unexpected modType: %s", modType)
 		}
 
 		replaces[origPath] = tmp.Name()
 		return nil
 	}); err != nil {
-		return "", err
+		return nil, err
 	}
 
-	f, err := os.CreateTemp("", "overlay.*.json")
-	if err != nil {
-		return "", err
-	}
-	defer f.Close()
-
-	e := json.NewEncoder(f)
-	if err := e.Encode(&overlay{Replace: replaces}); err != nil {
-		return "", err
-	}
-
-	return f.Name(), nil
+	return json.Marshal(&overlay{Replace: replaces})
 }
 
 func goPkgDir(pkg string) (string, error) {
@@ -159,7 +148,7 @@ func goPkgDir(pkg string) (string, error) {
 	cmd.Stderr = &buf
 	out, err := cmd.Output()
 	if err != nil {
-		return "", fmt.Errorf("%v\n%s", err, buf.String())
+		return "", fmt.Errorf("hitsumabushi: %v\n%s", err, buf.String())
 	}
 	return strings.TrimSpace(string(out)), nil
 }
