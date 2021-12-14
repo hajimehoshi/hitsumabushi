@@ -13,7 +13,7 @@ done:
 	MOVW	R0, ret+16(FP)
 	RET
 //--to
-TEXT runtime·open(SB),NOSPLIT,$0
+TEXT runtime·open(SB),NOSPLIT,$0-20
 	MOVD	name+0(FP), R0
 	MOVW	mode+8(FP), R1
 	MOVW	perm+12(FP), R2
@@ -32,9 +32,10 @@ done:
 	MOVW	R0, ret+8(FP)
 	RET
 //--to
-TEXT runtime·closefd(SB),NOSPLIT,$0
+TEXT runtime·closefd(SB),NOSPLIT,$0-12
 	MOVD	fd+0(FP), R0
 	BL	c_closefd(SB)
+        MOVW	R0, ret+8(FP)
 	RET
 //--from
 TEXT runtime·write1(SB),NOSPLIT|NOFRAME,$0-28
@@ -46,7 +47,7 @@ TEXT runtime·write1(SB),NOSPLIT|NOFRAME,$0-28
 	MOVW	R0, ret+24(FP)
 	RET
 //--to
-TEXT runtime·write1(SB),NOSPLIT,$0
+TEXT runtime·write1(SB),NOSPLIT,$0-28
 	MOVD	fd+0(FP), R0
 	MOVD	p+8(FP), R1
 	MOVW	n+16(FP), R2
@@ -63,7 +64,7 @@ TEXT runtime·read(SB),NOSPLIT|NOFRAME,$0-28
 	MOVW	R0, ret+24(FP)
 	RET
 //--to
-TEXT runtime·read(SB),NOSPLIT,$0
+TEXT runtime·read(SB),NOSPLIT,$0-28
 	MOVW	fd+0(FP), R0
 	MOVD	p+8(FP), R1
 	MOVW	n+16(FP), R2
@@ -101,7 +102,7 @@ TEXT runtime·gettid(SB),NOSPLIT,$0-4
 	MOVW	R0, ret+0(FP)
 	RET
 //--to
-TEXT runtime·gettid(SB),NOSPLIT,$0
+TEXT runtime·gettid(SB),NOSPLIT,$0-4
 	BL	c_gettid(SB)
 	MOVW	R0, ret+0(FP)
 	RET
@@ -193,7 +194,7 @@ finish:
 	MOVD	R3, ret+0(FP)
 	RET
 //--to
-TEXT runtime·nanotime1(SB),NOSPLIT,$0
+TEXT runtime·nanotime1(SB),NOSPLIT,$0-8
 	BL	c_nanotime1(SB)
 	MOVD	R0, ret+0(FP)
 	RET
@@ -210,7 +211,7 @@ TEXT runtime·futex(SB),NOSPLIT|NOFRAME,$0
 	MOVW	R0, ret+40(FP)
 	RET
 //--to
-TEXT runtime·futex(SB),NOSPLIT,$0
+TEXT runtime·futex(SB),NOSPLIT,$0-44
 	MOVD	addr+0(FP), R0
 	MOVD	op+8(FP), R1
 	MOVD	val+12(FP), R2
@@ -252,7 +253,7 @@ TEXT runtime·sched_getaffinity(SB),NOSPLIT|NOFRAME,$0
 	MOVW	R0, ret+24(FP)
 	RET
 //--to
-TEXT runtime·sched_getaffinity(SB),NOSPLIT,$0
+TEXT runtime·sched_getaffinity(SB),NOSPLIT,$0-28
 	MOVD	pid+0(FP), R0
 	MOVD	len+8(FP), R1
 	MOVD	buf+16(FP), R2
@@ -260,7 +261,7 @@ TEXT runtime·sched_getaffinity(SB),NOSPLIT,$0
 	MOVW	R0, ret+24(FP)
 	RET
 //--append
-TEXT runtime·calloc(SB),NOSPLIT,$0
+TEXT runtime·calloc(SB),NOSPLIT,$0-24
 	MOVD	n+0(FP), R0
 	MOVD	size+8(FP), R1
 	BL	c_calloc(SB)
