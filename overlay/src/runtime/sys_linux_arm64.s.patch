@@ -91,7 +91,7 @@ TEXT runtime·usleep(SB),NOSPLIT,$24-4
 	SVC
 	RET
 //--to
-TEXT runtime·usleep(SB),NOSPLIT,$0
+TEXT runtime·usleep(SB),NOSPLIT,$0-4
 	MOVW	usec+0(FP), R0
 	BL	c_usleep(SB)
 	RET
@@ -240,7 +240,7 @@ TEXT runtime·osyield(SB),NOSPLIT|NOFRAME,$0
 	SVC
 	RET
 //--to
-TEXT runtime·osyield(SB),NOSPLIT,$0
+TEXT runtime·osyield(SB),NOSPLIT,$0-0
 	BL	c_osyield(SB)
 	RET
 //--from
