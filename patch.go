@@ -11,12 +11,14 @@ import (
 )
 
 type patch struct {
+	name     string
 	replaces map[string]string
 	append   string
 }
 
-func parsePatch(r io.Reader) (*patch, error) {
+func parsePatch(name string, r io.Reader) (*patch, error) {
 	p := &patch{
+		name:     name,
 		replaces: map[string]string{},
 	}
 	var from string
@@ -78,7 +80,9 @@ func parsePatch(r io.Reader) (*patch, error) {
 		i++
 	}
 
-	p.replaces[from] = to
+	if from != "" {
+		p.replaces[from] = to
+	}
 	return p, nil
 }
 
@@ -91,9 +95,14 @@ func (p *patch) apply(r io.Reader) (io.Reader, error) {
 	str := string(buf)
 	for from, to := range p.replaces {
 		if !strings.Contains(str, from) {
-			return nil, fmt.Errorf("patching failed: %s", from[:strings.IndexByte(from, '\n')])
+			return nil, fmt.Errorf("hitsumabushi: patching %s failed: %s", p.name, from[:strings.IndexByte(from, '\n')])
 		}
-		str = strings.Replace(str, from, to, 1)
+		old := str
+		new := strings.Replace(old, from, to, 1)
+		if old == new {
+			return nil, fmt.Errorf("hitsumabushi: patching %s failed: replacing result is the same", p.name)
+		}
+		str = new
 	}
 	str += p.append
 	return bytes.NewBufferString(str), nil

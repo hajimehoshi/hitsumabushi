@@ -148,7 +148,7 @@ func GenOverlayJSON(options ...Option) ([]byte, error) {
 			}
 			defer orig.Close()
 
-			p, err := parsePatch(src)
+			p, err := parsePatch(shortPath, src)
 			if err != nil {
 				return err
 			}
