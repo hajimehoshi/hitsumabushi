@@ -21,6 +21,7 @@ type Option func(*config)
 type config struct {
 	testPkgs []string
 	numCPU   int
+	args     []string
 }
 
 // TestPkg represents a package for testing.
@@ -36,6 +37,14 @@ func TestPkg(pkg string) Option {
 func NumCPU(numCPU int) Option {
 	return func(cfg *config) {
 		cfg.numCPU = numCPU
+	}
+}
+
+// Args is arguments when executing.
+// The first argument must be a program name.
+func Args(args ...string) Option {
+	return func(cfg *config) {
+		cfg.args = append(cfg.args, args...)
 	}
 }
 
@@ -107,6 +116,12 @@ func GenOverlayJSON(options ...Option) ([]byte, error) {
 			return err
 		}
 
+		src, err := os.Open(path)
+		if err != nil {
+			return err
+		}
+		defer src.Close()
+
 		if err := os.MkdirAll(filepath.Join(tmpDir, pkg), 0755); err != nil {
 			return err
 		}
@@ -115,12 +130,6 @@ func GenOverlayJSON(options ...Option) ([]byte, error) {
 			return err
 		}
 		defer dst.Close()
-
-		src, err := os.Open(path)
-		if err != nil {
-			return err
-		}
-		defer src.Close()
 
 		origPath := filepath.Join(origDir, origFilename)
 
@@ -204,6 +213,72 @@ int32_t c_sched_getaffinity(pid_t pid, size_t cpusetsize, void *mask) {
 		return nil, err
 	}
 
+	// Replace the arguments.
+	{
+		pkg := "runtime"
+		origDir, err := goPkgDir(pkg)
+		if err != nil {
+			return nil, err
+		}
+		origPath := filepath.Join(origDir, "runtime1.go")
+
+		// Read the source before opening the destination.
+		// The destination might be the same as the source.
+		srcPath := origPath
+		if p, ok := replaces[origPath]; ok {
+			srcPath = p
+		}
+		srcContent, err := os.ReadFile(srcPath)
+		if err != nil {
+			return nil, err
+		}
+
+		if err := os.MkdirAll(filepath.Join(tmpDir, pkg), 0755); err != nil {
+			return nil, err
+		}
+		dst, err := os.Create(filepath.Join(tmpDir, pkg, filepath.Base(origPath)))
+		if err != nil {
+			return nil, err
+		}
+		defer dst.Close()
+
+		var strs []string
+		for _, arg := range cfg.args {
+			strs = append(strs, fmt.Sprintf(`%q`, arg))
+		}
+		argvDef := "var __argv = [...]string{" + strings.Join(strs, ", ") + "}"
+
+		old := `func goargs() {
+	if GOOS == "windows" {
+		return
+	}
+	argslice = make([]string, argc)
+	for i := int32(0); i < argc; i++ {
+		argslice[i] = gostringnocopy(argv_index(argv, i))
+	}
+}`
+		new := fmt.Sprintf(`%s
+
+func goargs() {
+	if GOOS == "windows" {
+		return
+	}
+	argslice = make([]string, %[2]d)
+	for i := int32(0); i < %[2]d; i++ {
+		argslice[i] = __argv[i]
+	}
+}`, argvDef, len(cfg.args))
+
+		replaced := strings.Replace(string(srcContent), old, new, 1)
+
+		if _, err := io.Copy(dst, bytes.NewReader([]byte(replaced))); err != nil {
+			return nil, err
+		}
+
+		replaces[origPath] = dst.Name()
+	}
+
+	// Add importing "runtime/cgo" for testing packages.
 	for _, pkg := range cfg.testPkgs {
 		origPath, err := goTestFile(pkg)
 		if err != nil {

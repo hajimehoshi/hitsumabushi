@@ -19,12 +19,10 @@ func main() {
 }
 
 func build() error {
-	var options []hitsumabushi.Option
-	for _, arg := range os.Args[1:] {
-		options = append(options, hitsumabushi.TestPkg(arg))
-	}
-
-	overlayJSON, err := hitsumabushi.GenOverlayJSON(options...)
+	args := append([]string{"hitsumabushi_program"}, os.Args[1:len(os.Args)]...)
+	overlayJSON, err := hitsumabushi.GenOverlayJSON(
+		hitsumabushi.TestPkg(args[len(args)-1]),
+		hitsumabushi.Args(args...))
 	if err != nil {
 		return err
 	}
