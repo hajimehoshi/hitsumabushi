@@ -38,6 +38,7 @@ jobs:
         ./test_qemu.sh runtime/internal/atomic
         ./test_qemu.sh runtime/internal/math
         ./test_qemu.sh runtime/internal/sys
+        ./test_qemu.sh strconv
         ./test_qemu.sh strings
         ./test_qemu.sh sort
         ./test_qemu.sh sync
