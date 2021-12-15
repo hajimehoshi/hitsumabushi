@@ -42,3 +42,4 @@ jobs:
         ./test_qemu.sh strings
         ./test_qemu.sh sort
         ./test_qemu.sh sync
+        ./test_qemu.sh sync/atomic

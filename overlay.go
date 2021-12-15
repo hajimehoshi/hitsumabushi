@@ -110,11 +110,11 @@ func GenOverlayJSON(options ...Option) ([]byte, error) {
 		if err := os.MkdirAll(filepath.Join(tmpDir, pkg), 0755); err != nil {
 			return err
 		}
-		tmp, err := os.Create(filepath.Join(tmpDir, pkg, origFilename))
+		dst, err := os.Create(filepath.Join(tmpDir, pkg, origFilename))
 		if err != nil {
 			return err
 		}
-		defer tmp.Close()
+		defer dst.Close()
 
 		src, err := os.Open(path)
 		if err != nil {
@@ -126,7 +126,7 @@ func GenOverlayJSON(options ...Option) ([]byte, error) {
 
 		switch modType {
 		case modTypeReplace:
-			if _, err := io.Copy(tmp, src); err != nil {
+			if _, err := io.Copy(dst, src); err != nil {
 				return err
 			}
 
@@ -137,7 +137,7 @@ func GenOverlayJSON(options ...Option) ([]byte, error) {
 			}
 			defer orig.Close()
 
-			if _, err := io.Copy(tmp, io.MultiReader(orig, src)); err != nil {
+			if _, err := io.Copy(dst, io.MultiReader(orig, src)); err != nil {
 				return err
 			}
 
@@ -156,7 +156,7 @@ func GenOverlayJSON(options ...Option) ([]byte, error) {
 			if err != nil {
 				return err
 			}
-			if _, err := io.Copy(tmp, patched); err != nil {
+			if _, err := io.Copy(dst, patched); err != nil {
 				return err
 			}
 
@@ -193,12 +193,12 @@ int32_t c_sched_getaffinity(pid_t pid, size_t cpusetsize, void *mask) {
 
 			tmpl = strings.ReplaceAll(tmpl, "{{.Masking}}", masking)
 			tmpl = strings.ReplaceAll(tmpl, "{{.NumBytes}}", fmt.Sprintf("%d", numBytes))
-			if _, err := tmp.Write([]byte(tmpl)); err != nil {
+			if _, err := dst.Write([]byte(tmpl)); err != nil {
 				return err
 			}
 		}
 
-		replaces[origPath] = tmp.Name()
+		replaces[origPath] = dst.Name()
 		return nil
 	}); err != nil {
 		return nil, err
@@ -215,30 +215,36 @@ int32_t c_sched_getaffinity(pid_t pid, size_t cpusetsize, void *mask) {
 			return nil, err
 		}
 
+		// Read the source before opening the destination.
+		// The destination might be the same as the source.
+		srcPath := origPath
+		if p, ok := replaces[origPath]; ok {
+			srcPath = p
+		}
+		srcContent, err := os.ReadFile(srcPath)
+		if err != nil {
+			return nil, err
+		}
+
 		if err := os.MkdirAll(filepath.Join(tmpDir, pkg), 0755); err != nil {
 			return nil, err
 		}
-		tmp, err := os.Create(filepath.Join(tmpDir, pkg, filepath.Base(origPath)))
+		dst, err := os.Create(filepath.Join(tmpDir, pkg, filepath.Base(origPath)))
 		if err != nil {
 			return nil, err
 		}
-		defer tmp.Close()
-
-		srcContent, err := os.ReadFile(origPath)
-		if err != nil {
-			return nil, err
-		}
+		defer dst.Close()
 
 		// This assumes that there is an external test package.
 		old := "package " + pkgName + "_test"
 		new := old + "\n\n" + `import _ "runtime/cgo"`
 		replaced := strings.Replace(string(srcContent), old, new, 1)
 
-		if _, err := io.Copy(tmp, bytes.NewReader([]byte(replaced))); err != nil {
+		if _, err := io.Copy(dst, bytes.NewReader([]byte(replaced))); err != nil {
 			return nil, err
 		}
 
-		replaces[origPath] = tmp.Name()
+		replaces[origPath] = dst.Name()
 	}
 
 	return json.Marshal(&overlay{Replace: replaces})
