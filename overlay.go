@@ -32,7 +32,7 @@ func TestPkg(pkg string) Option {
 }
 
 // NumCPU represents a number of CPU.
-// The default value is 4.
+// The default value is runtime.NumCPU().
 func NumCPU(numCPU int) Option {
 	return func(cfg *config) {
 		cfg.numCPU = numCPU
@@ -56,7 +56,7 @@ func GenOverlayJSON(options ...Option) ([]byte, error) {
 	}
 
 	cfg := config{
-		numCPU: 4,
+		numCPU: runtime.NumCPU(),
 	}
 	for _, op := range options {
 		op(&cfg)
