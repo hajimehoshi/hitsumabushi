@@ -31,6 +31,7 @@ jobs:
         ./test_qemu.sh math
         ./test_qemu.sh math/big
         ./test_qemu.sh math/bits
+        ./test_qemu.sh math/cmplx
         ./test_qemu.sh math/rand
         ./test_qemu.sh runtime -test.short
         ./test_qemu.sh runtime/debug
