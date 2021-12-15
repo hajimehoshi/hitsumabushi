@@ -1,0 +1,55 @@
+//--from
+import (
+	"runtime"
+	"runtime/debug"
+	"syscall"
+	"testing"
+	"unsafe"
+)
+//--to
+import (
+	"testing"
+)
+//--from
+func TestPanicOnFault(t *testing.T) {
+	if runtime.GOARCH == "s390x" {
+		t.Skip("s390x fault addresses are missing the low order bits")
+	}
+	if runtime.GOOS == "ios" {
+		t.Skip("iOS doesn't provide fault addresses")
+	}
+	if runtime.GOOS == "netbsd" && runtime.GOARCH == "arm" {
+		t.Skip("netbsd-arm doesn't provide fault address (golang.org/issue/45026)")
+	}
+	m, err := syscall.Mmap(-1, 0, 0x1000, syscall.PROT_READ /* Note: no PROT_WRITE */, syscall.MAP_SHARED|syscall.MAP_ANON)
+	if err != nil {
+		t.Fatalf("can't map anonymous memory: %s", err)
+	}
+	defer syscall.Munmap(m)
+	old := debug.SetPanicOnFault(true)
+	defer debug.SetPanicOnFault(old)
+	const lowBits = 0x3e7
+	defer func() {
+		r := recover()
+		if r == nil {
+			t.Fatalf("write did not fault")
+		}
+		type addressable interface {
+			Addr() uintptr
+		}
+		a, ok := r.(addressable)
+		if !ok {
+			t.Fatalf("fault does not contain address")
+		}
+		want := uintptr(unsafe.Pointer(&m[lowBits]))
+		got := a.Addr()
+		if got != want {
+			t.Fatalf("fault address %x, want %x", got, want)
+		}
+	}()
+	m[lowBits] = 1 // will fault
+}
+//--to
+func TestPanicOnFault(t *testing.T) {
+	t.Skip("handling nil pointer access is not supported in this environment")
+}
