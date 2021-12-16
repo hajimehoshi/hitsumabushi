@@ -156,6 +156,14 @@ func sigprocmask(how int32, new, old *sigset) {
 	// Do nothing.
 	// rtsigprocmask(how, new, old, int32(unsafe.Sizeof(*new)))
 }
+//--from
+func signalM(mp *m, sig int) {
+	tgkill(getpid(), int(mp.procid), sig)
+}
+//--to
+func signalM(mp *m, sig int) {
+	// Do nothiing.
+}
 //--append
 //go:linkname c_calloc c_calloc
 //go:cgo_import_static c_calloc
