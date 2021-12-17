@@ -337,14 +337,26 @@ func goPkgDir(pkg string) (string, error) {
 }
 
 func goTestFile(pkg string) (string, error) {
-	var buf bytes.Buffer
-	cmd := exec.Command("go", "list", "-f", "{{.Dir}}"+string(filepath.Separator)+"{{index .XTestGoFiles 0}}", pkg)
-	cmd.Stderr = &buf
-	out, err := cmd.Output()
-	if err != nil {
-		return "", fmt.Errorf("hitsumabushi: %v\n%s", err, buf.String())
+	idx := 0
+	for {
+		var buf bytes.Buffer
+		cmd := exec.Command("go", "list", "-f", "{{.Dir}}"+string(filepath.Separator)+fmt.Sprintf("{{index .XTestGoFiles %d}}", idx), pkg)
+		cmd.Stderr = &buf
+		out, err := cmd.Output()
+		if err != nil {
+			return "", fmt.Errorf("hitsumabushi: %v\n%s", err, buf.String())
+		}
+
+		f := strings.TrimSpace(string(out))
+
+		// runtime/callers_test.go is very special and the line number matters.
+		if pkg == "runtime" && filepath.Base(f) == "callers_test.go" {
+			idx++
+			continue
+		}
+
+		return f, nil
 	}
-	return strings.TrimSpace(string(out)), nil
 }
 
 func goPkgName(pkg string) (string, error) {
