@@ -394,7 +394,9 @@ int32_t c_futex(_Atomic uint32_t *uaddr, int32_t futex_op, uint32_t val,
 }
 
 uint32_t c_gettid() {
-  return (uint32_t)(pthread_self());
+  uint64_t tid64 = (uint64_t)(pthread_self());
+  uint32_t tid = (uint32_t)(tid64 >> 32) ^ (uint32_t)(tid64);
+  return tid;
 }
 
 uintptr_t c_calloc(size_t num, size_t size) {
