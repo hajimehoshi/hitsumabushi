@@ -288,29 +288,6 @@ TEXT runtime·nanotime1(SB),NOSPLIT,$0-8
 	MOVD	R0, ret+0(FP)
 	RET
 //--from
-TEXT runtime·futex(SB),NOSPLIT|NOFRAME,$0
-	MOVD	addr+0(FP), R0
-	MOVW	op+8(FP), R1
-	MOVW	val+12(FP), R2
-	MOVD	ts+16(FP), R3
-	MOVD	addr2+24(FP), R4
-	MOVW	val3+32(FP), R5
-	MOVD	$SYS_futex, R8
-	SVC
-	MOVW	R0, ret+40(FP)
-	RET
-//--to
-TEXT runtime·futex(SB),NOSPLIT,$0-44
-	MOVD	addr+0(FP), R0
-	MOVD	op+8(FP), R1
-	MOVD	val+12(FP), R2
-	MOVD	ts+16(FP), R3
-	MOVD	addr2+24(FP), R4
-	MOVD	val3+32(FP), R5
-	BL	c_futex(SB)
-	MOVW	R0, ret+40(FP)
-	RET
-//--from
 TEXT runtime·sigaltstack(SB),NOSPLIT|NOFRAME,$0
 	MOVD	new+0(FP), R0
 	MOVD	old+8(FP), R1
@@ -354,5 +331,25 @@ TEXT runtime·calloc(SB),NOSPLIT,$0-24
 	MOVD	n+0(FP), R0
 	MOVD	size+8(FP), R1
 	BL	c_calloc(SB)
+	MOVD	R0, ret+16(FP)
+	RET
+TEXT runtime·plan9_semacquire(SB),NOSPLIT,$0-24
+	MOVD	addr+0(FP), R0
+	MOVW	block+8(FP), R1
+	BL	c_plan9_semacquire(SB)
+	MOVD	R0, ret+16(FP)
+	RET
+
+TEXT runtime·plan9_semrelease(SB),NOSPLIT,$0-24
+	MOVD	addr+0(FP), R0
+	MOVW	count+8(FP), R1
+	BL	c_plan9_semrelease(SB)
+	MOVD	R0, ret+16(FP)
+	RET
+
+TEXT runtime·plan9_tsemacquire(SB),NOSPLIT,$0-24
+	MOVD	addr+0(FP), R0
+	MOVW	ms+8(FP), R1
+	BL	c_plan9_tsemacquire(SB)
 	MOVD	R0, ret+16(FP)
 	RET

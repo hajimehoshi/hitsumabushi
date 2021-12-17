@@ -15,7 +15,6 @@
 #include "libcgo.h"
 #include "libcgo_unix.h"
 
-#include <stdatomic.h>
 #include <unistd.h> // for usleep
 //--from
 void
@@ -237,96 +236,12 @@ static void close_pseudo_file(int32_t fd) {
   pseudo_files[index].fd = 0;
 }
 
-static const int kPseudoFutexWait = 0;
-static const int kPseudoFutexWake = 1;
-
-static void pseudo_futex(_Atomic uint32_t *uaddr, int mode, uint32_t val, const struct timespec *reltime) {
-  static pthread_mutex_t mutex = PTHREAD_MUTEX_INITIALIZER;
-  static pthread_cond_t cond = PTHREAD_COND_INITIALIZER;
-
-  int ret = pthread_mutex_lock(&mutex);
-  if (ret) {
-    fprintf(stderr, "pthread_mutex_lock failed: %d\n", ret);
-    abort();
-  }
-
-  struct timespec abstime;
-  if (reltime) {
-    clock_gettime(CLOCK_REALTIME, &abstime);
-    abstime.tv_sec += reltime->tv_sec;
-    abstime.tv_nsec += reltime->tv_nsec;
-    if (1000000000 <= abstime.tv_nsec) {
-      abstime.tv_sec += 1;
-      abstime.tv_nsec -= 1000000000;
-    }
-  }
-
-  switch (mode) {
-  case kPseudoFutexWait:
-    if (reltime) {
-      if (atomic_load(uaddr) == val) {
-        int ret = pthread_cond_timedwait(&cond, &mutex, &abstime);
-        if (ret && ret != ETIMEDOUT) {
-          fprintf(stderr, "pthread_cond_timedwait failed: %d\n", ret);
-          abort();
-        }
-      }
-    } else {
-      if (atomic_load(uaddr) == val) {
-        int ret = pthread_cond_wait(&cond, &mutex);
-        if (ret) {
-          fprintf(stderr, "pthread_cond_wait failed: %d\n", ret);
-          abort();
-        }
-      }
-    }
-    break;
-  case kPseudoFutexWake:
-    if (val != 1) {
-      fprintf(stderr, "val for waking must be 1 but %d\n", val);
-      abort();
-    }
-    // TODO: broadcasting is not efficient. Use a mutex for each uaddr.
-    int ret = pthread_cond_broadcast(&cond);
-    if (ret) {
-      fprintf(stderr, "pthread_cond_broadcast failed: %d\n", ret);
-      abort();
-    }
-    break;
-  }
-
-  ret = pthread_mutex_unlock(&mutex);
-  if (ret) {
-    fprintf(stderr, "pthread_mutex_unlock failed: %d\n", ret);
-    abort();
-  }
-}
-
 int32_t c_closefd(int32_t fd) {
   if (fd >= kFDOffset) {
     close_pseudo_file(fd);
     return 0;
   }
   fprintf(stderr, "syscall close(%d) is not implemented\n", fd);
-  return 0;
-}
-
-int32_t c_futex(_Atomic uint32_t *uaddr, int32_t futex_op, uint32_t val,
-                const struct timespec *timeout,
-                uint32_t *uaddr2, uint32_t val3) {
-  enum {
-    kFutexWaitPrivate = 128,
-    kFutexWakePrivate = 129,
-  };
-
-  switch (futex_op) {
-  case kFutexWaitPrivate:
-    pseudo_futex(uaddr, kPseudoFutexWait, val, timeout);
-    break;
-  case kFutexWakePrivate:
-    pseudo_futex(uaddr, kPseudoFutexWake, val, NULL);
-    break;
-  }
   return 0;
 }
 
@@ -368,6 +283,102 @@ int32_t c_open(char *name, int32_t mode, int32_t perm) {
 
 int32_t c_osyield() {
   return sched_yield();
+}
+
+static const int kPlan9SemAcquire = 0;
+static const int kPlan9SemRelease = 1;
+
+static int32_t pseudo_plan9_sem(int mode, uint32_t* addr, int64_t ns, int32_t count) {
+  static pthread_mutex_t mutex = PTHREAD_MUTEX_INITIALIZER;
+  static pthread_cond_t cond = PTHREAD_COND_INITIALIZER;
+
+  pthread_mutex_lock(&mutex);
+
+  int32_t ret = 0;
+  int timeout = 0;
+
+  switch (mode) {
+  case kPlan9SemAcquire:
+    while (*addr == 0) {
+      // Non-blocking
+      if (ns == 0) {
+        timeout = 1;
+        break;
+      }
+
+      // Blocking
+      if (ns < 0) {
+        pthread_cond_wait(&cond, &mutex);
+        continue;
+      }
+
+      // Timer
+      struct timespec abstime;
+      // CLOCK_MONOTONIC should be used here, but some platforms don't support CLOCK_MONOTONIC.
+      // TODO: Use a platform-specific function.
+      clock_gettime(CLOCK_REALTIME, &abstime);
+      abstime.tv_nsec += ns;
+      if (1000000000ll <= abstime.tv_nsec) {
+        abstime.tv_sec += 1;
+        abstime.tv_nsec -= 1000000000ll;
+      }
+
+      struct timespec now_ts1;
+      clock_gettime(CLOCK_REALTIME, &now_ts1);
+      int64_t now1 = now_ts1.tv_sec * 1000000000ll + now_ts1.tv_nsec;
+
+      int result = pthread_cond_timedwait(&cond, &mutex, &abstime);
+      if (result == ETIMEDOUT) {
+        timeout = 1;
+        break;
+      }
+
+      struct timespec now_ts2;
+      // CLOCK_MONOTONIC should be used here, but some platforms don't support CLOCK_MONOTONIC.
+      // TODO: Use a platform-specific function.
+      clock_gettime(CLOCK_REALTIME, &now_ts2);
+      int64_t now2 = now_ts2.tv_sec * 1000000000ll + now_ts2.tv_nsec;
+
+      if (now2 - now1 > 0) {
+        ns -= now2 - now1;
+      }
+      if (ns < 0) {
+        ns = 0;
+      }
+    }
+    if (!timeout) {
+      *addr -= 1;
+    }
+    ret = timeout ? 0 : 1;
+    break;
+
+  case kPlan9SemRelease:
+    *addr += count;
+    ret = *addr;
+    pthread_cond_broadcast(&cond);
+    break;
+
+  default:
+    fprintf(stderr, "unexpected plan9-sem mode: %d\n", mode);
+    abort();
+    break;
+  }
+
+  pthread_mutex_unlock(&mutex);
+
+  return ret;
+}
+
+int32_t c_plan9_semacquire(uint32_t* addr, int32_t block) {
+  return pseudo_plan9_sem(kPlan9SemAcquire, addr, block ? -1 : 0, 0);
+}
+
+int32_t c_plan9_semrelease(uint32_t* addr, int32_t count) {
+  return pseudo_plan9_sem(kPlan9SemRelease, addr, 0, count);
+}
+
+int32_t c_plan9_tsemacquire(uint32_t* addr, int32_t ms) {
+  return pseudo_plan9_sem(kPlan9SemAcquire, addr, (int64_t)ms * 1000000ll, 0);
 }
 
 int32_t c_read(int32_t fd, void *p, int32_t n) {
