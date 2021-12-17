@@ -38,7 +38,7 @@ func parsePatch(name string, r io.Reader) (*patch, error) {
 		switch line := s.Text(); line {
 		case "//--from":
 			if phase == phaseFrom {
-				return nil, fmt.Errorf("unexpected //--from at L%d", i)
+				return nil, fmt.Errorf("unexpected //--from at %s:L%d", p.name, i)
 			}
 			if phase != phaseInit {
 				p.replaces[from] = to
@@ -49,13 +49,13 @@ func parsePatch(name string, r io.Reader) (*patch, error) {
 
 		case "//--to":
 			if phase != phaseFrom {
-				return nil, fmt.Errorf("unexpected //--to at L%d", i)
+				return nil, fmt.Errorf("unexpected //--to at %s:L%d", p.name, i)
 			}
 			phase = phaseTo
 
 		case "//--append":
 			if phase == phaseFrom {
-				return nil, fmt.Errorf("unexpected //--append at L%d", i)
+				return nil, fmt.Errorf("unexpected //--append at %s:L%d", p.name, i)
 			}
 			if phase != phaseInit {
 				p.replaces[from] = to
@@ -67,7 +67,7 @@ func parsePatch(name string, r io.Reader) (*patch, error) {
 		default:
 			switch phase {
 			case phaseInit:
-				return nil, fmt.Errorf("unexpected content at L%d", i)
+				return nil, fmt.Errorf("unexpected content at %s:L%d", p.name, i)
 			case phaseFrom:
 				from += line + "\n"
 			case phaseTo:
