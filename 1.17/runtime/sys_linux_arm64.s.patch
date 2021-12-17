@@ -13,12 +13,11 @@ done:
 	MOVW	R0, ret+16(FP)
 	RET
 //--to
-TEXT runtime·open(SB),NOSPLIT,$0-20
-	MOVD	name+0(FP), R0
-	MOVW	mode+8(FP), R1
-	MOVW	perm+12(FP), R2
+TEXT runtime·open_trampoline(SB),NOSPLIT,$0
+	MOVW	12(R0), R2
+	MOVD	0(R0), R0
+	MOVW	8(R0), R1
 	BL	c_open(SB)
-	MOVW	R0, ret+16(FP)
 	RET
 //--from
 TEXT runtime·closefd(SB),NOSPLIT|NOFRAME,$0-12
@@ -32,10 +31,9 @@ done:
 	MOVW	R0, ret+8(FP)
 	RET
 //--to
-TEXT runtime·closefd(SB),NOSPLIT,$0-12
-	MOVW	fd+0(FP), R0
+TEXT runtime·closefd_trampoline(SB),NOSPLIT,$0-12
+	MOVW	0(R0), R0
 	BL	c_closefd(SB)
-        MOVW	R0, ret+8(FP)
 	RET
 //--from
 TEXT runtime·write1(SB),NOSPLIT|NOFRAME,$0-28
@@ -47,12 +45,11 @@ TEXT runtime·write1(SB),NOSPLIT|NOFRAME,$0-28
 	MOVW	R0, ret+24(FP)
 	RET
 //--to
-TEXT runtime·write1(SB),NOSPLIT,$0-28
-	MOVD	fd+0(FP), R0
-	MOVD	p+8(FP), R1
-	MOVW	n+16(FP), R2
+TEXT runtime·write1_trampoline(SB),NOSPLIT,$0-28
+	MOVD	8(R0), R1
+	MOVW	16(R0), R2
+	MOVD	0(R0), R0
 	BL	c_write1(SB)
-	MOVW	R0, ret+24(FP)
 	RET
 //--from
 TEXT runtime·read(SB),NOSPLIT|NOFRAME,$0-28
@@ -64,12 +61,11 @@ TEXT runtime·read(SB),NOSPLIT|NOFRAME,$0-28
 	MOVW	R0, ret+24(FP)
 	RET
 //--to
-TEXT runtime·read(SB),NOSPLIT,$0-28
-	MOVW	fd+0(FP), R0
-	MOVD	p+8(FP), R1
-	MOVW	n+16(FP), R2
+TEXT runtime·read_trampoline(SB),NOSPLIT,$0-28
+	MOVD	8(R0), R1
+	MOVW	16(R0), R2
+	MOVW	0(R0), R0
 	BL	c_read(SB)
-	MOVW	R0, ret+24(FP)
 	RET
 //--from
 TEXT runtime·usleep(SB),NOSPLIT,$24-4
@@ -91,8 +87,8 @@ TEXT runtime·usleep(SB),NOSPLIT,$24-4
 	SVC
 	RET
 //--to
-TEXT runtime·usleep(SB),NOSPLIT,$0-4
-	MOVW	usec+0(FP), R0
+TEXT runtime·usleep_trampoline(SB),NOSPLIT,$0
+	MOVW	0(R0), R0
 	BL	c_usleep(SB)
 	RET
 //--from
@@ -102,9 +98,10 @@ TEXT runtime·gettid(SB),NOSPLIT,$0-4
 	MOVW	R0, ret+0(FP)
 	RET
 //--to
-TEXT runtime·gettid(SB),NOSPLIT,$0-4
+TEXT runtime·gettid_trampoline(SB),NOSPLIT,$0
+	MOVD	R0, R19		// R19 is callee-save
 	BL	c_gettid(SB)
-	MOVW	R0, ret+0(FP)
+	MOVW	R0, 0(R19)	// return value
 	RET
 //--from
 TEXT runtime·walltime(SB),NOSPLIT,$24-12
@@ -190,9 +187,9 @@ finish:
 	MOVW	R5, nsec+8(FP)
 	RET
 //--to
-TEXT runtime·walltime1(SB),NOSPLIT,$0-16
-	MOVD	sec+0(FP), R0
-	MOVD	nsec+8(FP), R1
+TEXT runtime·walltime1_trampoline(SB),NOSPLIT,$0
+	MOVD	8(R0), R1
+	MOVD	0(R0), R0
 	BL	c_walltime1(SB)
 	RET
 //--from
@@ -283,9 +280,10 @@ finish:
 	MOVD	R3, ret+0(FP)
 	RET
 //--to
-TEXT runtime·nanotime1(SB),NOSPLIT,$0-8
+TEXT runtime·nanotime1_trampoline(SB),NOSPLIT,$0
+	MOVD	R0, R19		// R19 is callee-save
 	BL	c_nanotime1(SB)
-	MOVD	R0, ret+0(FP)
+	MOVD	R0, 0(R19)	// return value
 	RET
 //--from
 TEXT runtime·futex(SB),NOSPLIT|NOFRAME,$0
@@ -300,15 +298,14 @@ TEXT runtime·futex(SB),NOSPLIT|NOFRAME,$0
 	MOVW	R0, ret+40(FP)
 	RET
 //--to
-TEXT runtime·futex(SB),NOSPLIT,$0-44
-	MOVD	addr+0(FP), R0
-	MOVW	op+8(FP), R1
-	MOVW	val+12(FP), R2
-	MOVD	ts+16(FP), R3
-	MOVD	addr2+24(FP), R4
-	MOVW	val3+32(FP), R5
+TEXT runtime·futex_trampoline(SB),NOSPLIT,$0
+	MOVW	8(R0), R1
+	MOVW	12(R0), R2
+	MOVD	16(R0), R3
+	MOVD	24(R0), R4
+	MOVW	32(R0), R5
+	MOVD	0(R0), R0
 	BL	c_futex(SB)
-	MOVW	R0, ret+40(FP)
 	RET
 //--from
 TEXT runtime·sigaltstack(SB),NOSPLIT|NOFRAME,$0
@@ -329,7 +326,7 @@ TEXT runtime·osyield(SB),NOSPLIT|NOFRAME,$0
 	SVC
 	RET
 //--to
-TEXT runtime·osyield(SB),NOSPLIT,$0-0
+TEXT runtime·osyield_trampoline(SB),NOSPLIT,$0
 	BL	c_osyield(SB)
 	RET
 //--from
@@ -342,17 +339,17 @@ TEXT runtime·sched_getaffinity(SB),NOSPLIT|NOFRAME,$0
 	MOVW	R0, ret+24(FP)
 	RET
 //--to
-TEXT runtime·sched_getaffinity(SB),NOSPLIT,$0-28
-	MOVD	pid+0(FP), R0
-	MOVD	len+8(FP), R1
-	MOVD	buf+16(FP), R2
+TEXT runtime·sched_getaffinity_trampoline(SB),NOSPLIT,$0-28
+	MOVD	8(R0), R1
+	MOVD	16(R0), R2
+	MOVD	0(R0), R0
 	BL	c_sched_getaffinity(SB)
-	MOVW	R0, ret+24(FP)
 	RET
 //--append
-TEXT runtime·calloc(SB),NOSPLIT,$0-24
-	MOVD	n+0(FP), R0
-	MOVD	size+8(FP), R1
+TEXT runtime·calloc_trampoline(SB),NOSPLIT,$0
+	MOVD	R0, R19		// R19 is callee-save
+	MOVD	8(R0), R1
+	MOVD	0(R0), R0
 	BL	c_calloc(SB)
-	MOVD	R0, ret+16(FP)
+	MOVD	R0, 16(R19)	// return value
 	RET

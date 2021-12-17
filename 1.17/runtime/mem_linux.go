@@ -8,6 +8,7 @@
 package runtime
 
 import (
+	"internal/abi"
 	"unsafe"
 )
 
@@ -47,7 +48,13 @@ func sysReserve(v unsafe.Pointer, n uintptr) unsafe.Pointer {
 	return unsafe.Pointer(ptr)
 }
 
-func calloc(n uintptr, size uintptr) uintptr
+//go:nosplit
+//go:cgo_unsafe_args
+func calloc(n uintptr, size uintptr) (ret uintptr) {
+	libcCall(unsafe.Pointer(abi.FuncPCABI0(calloc_trampoline)), unsafe.Pointer(&n))
+	return
+}
+func calloc_trampoline(n uintptr, size uintptr) uintptr
 
 func sysMap(v unsafe.Pointer, n uintptr, sysStat *sysMemStat) {
 	sysStat.add(int64(n))

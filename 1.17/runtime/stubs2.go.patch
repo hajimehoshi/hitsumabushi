@@ -1,0 +1,59 @@
+//--from
+import "unsafe"
+//--to
+import (
+	"internal/abi"
+	"unsafe"
+)
+//--from
+func read(fd int32, p unsafe.Pointer, n int32) int32
+//--to
+func read(fd int32, p unsafe.Pointer, n int32) int32 {
+	return libcCall(unsafe.Pointer(abi.FuncPCABI0(read_trampoline)), unsafe.Pointer(&fd))
+}
+func read_trampoline(fd int32, p unsafe.Pointer, n int32) int32
+//--from
+func closefd(fd int32) int32
+//--to
+func closefd(fd int32) int32 {
+	return libcCall(unsafe.Pointer(abi.FuncPCABI0(closefd_trampoline)), unsafe.Pointer(&fd))
+}
+func closefd_trampoline(fd int32) int32
+//--from
+func usleep(usec uint32)
+//--to
+//go:nosplit
+//go:cgo_unsafe_args
+func usleep(usec uint32) {
+	libcCall(unsafe.Pointer(abi.FuncPCABI0(usleep_trampoline)), unsafe.Pointer(&usec))
+}
+func usleep_trampoline(usec uint32)
+//--from
+//go:nosplit
+func usleep_no_g(usec uint32) {
+	usleep(usec)
+}
+//--to
+//go:nosplit
+//go:cgo_unsafe_args
+func usleep_no_g(usec uint32) {
+	asmcgocall_no_g(unsafe.Pointer(abi.FuncPCABI0(usleep_trampoline)), unsafe.Pointer(&usec))
+}
+//--from
+//go:noescape
+func write1(fd uintptr, p unsafe.Pointer, n int32) int32
+//--to
+func write1(fd uintptr, p unsafe.Pointer, n int32) int32 {
+	return libcCall(unsafe.Pointer(abi.FuncPCABI0(write1_trampoline)), unsafe.Pointer(&fd))
+}
+func write1_trampoline(fd uintptr, p unsafe.Pointer, n int32) int32
+//--from
+//go:noescape
+func open(name *byte, mode, perm int32) int32
+//--to
+//go:nosplit
+//go:cgo_unsafe_args
+func open(name *byte, mode, perm int32) int32 {
+	return libcCall(unsafe.Pointer(abi.FuncPCABI0(open_trampoline)), unsafe.Pointer(&name))
+}
+func open_trampoline(name *byte, mode, perm int32) int32
