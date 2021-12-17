@@ -192,7 +192,7 @@ finish:
 //--to
 TEXT runtime·walltime1(SB),NOSPLIT,$0-16
 	MOVD	sec+0(FP), R0
-	MOVD	nsec+1(FP), R1
+	MOVD	nsec+8(FP), R1
 	BL	c_walltime1(SB)
 	RET
 //--from
