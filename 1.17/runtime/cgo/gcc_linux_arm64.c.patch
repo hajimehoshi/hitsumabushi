@@ -387,6 +387,9 @@ int32_t c_futex(_Atomic uint32_t *uaddr, int32_t futex_op, uint32_t val,
     pseudo_futex(uaddr, kPseudoFutexWake, val, NULL);
     break;
   }
+
+  // This function should return the number of awaken threads, but now it is impossible.
+  // Just return 0.
   return 0;
 }
 
