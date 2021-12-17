@@ -201,6 +201,10 @@ var c_sched_getaffinity byte
 //go:cgo_import_static c_usleep
 var c_usleep byte
 
+//go:linkname c_walltime1 c_walltime1
+//go:cgo_import_static c_walltime1
+var c_walltime1 byte
+
 //go:linkname c_write1 c_write1
 //go:cgo_import_static c_write1
 var c_write1 byte
