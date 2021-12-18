@@ -26,7 +26,7 @@ func Syscall(trap, a1, a2, a3 uintptr) (r1, r2 uintptr, err Errno) {
 			return uintptr(r), 0, 0
 		}
 	}
-	println("not implemented syscall", trap)
+	println("not implemented syscall at runtime.Syscall", trap)
 	panic("syscall.Syscall")
 	return 0, 0, ENOSYS
 }
@@ -37,7 +37,7 @@ func write1(fd uintptr, p unsafe.Pointer, n int32) int32
 func Syscall6(trap, a1, a2, a3, a4, a5, a6 uintptr) (r1, r2 uintptr, err Errno)
 //--to
 func Syscall6(trap, a1, a2, a3, a4, a5, a6 uintptr) (r1, r2 uintptr, err Errno) {
-	println("not implemented syscall", trap)
+	println("not implemented syscall at runtime.Syscall6", trap)
 	panic("syscall.Syscall6")
 	return 0, 0, ENOSYS
 }
@@ -45,7 +45,7 @@ func Syscall6(trap, a1, a2, a3, a4, a5, a6 uintptr) (r1, r2 uintptr, err Errno) 
 func RawSyscall(trap, a1, a2, a3 uintptr) (r1, r2 uintptr, err Errno)
 //--to
 func RawSyscall(trap, a1, a2, a3 uintptr) (r1, r2 uintptr, err Errno) {
-	println("not implemented syscall", trap)
+	println("not implemented syscall at RawSyscall", trap)
 	panic("syscall.RawSyscall")
 	return 0, 0, ENOSYS
 }
@@ -53,7 +53,7 @@ func RawSyscall(trap, a1, a2, a3 uintptr) (r1, r2 uintptr, err Errno) {
 func RawSyscall6(trap, a1, a2, a3, a4, a5, a6 uintptr) (r1, r2 uintptr, err Errno)
 //--to
 func RawSyscall6(trap, a1, a2, a3, a4, a5, a6 uintptr) (r1, r2 uintptr, err Errno) {
-	println("not implemented syscall", trap)
+	println("not implemented syscall at RawSyscall6", trap)
 	panic("syscall.RawSyscall6")
 	return 0, 0, ENOSYS
 }
