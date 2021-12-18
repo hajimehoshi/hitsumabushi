@@ -14,9 +14,9 @@ done:
 	RET
 //--to
 TEXT runtime·open_trampoline(SB),NOSPLIT,$0
+	MOVW	8(R0), R1
 	MOVW	12(R0), R2
 	MOVD	0(R0), R0
-	MOVW	8(R0), R1
 	BL	c_open(SB)
 	RET
 //--from
