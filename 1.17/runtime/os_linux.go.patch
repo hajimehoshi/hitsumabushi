@@ -179,6 +179,18 @@ func sigprocmask(how int32, new, old *sigset) {
 	// rtsigprocmask(how, new, old, int32(unsafe.Sizeof(*new)))
 }
 //--from
+func raise(sig uint32)
+//--to
+func raise(sig uint32) {
+	// Do nothing
+}
+//--from
+func raiseproc(sig uint32)
+//--to
+func raiseproc(sig uint32) {
+	// Do nothing
+}
+//--from
 //go:noescape
 func sched_getaffinity(pid, len uintptr, buf *byte) int32
 //--to
