@@ -37,6 +37,10 @@ func write1(fd uintptr, p unsafe.Pointer, n int32) int32
 func Syscall6(trap, a1, a2, a3, a4, a5, a6 uintptr) (r1, r2 uintptr, err Errno)
 //--to
 func Syscall6(trap, a1, a2, a3, a4, a5, a6 uintptr) (r1, r2 uintptr, err Errno) {
+	switch trap {
+	case SYS_FSTATAT:
+		return 0, 0, ENOENT
+	}
 	println("not implemented syscall at runtime.Syscall6", trap)
 	panic("syscall.Syscall6")
 	return 0, 0, ENOSYS

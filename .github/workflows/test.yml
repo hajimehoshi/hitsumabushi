@@ -43,3 +43,4 @@ jobs:
         ./test_qemu.sh -test.v sort
         ./test_qemu.sh -test.v sync
         ./test_qemu.sh -test.v sync/atomic
+        ./test_qemu.sh -test.v time
