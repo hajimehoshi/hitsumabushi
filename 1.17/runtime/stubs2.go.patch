@@ -24,6 +24,15 @@ func closefd(fd int32) int32 {
 }
 func closefd_trampoline(fd int32) int32
 //--from
+func exit(code int32)
+//--to
+//go:nosplit
+//go:cgo_unsafe_args
+func exit(code int32) {
+	libcCall(unsafe.Pointer(abi.FuncPCABI0(exit_trampoline)), unsafe.Pointer(&code))
+}
+func exit_trampoline(code int32)
+//--from
 func usleep(usec uint32)
 //--to
 //go:nosplit

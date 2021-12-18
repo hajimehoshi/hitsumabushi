@@ -479,3 +479,7 @@ int32_t c_write1(uintptr_t fd, void *p, int32_t n) {
   pthread_mutex_unlock(&m);
   return ret;
 }
+
+void c_exit(int32_t code) {
+  exit(code);
+}

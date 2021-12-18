@@ -214,6 +214,10 @@ var c_calloc byte
 //go:cgo_import_static c_closefd
 var c_closefd byte
 
+//go:linkname c_exit c_exit
+//go:cgo_import_static c_exit
+var c_exit byte
+
 //go:linkname c_gettid c_gettid
 //go:cgo_import_static c_gettid
 var c_gettid byte
