@@ -255,7 +255,14 @@ typedef struct {
 // TODO: Do we need to protect this by mutex?
 static pseudo_file pseudo_files[100];
 
+static pthread_mutex_t* pseudo_file_mutex() {
+  static pthread_mutex_t mutex = PTHREAD_MUTEX_INITIALIZER;
+  return &mutex;
+}
+
 static int32_t open_pseudo_file(const void* content, size_t content_size) {
+  pthread_mutex_lock(pseudo_file_mutex());
+
   int index = 0;
   int found = 0;
   for (int i = 0; i < sizeof(pseudo_files) / sizeof(pseudo_file); i++) {
@@ -267,6 +274,7 @@ static int32_t open_pseudo_file(const void* content, size_t content_size) {
   }
   if (!found) {
     // Too many pseudo files are opened.
+    pthread_mutex_unlock(pseudo_file_mutex());
     return -1;
   }
   int32_t fd = index + kFDOffset;
@@ -274,10 +282,14 @@ static int32_t open_pseudo_file(const void* content, size_t content_size) {
   pseudo_files[index].content_size = content_size;
   pseudo_files[index].current = 0;
   pseudo_files[index].fd = fd;
+
+  pthread_mutex_unlock(pseudo_file_mutex());
   return fd;
 }
 
 static size_t read_pseudo_file(int32_t fd, void *p, int32_t n) {
+  pthread_mutex_lock(pseudo_file_mutex());
+
   int32_t index = fd - kFDOffset;
   pseudo_file *file = &pseudo_files[index];
   size_t rest = file->content_size - file->current;
@@ -286,15 +298,21 @@ static size_t read_pseudo_file(int32_t fd, void *p, int32_t n) {
   }
   memcpy(p, file->content + file->current, n);
   pseudo_files[index].current += n;
+
+  pthread_mutex_unlock(pseudo_file_mutex());
   return n;
 }
 
 static void close_pseudo_file(int32_t fd) {
+  pthread_mutex_lock(pseudo_file_mutex());
+
   int32_t index = fd - kFDOffset;
   pseudo_files[index].content = NULL;
   pseudo_files[index].content_size = 0;
   pseudo_files[index].current = 0;
   pseudo_files[index].fd = 0;
+
+  pthread_mutex_unlock(pseudo_file_mutex());
 }
 
 static const int kPseudoFutexWait = 0;
