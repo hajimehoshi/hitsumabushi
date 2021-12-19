@@ -322,12 +322,6 @@ static void pseudo_futex(uint32_t *uaddr, int mode, uint32_t val, const struct t
   static pthread_mutex_t mutex = PTHREAD_MUTEX_INITIALIZER;
   static pthread_cond_t cond = PTHREAD_COND_INITIALIZER;
 
-  int ret = pthread_mutex_lock(&mutex);
-  if (ret) {
-    fprintf(stderr, "pthread_mutex_lock failed: %d\n", ret);
-    abort();
-  }
-
   struct timespec abstime;
   if (reltime) {
     clock_gettime(CLOCK_REALTIME, &abstime);
@@ -337,6 +331,12 @@ static void pseudo_futex(uint32_t *uaddr, int mode, uint32_t val, const struct t
       abstime.tv_sec += 1;
       abstime.tv_nsec -= 1000000000;
     }
+  }
+
+  int ret = pthread_mutex_lock(&mutex);
+  if (ret) {
+    fprintf(stderr, "pthread_mutex_lock failed: %d\n", ret);
+    abort();
   }
 
   switch (mode) {
