@@ -322,6 +322,12 @@ static void pseudo_futex(uint32_t *uaddr, int mode, uint32_t val, const struct t
   static pthread_mutex_t mutex = PTHREAD_MUTEX_INITIALIZER;
   static pthread_cond_t cond = PTHREAD_COND_INITIALIZER;
 
+  int ret = pthread_mutex_lock(&mutex);
+  if (ret) {
+    fprintf(stderr, "pthread_mutex_lock failed: %d\n", ret);
+    abort();
+  }
+
   struct timespec abstime;
   if (reltime) {
     clock_gettime(CLOCK_REALTIME, &abstime);
@@ -339,19 +345,9 @@ static void pseudo_futex(uint32_t *uaddr, int mode, uint32_t val, const struct t
       uint32_t v = 0;
       __atomic_load(uaddr, &v, __ATOMIC_RELAXED);
       if (v == val) {
-        int ret = pthread_mutex_lock(&mutex);
-        if (ret) {
-          fprintf(stderr, "pthread_mutex_lock failed: %d\n", ret);
-          abort();
-        }
-        ret = pthread_cond_timedwait(&cond, &mutex, &abstime);
+        int ret = pthread_cond_timedwait(&cond, &mutex, &abstime);
         if (ret && ret != ETIMEDOUT) {
           fprintf(stderr, "pthread_cond_timedwait failed: %d\n", ret);
-          abort();
-        }
-        ret = pthread_mutex_unlock(&mutex);
-        if (ret) {
-          fprintf(stderr, "pthread_mutex_unlock failed: %d\n", ret);
           abort();
         }
       }
@@ -359,19 +355,9 @@ static void pseudo_futex(uint32_t *uaddr, int mode, uint32_t val, const struct t
       uint32_t v = 0;
       __atomic_load(uaddr, &v, __ATOMIC_RELAXED);
       if (v == val) {
-        int ret = pthread_mutex_lock(&mutex);
-        if (ret) {
-          fprintf(stderr, "pthread_mutex_lock failed: %d\n", ret);
-          abort();
-        }
-        ret = pthread_cond_wait(&cond, &mutex);
+        int ret = pthread_cond_wait(&cond, &mutex);
         if (ret) {
           fprintf(stderr, "pthread_cond_wait failed: %d\n", ret);
-          abort();
-        }
-        ret = pthread_mutex_unlock(&mutex);
-        if (ret) {
-          fprintf(stderr, "pthread_mutex_unlock failed: %d\n", ret);
           abort();
         }
       }
@@ -389,6 +375,12 @@ static void pseudo_futex(uint32_t *uaddr, int mode, uint32_t val, const struct t
       abort();
     }
     break;
+  }
+
+  ret = pthread_mutex_unlock(&mutex);
+  if (ret) {
+    fprintf(stderr, "pthread_mutex_unlock failed: %d\n", ret);
+    abort();
   }
 }
 
