@@ -364,7 +364,9 @@ static void pseudo_futex(uint32_t *uaddr, int mode, uint32_t val, const struct t
     }
     break;
   case kPseudoFutexWake:
-    if (val != 1) {
+    uint32_t v = 0;
+    __atomic_load(uaddr, &v, __ATOMIC_RELAXED);
+    if (v != 1) {
       fprintf(stderr, "val for waking must be 1 but %d\n", val);
       abort();
     }
