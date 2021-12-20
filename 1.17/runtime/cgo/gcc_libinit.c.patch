@@ -1,0 +1,5 @@
+//--from
+#include <pthread.h>
+//--to
+#define _GNU_SOURCE
+#include <pthread.h>

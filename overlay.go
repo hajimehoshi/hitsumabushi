@@ -214,6 +214,38 @@ int32_t c_sched_getaffinity(pid_t pid, size_t cpusetsize, void *mask) {
 		return nil, err
 	}
 
+	// Add pthread_setaffinity_np.
+	{
+		indent := "\t\t\t"
+		setCPU := []string{
+			fmt.Sprintf(indent + `cpu_set_t *cpu_set = CPU_ALLOC(%d);`, cfg.numCPU),
+			fmt.Sprintf(indent + `size_t size = CPU_ALLOC_SIZE(%d);`, cfg.numCPU),
+			indent + `CPU_ZERO_S(size, cpu_set);`,
+			fmt.Sprintf(indent + `for (int i = 0; i < %d; i++) {`, cfg.numCPU),
+			indent + `	CPU_SET_S(i, size, cpu_set);`,
+			indent + `}`,
+			indent + `pthread_setaffinity_np(*thread, size, cpu_set);`,
+			indent + `CPU_FREE(cpu_set);`,
+		}
+
+		old := `		err = pthread_create(thread, attr, pfn, arg);
+		if (err == 0) {
+			pthread_detach(*thread);
+			return 0;
+		}`
+
+		new := strings.Replace(`		err = pthread_create(thread, attr, pfn, arg);
+		if (err == 0) {
+			pthread_detach(*thread);
+{{.SetCPU}}
+			return 0;
+		}`, "{{.SetCPU}}", strings.Join(setCPU, "\n"), 1)
+
+		if err := replace(tmpDir, replaces, "runtime/cgo", "gcc_libinit.c", old, new); err != nil {
+			return nil, err
+		}
+	}
+
 	// Replace the arguments.
 	{
 		var strs []string
