@@ -173,8 +173,9 @@ func GenOverlayJSON(options ...Option) ([]byte, error) {
 			return fmt.Errorf("hitsumabushi: unexpected modType: %s", modType)
 		}
 
-		// The number of CPU is defined at runtime/cgo/gcc_linux_arm64.c
-		if pkg == "runtime/cgo" && origFilename == "gcc_linux_arm64.c" {
+		switch {
+		case pkg == "runtime/cgo" && origFilename == "gcc_linux_arm64.c":
+			// The number of CPU is defined at runtime/cgo/gcc_linux_arm64.c
 			numBytes := (cfg.numCPU-1)/8 + 1
 			tmpl := `
 int32_t c_sched_getaffinity(pid_t pid, size_t cpusetsize, void *mask) {
@@ -215,33 +216,6 @@ int32_t c_sched_getaffinity(pid_t pid, size_t cpusetsize, void *mask) {
 
 	// Replace the arguments.
 	{
-		pkg := "runtime"
-		origDir, err := goPkgDir(pkg)
-		if err != nil {
-			return nil, err
-		}
-		origPath := filepath.Join(origDir, "runtime1.go")
-
-		// Read the source before opening the destination.
-		// The destination might be the same as the source.
-		srcPath := origPath
-		if p, ok := replaces[origPath]; ok {
-			srcPath = p
-		}
-		srcContent, err := os.ReadFile(srcPath)
-		if err != nil {
-			return nil, err
-		}
-
-		if err := os.MkdirAll(filepath.Join(tmpDir, pkg), 0755); err != nil {
-			return nil, err
-		}
-		dst, err := os.Create(filepath.Join(tmpDir, pkg, filepath.Base(origPath)))
-		if err != nil {
-			return nil, err
-		}
-		defer dst.Close()
-
 		var strs []string
 		for _, arg := range cfg.args {
 			strs = append(strs, fmt.Sprintf(`%q`, arg))
@@ -268,14 +242,9 @@ func goargs() {
 		argslice[i] = __argv[i]
 	}
 }`, argvDef, len(cfg.args))
-
-		replaced := strings.Replace(string(srcContent), old, new, 1)
-
-		if _, err := io.Copy(dst, bytes.NewReader([]byte(replaced))); err != nil {
+		if err := replace(tmpDir, replaces, "runtime", "runtime1.go", old, new); err != nil {
 			return nil, err
 		}
-
-		replaces[origPath] = dst.Name()
 	}
 
 	// Add importing "runtime/cgo" for testing packages.
@@ -368,4 +337,43 @@ func goPkgName(pkg string) (string, error) {
 		return "", fmt.Errorf("hitsumabushi: %v\n%s", err, buf.String())
 	}
 	return strings.TrimSpace(string(out)), nil
+}
+
+func replace(tmpDir string, replaces map[string]string, pkg string, filename string, old, new string) error {
+	origDir, err := goPkgDir(pkg)
+	if err != nil {
+		return err
+	}
+	origPath := filepath.Join(origDir, filename)
+
+	// Read the source before opening the destination.
+	// The destination might be the same as the source.
+	srcPath := origPath
+	if p, ok := replaces[origPath]; ok {
+		srcPath = p
+	}
+	srcContent, err := os.ReadFile(srcPath)
+	if err != nil {
+		return err
+	}
+
+	if err := os.MkdirAll(filepath.Join(tmpDir, pkg), 0755); err != nil {
+		return err
+	}
+	dst, err := os.Create(filepath.Join(tmpDir, pkg, filepath.Base(origPath)))
+	if err != nil {
+		return err
+	}
+	defer dst.Close()
+
+	replaced := strings.Replace(string(srcContent), old, new, 1)
+	if string(srcContent) == replaced {
+		return fmt.Errorf("hitsumabushi: replacing %s/%s failed: replacing result is the same", pkg, filename)
+	}
+	if _, err := io.Copy(dst, bytes.NewReader([]byte(replaced))); err != nil {
+		return err
+	}
+
+	replaces[origPath] = dst.Name()
+	return nil
 }
