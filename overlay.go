@@ -218,10 +218,10 @@ int32_t c_sched_getaffinity(pid_t pid, size_t cpusetsize, void *mask) {
 	{
 		indent := "\t\t\t"
 		setCPU := []string{
-			fmt.Sprintf(indent + `cpu_set_t *cpu_set = CPU_ALLOC(%d);`, cfg.numCPU),
-			fmt.Sprintf(indent + `size_t size = CPU_ALLOC_SIZE(%d);`, cfg.numCPU),
+			indent + fmt.Sprintf(`cpu_set_t *cpu_set = CPU_ALLOC(%d);`, cfg.numCPU),
+			indent + fmt.Sprintf(`size_t size = CPU_ALLOC_SIZE(%d);`, cfg.numCPU),
 			indent + `CPU_ZERO_S(size, cpu_set);`,
-			fmt.Sprintf(indent + `for (int i = 0; i < %d; i++) {`, cfg.numCPU),
+			indent + fmt.Sprintf(`for (int i = 0; i < %d; i++) {`, cfg.numCPU),
 			indent + `	CPU_SET_S(i, size, cpu_set);`,
 			indent + `}`,
 			indent + `pthread_setaffinity_np(*thread, size, cpu_set);`,
