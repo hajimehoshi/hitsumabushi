@@ -327,6 +327,9 @@ static void pseudo_futex(uint32_t *uaddr, int mode, uint32_t val, const struct t
 
   struct timespec abstime;
   if (reltime) {
+    // We are not sure CLOCK_REALTIME is correct or not here.
+    // However, this time limit is actually not used as the condition variable is shared by
+    // all the threads. Before the time limit reaches, the thread wakes up in 99.9999...% cases.
     clock_gettime(CLOCK_REALTIME, &abstime);
     abstime.tv_sec += reltime->tv_sec;
     abstime.tv_nsec += reltime->tv_nsec;
