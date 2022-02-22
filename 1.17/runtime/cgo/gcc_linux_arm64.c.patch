@@ -17,6 +17,9 @@
 
 #include <stdatomic.h>
 #include <unistd.h> // for usleep
+
+// This will be replaced at overlay.go later.
+#define clock_gettime clock_gettime
 //--from
 void
 _cgo_sys_thread_start(ThreadStart *ts)
@@ -428,9 +431,7 @@ uintptr_t c_calloc(size_t num, size_t size) {
 
 int64_t c_nanotime1() {
   struct timespec tp;
-  // CLOCK_MONOTONIC should be used here, but some platforms don't support CLOCK_MONOTONIC.
-  // TODO: Use a platform-specific function.
-  clock_gettime(CLOCK_REALTIME, &tp);
+  clock_gettime(CLOCK_MONOTONIC, &tp);
   return (int64_t)(tp.tv_sec) * 1000000000ll + (int64_t)tp.tv_nsec;
 }
 

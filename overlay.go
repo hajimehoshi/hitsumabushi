@@ -20,9 +20,10 @@ import (
 type Option func(*config)
 
 type config struct {
-	testPkgs []string
-	numCPU   int
-	args     []string
+	testPkgs         []string
+	numCPU           int
+	args             []string
+	clockGettimeName string
 }
 
 // TestPkg represents a package for testing.
@@ -46,6 +47,15 @@ func NumCPU(numCPU int) Option {
 func Args(args ...string) Option {
 	return func(cfg *config) {
 		cfg.args = append(cfg.args, args...)
+	}
+}
+
+// ReplaceClockGettime replaces the C function `clock_gettime` with the given name.
+// If name is an empty string, the function is not replaced.
+// This is useful for special environments where `clock_gettime` doesn't work correctly.
+func ReplaceClockGettime(name string) Option {
+	return func(cfg *config) {
+		cfg.clockGettimeName = name
 	}
 }
 
@@ -276,6 +286,16 @@ func goargs() {
 	}
 }`, argvDef, len(cfg.args))
 		if err := replace(tmpDir, replaces, "runtime", "runtime1.go", old, new); err != nil {
+			return nil, err
+		}
+	}
+
+	// Replace clock_gettime.
+	if cfg.clockGettimeName != "" {
+		old := "#define clock_gettime clock_gettime"
+		new := fmt.Sprintf(`void %[1]s(clockid_t, struct timespec *);
+#define clock_gettime %[1]s`, cfg.clockGettimeName)
+		if err := replace(tmpDir, replaces, "runtime/cgo", "gcc_linux_arm64.c", old, new); err != nil {
 			return nil, err
 		}
 	}
