@@ -309,7 +309,7 @@ func goargs() {
 
 	// Add importing "runtime/cgo" for testing packages.
 	for _, pkg := range cfg.testPkgs {
-		origPath, err := goTestFile(pkg)
+		origPath, err := goExternalTestFile(pkg)
 		if err != nil {
 			return nil, err
 		}
@@ -365,7 +365,7 @@ func goPkgDir(pkg string) (string, error) {
 	return strings.TrimSpace(string(out)), nil
 }
 
-func goTestFile(pkg string) (string, error) {
+func goExternalTestFile(pkg string) (string, error) {
 	idx := 0
 	for {
 		var buf bytes.Buffer
@@ -373,7 +373,7 @@ func goTestFile(pkg string) (string, error) {
 		cmd.Stderr = &buf
 		out, err := cmd.Output()
 		if err != nil {
-			return "", fmt.Errorf("hitsumabushi: %v\n%s", err, buf.String())
+			return "", fmt.Errorf("hitsumabushi: %v\n%s\nperhaps this package doesn't have an external test", err, buf.String())
 		}
 
 		f := strings.TrimSpace(string(out))

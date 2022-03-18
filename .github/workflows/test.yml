@@ -28,6 +28,12 @@ jobs:
     - name: Test
       run: |
         ./test_qemu.sh -test.run=^Test -test.v fmt
+        ./test_qemu.sh -test.run=^Test -test.v internal/abi
+        ./test_qemu.sh -test.run=^Test -test.v internal/cpu
+        ./test_qemu.sh -test.run=^Test -test.v internal/fmtsort
+        ./test_qemu.sh -test.run=^Test -test.v internal/itoa
+        ./test_qemu.sh -test.run=^Test -test.v internal/reflectlite
+        ./test_qemu.sh -test.run=^Test -test.v internal/unsafeheader
         ./test_qemu.sh -test.run=^Test -test.v math
         ./test_qemu.sh -test.run=^Test -test.v math/big
         ./test_qemu.sh -test.run=^Test -test.v math/bits
