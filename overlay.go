@@ -6,6 +6,7 @@ package hitsumabushi
 import (
 	"bytes"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"io"
 	"io/fs"
@@ -84,6 +85,12 @@ func GenOverlayJSON(options ...Option) ([]byte, error) {
 
 	m := reGoVersion.FindStringSubmatch(runtime.Version())
 	dir := filepath.Join(currentDir(), m[1])
+	if _, err := os.Stat(dir); err != nil {
+		if errors.Is(err, os.ErrNotExist) {
+			return nil, fmt.Errorf("the version %s is not supported", runtime.Version())
+		}
+		return nil, err
+	}
 	replaces := map[string]string{}
 
 	tmpDir, err := os.MkdirTemp("", "")
