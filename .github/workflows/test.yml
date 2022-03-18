@@ -6,7 +6,7 @@ jobs:
   test:
     strategy:
       matrix:
-        go: ['1.17.x']
+        go: ['1.17.x', '1.18.x']
     runs-on: ubuntu-latest
     defaults:
       run:
@@ -27,20 +27,20 @@ jobs:
 
     - name: Test
       run: |
-        ./test_qemu.sh -test.v fmt
-        ./test_qemu.sh -test.v math
-        ./test_qemu.sh -test.v math/big
-        ./test_qemu.sh -test.v math/bits
-        ./test_qemu.sh -test.v math/cmplx
-        ./test_qemu.sh -test.v math/rand
-        ./test_qemu.sh -test.v -test.short runtime
-        ./test_qemu.sh -test.v runtime/debug
-        ./test_qemu.sh -test.v runtime/internal/atomic
-        ./test_qemu.sh -test.v runtime/internal/math
-        ./test_qemu.sh -test.v runtime/internal/sys
-        ./test_qemu.sh -test.v strconv
-        ./test_qemu.sh -test.v strings
-        ./test_qemu.sh -test.v sort
-        ./test_qemu.sh -test.v sync
-        ./test_qemu.sh -test.v sync/atomic
-        ./test_qemu.sh -test.v time
+        ./test_qemu.sh -test.run=^Test -test.v fmt
+        ./test_qemu.sh -test.run=^Test -test.v math
+        ./test_qemu.sh -test.run=^Test -test.v math/big
+        ./test_qemu.sh -test.run=^Test -test.v math/bits
+        ./test_qemu.sh -test.run=^Test -test.v math/cmplx
+        ./test_qemu.sh -test.run=^Test -test.v math/rand
+        ./test_qemu.sh -test.run=^Test -test.v -test.short runtime
+        ./test_qemu.sh -test.run=^Test -test.v runtime/debug
+        ./test_qemu.sh -test.run=^Test -test.v runtime/internal/atomic
+        ./test_qemu.sh -test.run=^Test -test.v runtime/internal/math
+        ./test_qemu.sh -test.run=^Test -test.v runtime/internal/sys
+        ./test_qemu.sh -test.run=^Test -test.v strconv
+        ./test_qemu.sh -test.run=^Test -test.v strings
+        ./test_qemu.sh -test.run=^Test -test.v sort
+        ./test_qemu.sh -test.run=^Test -test.v sync
+        ./test_qemu.sh -test.run=^Test -test.v sync/atomic
+        ./test_qemu.sh -test.run=^Test -test.v time

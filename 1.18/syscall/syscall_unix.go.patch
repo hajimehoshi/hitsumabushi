@@ -1,0 +1,63 @@
+//--from
+func Syscall(trap, a1, a2, a3 uintptr) (r1, r2 uintptr, err Errno)
+//--to
+func Syscall(trap, a1, a2, a3 uintptr) (r1, r2 uintptr, err Errno) {
+	switch trap {
+	case SYS_FCNTL:
+		if a1 == uintptr(Stdin) || a1 == uintptr(Stdout) || a1 == uintptr(Stderr) {
+			if a2 == F_GETFL {
+				return 0, 0, 0
+			}
+		}
+		println("unexpected fcntl:", a1, a2, a3)
+	case SYS_READ:
+		if a1 == uintptr(Stdin) {
+			if a3 == 0 {
+				return 0, 0, 0
+			}
+			// TODO: Implement this
+		}
+	case SYS_WRITE:
+		if a1 == uintptr(Stdout) || a1 == uintptr(Stderr) {
+			if a3 == 0 {
+				return 0, 0, 0
+			}
+			r := write1(a1, unsafe.Pointer(a2), int32(a3))
+			return uintptr(r), 0, 0
+		}
+	}
+	println("not implemented syscall at runtime.Syscall", trap)
+	panic("syscall.Syscall")
+	return 0, 0, ENOSYS
+}
+
+//go:linkname write1 runtime.write1
+func write1(fd uintptr, p unsafe.Pointer, n int32) int32
+//--from
+func Syscall6(trap, a1, a2, a3, a4, a5, a6 uintptr) (r1, r2 uintptr, err Errno)
+//--to
+func Syscall6(trap, a1, a2, a3, a4, a5, a6 uintptr) (r1, r2 uintptr, err Errno) {
+	switch trap {
+	case SYS_FSTATAT:
+		return 0, 0, ENOENT
+	}
+	println("not implemented syscall at runtime.Syscall6", trap)
+	panic("syscall.Syscall6")
+	return 0, 0, ENOSYS
+}
+//--from
+func RawSyscall(trap, a1, a2, a3 uintptr) (r1, r2 uintptr, err Errno)
+//--to
+func RawSyscall(trap, a1, a2, a3 uintptr) (r1, r2 uintptr, err Errno) {
+	println("not implemented syscall at RawSyscall", trap)
+	panic("syscall.RawSyscall")
+	return 0, 0, ENOSYS
+}
+//--from
+func RawSyscall6(trap, a1, a2, a3, a4, a5, a6 uintptr) (r1, r2 uintptr, err Errno)
+//--to
+func RawSyscall6(trap, a1, a2, a3, a4, a5, a6 uintptr) (r1, r2 uintptr, err Errno) {
+	println("not implemented syscall at RawSyscall6", trap)
+	panic("syscall.RawSyscall6")
+	return 0, 0, ENOSYS
+}
