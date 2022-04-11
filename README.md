@@ -4,7 +4,7 @@ Package hitsumabushi provides APIs to generate JSON for go-build's `-overlay` op
 Hitsumabushi aims to make Go programs work on almost everywhere by overwriting system calls with C function calls.
 Now the generated JSON works only for Arm64 so far.
 
-Go version: 1.17.5
+Go version: 1.18
 
 ## Example
 
