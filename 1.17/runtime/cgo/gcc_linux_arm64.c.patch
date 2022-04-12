@@ -20,6 +20,8 @@
 
 // This will be replaced at overlay.go later.
 #define clock_gettime clock_gettime
+// This will be replaced at overlay.go later.
+#undef user_futex
 //--from
 void
 _cgo_sys_thread_start(ThreadStart *ts)
@@ -318,6 +320,7 @@ static void close_pseudo_file(int32_t fd) {
   pthread_mutex_unlock(pseudo_file_mutex());
 }
 
+#ifndef user_futex
 static const int kPseudoFutexWait = 0;
 static const int kPseudoFutexWake = 1;
 
@@ -389,6 +392,7 @@ static void pseudo_futex(uint32_t *uaddr, int mode, uint32_t val, const struct t
     abort();
   }
 }
+#endif
 
 int32_t c_closefd(int32_t fd) {
   if (fd >= kFDOffset) {
@@ -402,6 +406,9 @@ int32_t c_closefd(int32_t fd) {
 int32_t c_futex(uint32_t *uaddr, int32_t futex_op, uint32_t val,
                 const struct timespec *timeout,
                 uint32_t *uaddr2, uint32_t val3) {
+#ifdef user_futex
+  return user_futex(uaddr, futex_op, val, timeout, uaddr2, val3);
+#else
   enum {
     kFutexWaitPrivate = 128,
     kFutexWakePrivate = 129,
@@ -419,6 +426,7 @@ int32_t c_futex(uint32_t *uaddr, int32_t futex_op, uint32_t val,
   // This function should return the number of awaken threads, but now it is impossible.
   // Just return 0.
   return 0;
+#endif
 }
 
 uint32_t c_gettid() {

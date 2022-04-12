@@ -25,6 +25,7 @@ type config struct {
 	numCPU           int
 	args             []string
 	clockGettimeName string
+	futexName        string
 }
 
 // TestPkg represents a package for testing.
@@ -57,6 +58,15 @@ func Args(args ...string) Option {
 func ReplaceClockGettime(name string) Option {
 	return func(cfg *config) {
 		cfg.clockGettimeName = name
+	}
+}
+
+// ReplaceClockGettime replaces the system call `futex` with the given name.
+// If name is an empty string, a pseudo futex implementation is used.
+// This is useful for special environments where the pseudo `futex` doesn't work correctly.
+func ReplaceFutex(name string) Option {
+	return func(cfg *config) {
+		cfg.futexName = name
 	}
 }
 
@@ -302,6 +312,16 @@ func goargs() {
 		old := "#define clock_gettime clock_gettime"
 		new := fmt.Sprintf(`void %[1]s(clockid_t, struct timespec *);
 #define clock_gettime %[1]s`, cfg.clockGettimeName)
+		if err := replace(tmpDir, replaces, "runtime/cgo", "gcc_linux_arm64.c", old, new); err != nil {
+			return nil, err
+		}
+	}
+
+	// Replace futex.
+	if cfg.futexName != "" {
+		old := "#undef user_futex"
+		new := fmt.Sprintf(`int32_t %[1]s(uint32_t *uaddr, int32_t futex_op, uint32_t val, const struct timespec *timeout, uint32_t *uaddr2, uint32_t val3);
+#define user_futex %[1]s`, cfg.futexName)
 		if err := replace(tmpDir, replaces, "runtime/cgo", "gcc_linux_arm64.c", old, new); err != nil {
 			return nil, err
 		}
