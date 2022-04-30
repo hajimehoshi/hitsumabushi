@@ -94,10 +94,10 @@ func GenOverlayJSON(options ...Option) ([]byte, error) {
 	}
 
 	m := reGoVersion.FindStringSubmatch(runtime.Version())
-	dir := filepath.Join(currentDir(), m[1])
+	dir := filepath.Join(currentDir(), m[1] + "_" + runtime.GOOS)
 	if _, err := os.Stat(dir); err != nil {
 		if errors.Is(err, os.ErrNotExist) {
-			return nil, fmt.Errorf("the version %s is not supported", runtime.Version())
+			return nil, fmt.Errorf("the Go version %s and GOOS=%s is not supported", runtime.Version(), runtime.GOOS)
 		}
 		return nil, err
 	}
