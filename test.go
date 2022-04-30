@@ -12,6 +12,7 @@ import (
 	"os"
 	"os/exec"
 	"path/filepath"
+	"runtime"
 	"strings"
 
 	"github.com/hajimehoshi/hitsumabushi"
@@ -46,7 +47,7 @@ func run() error {
 		return err
 	}
 
-	if err := runTestBinary(args[len(args)-1]); err != nil {
+	if err := runTestBinary(args); err != nil {
 		return err
 	}
 
@@ -77,7 +78,11 @@ func createJSON(args []string) (string, error) {
 }
 
 func buildTestBinary(jsonPath string, args []string) error {
-	cmd := exec.Command("go", "test", "-c", "-vet=off", "-overlay="+jsonPath, "-o=test")
+	bin := "test"
+	if runtime.GOOS == "windows" {
+		bin += ".exe"
+	}
+	cmd := exec.Command("go", "test", "-c", "-vet=off", "-overlay="+jsonPath, "-o="+bin)
 	cmd.Args = append(cmd.Args, args...)
 	cmd.Env = append(os.Environ(),
 		"CGO_ENABLED=1",
@@ -94,8 +99,13 @@ func buildTestBinary(jsonPath string, args []string) error {
 	return nil
 }
 
-func runTestBinary(pkg string) error {
-	bin, err := filepath.Abs("test")
+func runTestBinary(args []string) error {
+	binFilename := "test"
+	if runtime.GOOS == "windows" {
+		binFilename += ".exe"
+	}
+
+	bin, err := filepath.Abs(binFilename)
 	if err != nil {
 		return err
 	}
@@ -107,10 +117,12 @@ func runTestBinary(pkg string) error {
 	} else {
 		cmd = exec.Command(bin)
 	}
+	// TODO: Do not pass args. This is now needed for Windows as hitsumabushi.Args is not implemented on Windows.
+	cmd.Args = append(cmd.Args, args...)
 	cmd.Stdout = os.Stdout
 	cmd.Stderr = os.Stderr
 
-	dir, err := pkgDir(pkg)
+	dir, err := pkgDir(args[len(args)-1])
 	if err != nil {
 		return err
 	}

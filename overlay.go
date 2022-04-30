@@ -160,6 +160,9 @@ func GenOverlayJSON(options ...Option) ([]byte, error) {
 		defer dst.Close()
 
 		origPath := filepath.Join(origDir, origFilename)
+		defer func() {
+			replaces[origPath] = dst.Name()
+		}()
 
 		switch modType {
 		case modTypeReplace:
@@ -202,7 +205,7 @@ func GenOverlayJSON(options ...Option) ([]byte, error) {
 		}
 
 		switch {
-		case pkg == "runtime/cgo" && origFilename == "gcc_linux_arm64.c":
+		case runtime.GOOS == "linux" && pkg == "runtime/cgo" && origFilename == "gcc_linux_arm64.c":
 			// The number of CPU is defined at runtime/cgo/gcc_linux_arm64.c
 			numBytes := (cfg.numCPU-1)/8 + 1
 			tmpl := `
@@ -236,53 +239,53 @@ int32_t c_sched_getaffinity(pid_t pid, size_t cpusetsize, void *mask) {
 			}
 		}
 
-		replaces[origPath] = dst.Name()
 		return nil
 	}); err != nil {
 		return nil, err
 	}
 
-	// Add pthread_setaffinity_np.
-	{
-		indent := "\t\t\t"
-		setCPU := []string{
-			indent + fmt.Sprintf(`cpu_set_t *cpu_set = CPU_ALLOC(%d);`, cfg.numCPU),
-			indent + fmt.Sprintf(`size_t size = CPU_ALLOC_SIZE(%d);`, cfg.numCPU),
-			indent + `CPU_ZERO_S(size, cpu_set);`,
-			indent + fmt.Sprintf(`for (int i = 0; i < %d; i++) {`, cfg.numCPU),
-			indent + `	CPU_SET_S(i, size, cpu_set);`,
-			indent + `}`,
-			indent + `pthread_setaffinity_np(*thread, size, cpu_set);`,
-			indent + `CPU_FREE(cpu_set);`,
-		}
+	if runtime.GOOS == "linux" {
+		// Add pthread_setaffinity_np.
+		{
+			indent := "\t\t\t"
+			setCPU := []string{
+				indent + fmt.Sprintf(`cpu_set_t *cpu_set = CPU_ALLOC(%d);`, cfg.numCPU),
+				indent + fmt.Sprintf(`size_t size = CPU_ALLOC_SIZE(%d);`, cfg.numCPU),
+				indent + `CPU_ZERO_S(size, cpu_set);`,
+				indent + fmt.Sprintf(`for (int i = 0; i < %d; i++) {`, cfg.numCPU),
+				indent + `	CPU_SET_S(i, size, cpu_set);`,
+				indent + `}`,
+				indent + `pthread_setaffinity_np(*thread, size, cpu_set);`,
+				indent + `CPU_FREE(cpu_set);`,
+			}
 
-		old := `		err = pthread_create(thread, attr, pfn, arg);
+			old := `		err = pthread_create(thread, attr, pfn, arg);
 		if (err == 0) {
 			pthread_detach(*thread);
 			return 0;
 		}`
 
-		new := strings.Replace(`		err = pthread_create(thread, attr, pfn, arg);
+			new := strings.Replace(`		err = pthread_create(thread, attr, pfn, arg);
 		if (err == 0) {
 			pthread_detach(*thread);
 {{.SetCPU}}
 			return 0;
 		}`, "{{.SetCPU}}", strings.Join(setCPU, "\n"), 1)
 
-		if err := replace(tmpDir, replaces, "runtime/cgo", "gcc_libinit.c", old, new); err != nil {
-			return nil, err
+			if err := replace(tmpDir, replaces, "runtime/cgo", "gcc_libinit.c", old, new); err != nil {
+				return nil, err
+			}
 		}
-	}
 
-	// Replace the arguments.
-	{
-		var strs []string
-		for _, arg := range cfg.args {
-			strs = append(strs, fmt.Sprintf(`%q`, arg))
-		}
-		argvDef := "var __argv = [...]string{" + strings.Join(strs, ", ") + "}"
+		// Replace the arguments.
+		{
+			var strs []string
+			for _, arg := range cfg.args {
+				strs = append(strs, fmt.Sprintf(`%q`, arg))
+			}
+			argvDef := "var __argv = [...]string{" + strings.Join(strs, ", ") + "}"
 
-		old := `func goargs() {
+			old := `func goargs() {
 	if GOOS == "windows" {
 		return
 	}
@@ -291,7 +294,7 @@ int32_t c_sched_getaffinity(pid_t pid, size_t cpusetsize, void *mask) {
 		argslice[i] = gostringnocopy(argv_index(argv, i))
 	}
 }`
-		new := fmt.Sprintf(`%s
+			new := fmt.Sprintf(`%s
 
 func goargs() {
 	if GOOS == "windows" {
@@ -302,28 +305,29 @@ func goargs() {
 		argslice[i] = __argv[i]
 	}
 }`, argvDef, len(cfg.args))
-		if err := replace(tmpDir, replaces, "runtime", "runtime1.go", old, new); err != nil {
-			return nil, err
+			if err := replace(tmpDir, replaces, "runtime", "runtime1.go", old, new); err != nil {
+				return nil, err
+			}
 		}
-	}
 
-	// Replace clock_gettime.
-	if cfg.clockGettimeName != "" {
-		old := "#define clock_gettime clock_gettime"
-		new := fmt.Sprintf(`void %[1]s(clockid_t, struct timespec *);
+		// Replace clock_gettime.
+		if cfg.clockGettimeName != "" {
+			old := "#define clock_gettime clock_gettime"
+			new := fmt.Sprintf(`void %[1]s(clockid_t, struct timespec *);
 #define clock_gettime %[1]s`, cfg.clockGettimeName)
-		if err := replace(tmpDir, replaces, "runtime/cgo", "gcc_linux_arm64.c", old, new); err != nil {
-			return nil, err
+			if err := replace(tmpDir, replaces, "runtime/cgo", "gcc_linux_arm64.c", old, new); err != nil {
+				return nil, err
+			}
 		}
-	}
 
-	// Replace futex.
-	if cfg.futexName != "" {
-		old := "#undef user_futex"
-		new := fmt.Sprintf(`int32_t %[1]s(uint32_t *uaddr, int32_t futex_op, uint32_t val, const struct timespec *timeout, uint32_t *uaddr2, uint32_t val3);
+		// Replace futex.
+		if cfg.futexName != "" {
+			old := "#undef user_futex"
+			new := fmt.Sprintf(`int32_t %[1]s(uint32_t *uaddr, int32_t futex_op, uint32_t val, const struct timespec *timeout, uint32_t *uaddr2, uint32_t val3);
 #define user_futex %[1]s`, cfg.futexName)
-		if err := replace(tmpDir, replaces, "runtime/cgo", "gcc_linux_arm64.c", old, new); err != nil {
-			return nil, err
+			if err := replace(tmpDir, replaces, "runtime/cgo", "gcc_linux_arm64.c", old, new); err != nil {
+				return nil, err
+			}
 		}
 	}
 

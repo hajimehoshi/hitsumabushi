@@ -1,0 +1,5 @@
+//--from
+//go:cgo_import_dynamic runtime._WriteConsoleW WriteConsoleW%5 "kernel32.dll"
+//--to
+// TODO: Rename or remove this function for some special environments
+//go:cgo_import_dynamic runtime._WriteConsoleW WriteConsoleW%5 "kernel32.dll"
