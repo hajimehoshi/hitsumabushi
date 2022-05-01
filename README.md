@@ -5,7 +5,7 @@ Hitsumabushi aims to make Go programs work on almost everywhere by overwriting s
 Now the generated JSON works only for Linux/Arm64 and Windows/Amd64 so far.
 For GOOS=windows, Hitsumabushi replaces some functions that don't work on some special Windows-like systems.
 
-Go version: 1.18
+Go version: 1.18 (Linux), 1.19 (Windows)
 
 ## Example
 
@@ -15,3 +15,8 @@ On Arm Linux, run these commands:
 cd example/helloworld
 ./run.sh
 ```
+
+## Tips
+
+With VC++, you might have to call `_rt0_amd64_windows_lib()` at the beginning of the entry point explicitly.
+See also https://github.com/golang/go/issues/42190.
