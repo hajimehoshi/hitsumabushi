@@ -27,26 +27,26 @@ jobs:
 
     - name: Test
       run: |
-        ./test_qemu.sh -test.run=^Test -test.v fmt
-        ./test_qemu.sh -test.run=^Test -test.v internal/abi
-        ./test_qemu.sh -test.run=^Test -test.v internal/cpu
-        ./test_qemu.sh -test.run=^Test -test.v internal/fmtsort
-        ./test_qemu.sh -test.run=^Test -test.v internal/itoa
-        ./test_qemu.sh -test.run=^Test -test.v internal/reflectlite
-        ./test_qemu.sh -test.run=^Test -test.v internal/unsafeheader
-        ./test_qemu.sh -test.run=^Test -test.v math
-        ./test_qemu.sh -test.run=^Test -test.v math/big
-        ./test_qemu.sh -test.run=^Test -test.v math/bits
-        ./test_qemu.sh -test.run=^Test -test.v math/cmplx
-        ./test_qemu.sh -test.run=^Test -test.v math/rand
-        ./test_qemu.sh -test.run=^Test -test.v -test.short runtime
-        ./test_qemu.sh -test.run=^Test -test.v runtime/debug
-        ./test_qemu.sh -test.run=^Test -test.v runtime/internal/atomic
-        ./test_qemu.sh -test.run=^Test -test.v runtime/internal/math
-        ./test_qemu.sh -test.run=^Test -test.v runtime/internal/sys
-        ./test_qemu.sh -test.run=^Test -test.v strconv
-        ./test_qemu.sh -test.run=^Test -test.v strings
-        ./test_qemu.sh -test.run=^Test -test.v sort
-        ./test_qemu.sh -test.run=^Test -test.v sync
-        ./test_qemu.sh -test.run=^Test -test.v sync/atomic
-        ./test_qemu.sh -test.run=^Test -test.v time
+        go run test.go -qemu -args="-test.run=^Test -test.v fmt"
+        go run test.go -qemu -args="-test.run=^Test -test.v internal/abi"
+        go run test.go -qemu -args="-test.run=^Test -test.v internal/cpu"
+        go run test.go -qemu -args="-test.run=^Test -test.v internal/fmtsort"
+        go run test.go -qemu -args="-test.run=^Test -test.v internal/itoa"
+        go run test.go -qemu -args="-test.run=^Test -test.v internal/reflectlite"
+        go run test.go -qemu -args="-test.run=^Test -test.v internal/unsafeheader"
+        go run test.go -qemu -args="-test.run=^Test -test.v math"
+        go run test.go -qemu -args="-test.run=^Test -test.v math/big"
+        go run test.go -qemu -args="-test.run=^Test -test.v math/bits"
+        go run test.go -qemu -args="-test.run=^Test -test.v math/cmplx"
+        go run test.go -qemu -args="-test.run=^Test -test.v math/rand"
+        go run test.go -qemu -args="-test.run=^Test -test.v -test.short runtime"
+        go run test.go -qemu -args="-test.run=^Test -test.v runtime/debug"
+        go run test.go -qemu -args="-test.run=^Test -test.v runtime/internal/atomic"
+        go run test.go -qemu -args="-test.run=^Test -test.v runtime/internal/math"
+        go run test.go -qemu -args="-test.run=^Test -test.v runtime/internal/sys"
+        go run test.go -qemu -args="-test.run=^Test -test.v strconv"
+        go run test.go -qemu -args="-test.run=^Test -test.v strings"
+        go run test.go -qemu -args="-test.run=^Test -test.v sort"
+        go run test.go -qemu -args="-test.run=^Test -test.v sync"
+        go run test.go -qemu -args="-test.run=^Test -test.v sync/atomic"
+        go run test.go -qemu -args="-test.run=^Test -test.v time"
