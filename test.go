@@ -11,6 +11,8 @@ import (
 	"fmt"
 	"os"
 	"os/exec"
+	"path/filepath"
+	"strings"
 
 	"github.com/hajimehoshi/hitsumabushi"
 )
@@ -44,7 +46,7 @@ func run() error {
 		return err
 	}
 
-	if err := runTestBinary(); err != nil {
+	if err := runTestBinary(args[len(args)-1]); err != nil {
 		return err
 	}
 
@@ -78,8 +80,6 @@ func buildTestBinary(jsonPath string, args []string) error {
 	cmd := exec.Command("go", "test", "-c", "-vet=off", "-overlay="+jsonPath, "-o=test")
 	cmd.Args = append(cmd.Args, args...)
 	cmd.Env = append(os.Environ(),
-		"GOOS=linux",
-		"GOARCH=arm64",
 		"CGO_ENABLED=1",
 		"CGO_CFLAGS=-fno-common -fno-short-enums -ffunction-sections -fdata-sections -fPIC -g -O3")
 	if *flagQEMU {
@@ -94,16 +94,27 @@ func buildTestBinary(jsonPath string, args []string) error {
 	return nil
 }
 
-func runTestBinary() error {
+func runTestBinary(pkg string) error {
+	bin, err := filepath.Abs("test")
+	if err != nil {
+		return err
+	}
+
 	var cmd *exec.Cmd
 	if *flagQEMU {
-		cmd = exec.Command("qemu-aarch64", "test")
+		cmd = exec.Command("qemu-aarch64", bin)
 		cmd.Env = append(os.Environ(), "QEMU_LD_PREFIX=/usr/aarch64-linux-gnu")
 	} else {
-		cmd = exec.Command("test")
+		cmd = exec.Command(bin)
 	}
 	cmd.Stdout = os.Stdout
 	cmd.Stderr = os.Stderr
+
+	dir, err := pkgDir(pkg)
+	if err != nil {
+		return err
+	}
+	cmd.Dir = dir
 
 	if err := cmd.Run(); err != nil {
 		return err
@@ -151,4 +162,13 @@ func splitArgs(s string) ([]string, error) {
 		s = s[i:]
 	}
 	return f, nil
+}
+
+func pkgDir(pkg string) (string, error) {
+	cmd := exec.Command("go", "list", "-f", "{{.Dir}}", pkg)
+	out, err := cmd.Output()
+	if err != nil {
+		return "", err
+	}
+	return strings.TrimSpace(string(out)), nil
 }
