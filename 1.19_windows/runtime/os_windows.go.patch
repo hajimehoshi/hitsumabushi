@@ -122,8 +122,13 @@ func write1(fd uintptr, buf unsafe.Pointer, n int32) int32 {
 		// assume fd is real windows handle.
 		handle = fd
 	}
-	// handle is not used anyway.
-	return int32(writeConsole(handle, buf, n))
+	if fd == 1 || fd == 2 {
+		// Note that handle is not used anyway.
+		return int32(writeConsole(handle, buf, n))
+	}
+	var written uint32
+	stdcall5(_WriteFile, handle, uintptr(buf), uintptr(n), uintptr(unsafe.Pointer(&written)), 0)
+	return int32(written)
 }
 //--from
 func writeConsoleUTF16(handle uintptr, b []uint16) {
