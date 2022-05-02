@@ -1,0 +1,17 @@
+//--from
+func TestRuntimePanic(t *testing.T) {
+	testenv.MustHaveExec(t)
+	cmd := testenv.CleanCmdEnv(exec.Command(os.Args[0], "-test.run=TestRuntimePanic"))
+	cmd.Env = append(cmd.Env, "GO_TEST_RUNTIME_PANIC=1")
+	out, err := cmd.CombinedOutput()
+	t.Logf("%s", out)
+	if err == nil {
+		t.Error("child process did not fail")
+	} else if want := "runtime.unexportedPanicForTesting"; !bytes.Contains(out, []byte(want)) {
+		t.Errorf("output did not contain expected string %q", want)
+	}
+}
+//--to
+func TestRuntimePanic(t *testing.T) {
+	t.Skip("analyzing output is not supported in this environment")
+}
