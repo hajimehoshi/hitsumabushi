@@ -1,4 +1,25 @@
 //--from
+import (
+	"fmt"
+	"internal/testenv"
+	"os"
+	"os/exec"
+	"runtime"
+	"strings"
+	. "sync"
+	"testing"
+	"time"
+)
+//--to
+import (
+	"fmt"
+	"os"
+	"runtime"
+	. "sync"
+	"testing"
+	"time"
+)
+//--from
 func TestMutexMisuse(t *testing.T) {
 	testenv.MustHaveExec(t)
 	for _, test := range misuseTests {
