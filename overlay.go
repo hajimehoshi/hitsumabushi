@@ -23,6 +23,7 @@ type Option func(*config)
 type config struct {
 	testPkgs         []string
 	numCPU           int
+	os               string
 	args             []string
 	clockGettimeName string
 	futexName        string
@@ -70,6 +71,14 @@ func ReplaceFutex(name string) Option {
 	}
 }
 
+// GOOS specifies GOOS to generate the JSON.
+// The default value is runtime.GOOS.
+func GOOS(os string) Option {
+	return func(cfg *config) {
+		cfg.os = os
+	}
+}
+
 func currentDir() string {
 	_, currentPath, _, _ := runtime.Caller(1)
 	return filepath.Dir(currentPath)
@@ -88,16 +97,17 @@ func GenOverlayJSON(options ...Option) ([]byte, error) {
 
 	cfg := config{
 		numCPU: runtime.NumCPU(),
+		os:     runtime.GOOS,
 	}
 	for _, op := range options {
 		op(&cfg)
 	}
 
 	m := reGoVersion.FindStringSubmatch(runtime.Version())
-	dir := filepath.Join(currentDir(), m[1]+"_"+runtime.GOOS)
+	dir := filepath.Join(currentDir(), m[1]+"_"+cfg.os)
 	if _, err := os.Stat(dir); err != nil {
 		if errors.Is(err, os.ErrNotExist) {
-			return nil, fmt.Errorf("the Go version %s and GOOS=%s is not supported", runtime.Version(), runtime.GOOS)
+			return nil, fmt.Errorf("Hitsumabushi does not support the Go version %s and GOOS=%s", runtime.Version(), cfg.os)
 		}
 		return nil, err
 	}
@@ -205,7 +215,7 @@ func GenOverlayJSON(options ...Option) ([]byte, error) {
 		}
 
 		switch {
-		case runtime.GOOS == "linux" && pkg == "runtime/cgo" && origFilename == "gcc_linux_arm64.c":
+		case cfg.os == "linux" && pkg == "runtime/cgo" && origFilename == "gcc_linux_arm64.c":
 			// The number of CPU is defined at runtime/cgo/gcc_linux_arm64.c
 			numBytes := (cfg.numCPU-1)/8 + 1
 			tmpl := `
@@ -244,7 +254,7 @@ int32_t c_sched_getaffinity(pid_t pid, size_t cpusetsize, void *mask) {
 		return nil, err
 	}
 
-	if runtime.GOOS == "linux" {
+	if cfg.os == "linux" {
 		// Add pthread_setaffinity_np.
 		{
 			indent := "\t\t\t"
