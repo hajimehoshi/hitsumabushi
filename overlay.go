@@ -47,6 +47,8 @@ func NumCPU(numCPU int) Option {
 
 // Args is arguments when executing.
 // The first argument must be a program name.
+//
+// Args works only on Linux.
 func Args(args ...string) Option {
 	return func(cfg *config) {
 		cfg.args = append(cfg.args, args...)
@@ -57,18 +59,18 @@ func Args(args ...string) Option {
 // If name is an empty string, the function is not replaced.
 // This is useful for special environments where `clock_gettime` doesn't work correctly.
 //
-// This works only for Linux.
+// ReplaceClockGettime works only for Linux.
 func ReplaceClockGettime(name string) Option {
 	return func(cfg *config) {
 		cfg.clockGettimeName = name
 	}
 }
 
-// ReplaceClockGettime replaces the system call `futex` with the given name.
+// ReplaceFutex replaces the system call `futex` with the given name.
 // If name is an empty string, a pseudo futex implementation is used.
 // This is useful for special environments where the pseudo `futex` doesn't work correctly.
 //
-// This works only for Linux.
+// ReplaceFutex works only for Linux.
 func ReplaceFutex(name string) Option {
 	return func(cfg *config) {
 		cfg.futexName = name
