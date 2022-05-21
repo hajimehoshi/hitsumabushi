@@ -56,6 +56,8 @@ func Args(args ...string) Option {
 // ReplaceClockGettime replaces the C function `clock_gettime` with the given name.
 // If name is an empty string, the function is not replaced.
 // This is useful for special environments where `clock_gettime` doesn't work correctly.
+//
+// This works only for Linux.
 func ReplaceClockGettime(name string) Option {
 	return func(cfg *config) {
 		cfg.clockGettimeName = name
@@ -65,6 +67,8 @@ func ReplaceClockGettime(name string) Option {
 // ReplaceClockGettime replaces the system call `futex` with the given name.
 // If name is an empty string, a pseudo futex implementation is used.
 // This is useful for special environments where the pseudo `futex` doesn't work correctly.
+//
+// This works only for Linux.
 func ReplaceFutex(name string) Option {
 	return func(cfg *config) {
 		cfg.futexName = name
