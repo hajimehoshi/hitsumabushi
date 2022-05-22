@@ -16,8 +16,7 @@ import (
 	"regexp"
 	"runtime"
 	"strings"
-
-	"golang.org/x/sys/windows"
+	"unicode/utf16"
 )
 
 type Option func(*config)
@@ -409,13 +408,13 @@ func syscall_SyscallN(trap uintptr, args ...uintptr) (r1, r2, err uintptr) {
 			var froms []string
 			var tos []string
 			for _, replace := range cfg.replaceDLLs {
-				from, err := windows.UTF16FromString(replace.from)
+				from, err := utf16FromString(replace.from)
 				if err != nil {
 					return nil, err
 				}
 				froms = append(froms, fmt.Sprintf("%#v,", from))
 
-				to, err := windows.UTF16FromString(replace.to)
+				to, err := utf16FromString(replace.to)
 				if err != nil {
 					return nil, err
 				}
@@ -558,4 +557,11 @@ func replace(tmpDir string, replaces map[string]string, pkg string, filename str
 
 	replaces[origPath] = dst.Name()
 	return nil
+}
+
+func utf16FromString(s string) ([]uint16, error) {
+	if strings.IndexByte(s, 0) != -1 {
+		return nil, fmt.Errorf("hitsumabushi: the given string must not include a NUL character")
+	}
+	return utf16.Encode([]rune(s + "\x00")), nil
 }
