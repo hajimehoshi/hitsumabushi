@@ -16,9 +16,16 @@ import (
 	"regexp"
 	"runtime"
 	"strings"
+
+	"golang.org/x/sys/windows"
 )
 
 type Option func(*config)
+
+type replaceDLL struct {
+	from string
+	to   string
+}
 
 type config struct {
 	testPkgs         []string
@@ -27,6 +34,7 @@ type config struct {
 	args             []string
 	clockGettimeName string
 	futexName        string
+	replaceDLLs      []replaceDLL
 }
 
 // TestPkg represents a package for testing.
@@ -82,6 +90,18 @@ func ReplaceFutex(name string) Option {
 func GOOS(os string) Option {
 	return func(cfg *config) {
 		cfg.os = os
+	}
+}
+
+// ReplaceDLL replaces a DLL file name loaded at LoadLibraryW and LoadLibraryExW.
+//
+// This works only for Windows.
+func ReplaceDLL(from, to string) Option {
+	return func(cfg *config) {
+		cfg.replaceDLLs = append(cfg.replaceDLLs, replaceDLL{
+			from: from,
+			to:   to,
+		})
 	}
 }
 
@@ -260,7 +280,8 @@ int32_t c_sched_getaffinity(pid_t pid, size_t cpusetsize, void *mask) {
 		return nil, err
 	}
 
-	if cfg.os == "linux" {
+	switch cfg.os {
+	case "linux":
 		// Add pthread_setaffinity_np.
 		{
 			indent := "\t\t\t"
@@ -342,6 +363,67 @@ func goargs() {
 			new := fmt.Sprintf(`int32_t %[1]s(uint32_t *uaddr, int32_t futex_op, uint32_t val, const struct timespec *timeout, uint32_t *uaddr2, uint32_t val3);
 #define user_futex %[1]s`, cfg.futexName)
 			if err := replace(tmpDir, replaces, "runtime/cgo", "gcc_linux_arm64.c", old, new); err != nil {
+				return nil, err
+			}
+		}
+
+	case "windows":
+		// Replace loaded DLLs
+		if len(cfg.replaceDLLs) > 0 {
+			old := "func syscall_SyscallN(trap uintptr, args ...uintptr) (r1, r2, err uintptr) {"
+			new := `func _toLower(x uint16) uint16 {
+	if 'A' <= x && x <= 'Z' {
+		return x - 'A' + 'a'
+	}
+	return x
+}
+
+func _areUTF16StringsSame(a *uint16, b *uint16) bool {
+	for _toLower(*a) == _toLower(*b) {
+		a = (*uint16)(unsafe.Add(unsafe.Pointer(a), 2))
+		b = (*uint16)(unsafe.Add(unsafe.Pointer(b), 2))
+		if *a == 0 || *b == 0 {
+			return *a == 0 && *b == 0
+		}
+	}
+	return false
+}
+
+var _replacingDLLFroms = [][]uint16{
+	{{.Froms}}
+}
+
+var _replacingDLLTos = [][]uint16{
+	{{.Tos}}
+}
+
+func syscall_SyscallN(trap uintptr, args ...uintptr) (r1, r2, err uintptr) {
+	if trap == getLoadLibrary() || trap == getLoadLibraryEx() {
+		for i, from := range _replacingDLLFroms {
+			if _areUTF16StringsSame((*uint16)(unsafe.Pointer(args[0])), &from[0]) {
+				args[0] = uintptr(unsafe.Pointer(&_replacingDLLTos[i][0]))
+				break
+			}
+		}
+	}`
+			var froms []string
+			var tos []string
+			for _, replace := range cfg.replaceDLLs {
+				from, err := windows.UTF16FromString(replace.from)
+				if err != nil {
+					return nil, err
+				}
+				froms = append(froms, fmt.Sprintf("%#v,", from))
+
+				to, err := windows.UTF16FromString(replace.to)
+				if err != nil {
+					return nil, err
+				}
+				tos = append(tos, fmt.Sprintf("%#v,", to))
+			}
+			new = strings.ReplaceAll(new, "{{.Froms}}", strings.Join(froms, "\n\t"))
+			new = strings.ReplaceAll(new, "{{.Tos}}", strings.Join(tos, "\n\t"))
+			if err := replace(tmpDir, replaces, "runtime", "syscall_windows.go", old, new); err != nil {
 				return nil, err
 			}
 		}
