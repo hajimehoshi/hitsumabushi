@@ -109,7 +109,9 @@ func currentDir() string {
 	return filepath.Dir(currentPath)
 }
 
-var reGoVersion = regexp.MustCompile(`^go(\d+\.\d+)`)
+// reGoVersion represents a regular expression for Go version.
+// With gotip, the version might start with "devel ", so '^' is not used here.
+var reGoVersion = regexp.MustCompile(`go(\d+\.\d+)`)
 
 // GenOverlayJSON generates a JSON file for go-build's `-overlay` option.
 // GenOverlayJSON returns a JSON file content, or an error if generating it fails.
