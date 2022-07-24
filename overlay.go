@@ -392,6 +392,10 @@ func goargs() {
 			new := fmt.Sprintf(`%s
 
 func init() {
+	if len(__argv) == 0 {
+		arg0, _ := Executable()
+		__argv = []string{arg0}
+	}
 	Args = __argv
 }`, argvDef)
 			if err := replace(tmpDir, replaces, "os", "exec_windows.go", old, new); err != nil {
