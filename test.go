@@ -47,7 +47,11 @@ func run() error {
 		return err
 	}
 
-	if err := runTestBinary(args); err != nil {
+	dir, err := pkgDir(args[len(args)-1])
+	if err != nil {
+		return err
+	}
+	if err := runTestBinary(dir); err != nil {
 		return err
 	}
 
@@ -99,7 +103,7 @@ func buildTestBinary(jsonPath string, args []string) error {
 	return nil
 }
 
-func runTestBinary(args []string) error {
+func runTestBinary(dir string) error {
 	binFilename := "test"
 	if runtime.GOOS == "windows" {
 		binFilename += ".exe"
@@ -117,15 +121,8 @@ func runTestBinary(args []string) error {
 	} else {
 		cmd = exec.Command(bin)
 	}
-	// TODO: Do not pass args. This is now needed for Windows as hitsumabushi.Args is not implemented on Windows.
-	cmd.Args = append(cmd.Args, args...)
 	cmd.Stdout = os.Stdout
 	cmd.Stderr = os.Stderr
-
-	dir, err := pkgDir(args[len(args)-1])
-	if err != nil {
-		return err
-	}
 	cmd.Dir = dir
 
 	if err := cmd.Run(); err != nil {

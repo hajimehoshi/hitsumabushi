@@ -369,6 +369,53 @@ func goargs() {
 		}
 
 	case "windows":
+		// Replace the arguments.
+		{
+			var strs []string
+			for _, arg := range cfg.args {
+				strs = append(strs, fmt.Sprintf(`%q`, arg))
+			}
+			argvDef := "var __argv = []string{" + strings.Join(strs, ", ") + "}"
+
+			// It is hard to emulate GetCommandLine exactly.
+			// See http://daviddeley.com/autohotkey/parameters/parameters.htm#WINARGV
+			// Initialize os.Args directly instead.
+			old := `func init() {
+	cmd := windows.UTF16PtrToString(syscall.GetCommandLine())
+	if len(cmd) == 0 {
+		arg0, _ := Executable()
+		Args = []string{arg0}
+	} else {
+		Args = commandLineToArgv(cmd)
+	}
+}`
+			new := fmt.Sprintf(`%s
+
+func init() {
+	Args = __argv
+}`, argvDef)
+			if err := replace(tmpDir, replaces, "os", "exec_windows.go", old, new); err != nil {
+				return nil, err
+			}
+
+			if err := replace(tmpDir, replaces, "os", "exec_windows.go", `import (
+	"errors"
+	"internal/syscall/windows"
+	"runtime"
+	"sync/atomic"
+	"syscall"
+	"time"
+)`, `import (
+	"errors"
+	"runtime"
+	"sync/atomic"
+	"syscall"
+	"time"
+)`); err != nil {
+				return nil, err
+			}
+		}
+
 		// Replace loaded DLLs
 		if len(cfg.replaceDLLs) > 0 {
 			old := "func syscall_SyscallN(trap uintptr, args ...uintptr) (r1, r2, err uintptr) {"
