@@ -7,7 +7,7 @@ jobs:
     strategy:
       matrix:
         os: [ubuntu-latest, windows-latest]
-        go: ['1.17.x', '1.18.x', 'tip']
+        go: ['1.17.x', '1.18.x', '1.19.0-rc.2']
     name: Test with Go ${{ matrix.go }} on ${{ matrix.os }}
     runs-on: ${{ matrix.os }}
     defaults:
@@ -26,16 +26,10 @@ jobs:
     - name: Set up Go
       uses: actions/setup-go@v3
       with:
-        go-version: ${{ matrix.go != 'tip' && matrix.go || '1.18.x' }}
-
-    - name: Set up Go (Tip)
-      if: ${{ matrix.go == 'tip' }}
-      run: |
-        go install golang.org/dl/gotip@latest
-        gotip download
+        go-version: ${{ matrix.go }}
 
     - name: Test on Ubuntu
-      if: ${{ startsWith(matrix.os, 'ubuntu-') && matrix.go != 'tip' }}
+      if: ${{ startsWith(matrix.os, 'ubuntu-') && !startsWith(matrix.go, '1.19.') }}
       run: |
         GOARCH=arm64 go run test.go -qemu -args="-test.run=^Test -test.v fmt"
         GOARCH=arm64 go run test.go -qemu -args="-test.run=^Test -test.v internal/abi"
@@ -62,28 +56,28 @@ jobs:
         GOARCH=arm64 go run test.go -qemu -args="-test.run=^Test -test.v time"
 
     - name: Test on Windows
-      if: ${{ startsWith(matrix.os, 'windows-') && matrix.go == 'tip' }}
+      if: ${{ startsWith(matrix.os, 'windows-') && startsWith(matrix.go, '1.19.') }}
       run: |
-        gotip run test.go -args="-test.run=^Test -test.v fmt"
-        gotip run test.go -args="-test.run=^Test -test.v internal/abi"
-        gotip run test.go -args="-test.run=^Test -test.v internal/cpu"
-        gotip run test.go -args="-test.run=^Test -test.v internal/fmtsort"
-        gotip run test.go -args="-test.run=^Test -test.v internal/itoa"
-        gotip run test.go -args="-test.run=^Test -test.v internal/reflectlite"
-        gotip run test.go -args="-test.run=^Test -test.v internal/unsafeheader"
-        gotip run test.go -args="-test.run=^Test -test.v math"
-        gotip run test.go -args="-test.run=^Test -test.v math/big"
-        gotip run test.go -args="-test.run=^Test -test.v math/bits"
-        gotip run test.go -args="-test.run=^Test -test.v math/cmplx"
-        gotip run test.go -args="-test.run=^Test -test.v math/rand"
-        gotip run test.go -args="-test.run=^Test -test.v -test.short runtime"
-        gotip run test.go -args="-test.run=^Test -test.v runtime/debug"
-        gotip run test.go -args="-test.run=^Test -test.v runtime/internal/atomic"
-        gotip run test.go -args="-test.run=^Test -test.v runtime/internal/math"
-        gotip run test.go -args="-test.run=^Test -test.v runtime/internal/sys"
-        gotip run test.go -args="-test.run=^Test -test.v strconv"
-        gotip run test.go -args="-test.run=^Test -test.v strings"
-        gotip run test.go -args="-test.run=^Test -test.v sort"
-        gotip run test.go -args="-test.run=^Test -test.v sync"
-        gotip run test.go -args="-test.run=^Test -test.v sync/atomic"
-        gotip run test.go -args="-test.run=^Test -test.v time"
+        go run test.go -args="-test.run=^Test -test.v fmt"
+        go run test.go -args="-test.run=^Test -test.v internal/abi"
+        go run test.go -args="-test.run=^Test -test.v internal/cpu"
+        go run test.go -args="-test.run=^Test -test.v internal/fmtsort"
+        go run test.go -args="-test.run=^Test -test.v internal/itoa"
+        go run test.go -args="-test.run=^Test -test.v internal/reflectlite"
+        go run test.go -args="-test.run=^Test -test.v internal/unsafeheader"
+        go run test.go -args="-test.run=^Test -test.v math"
+        go run test.go -args="-test.run=^Test -test.v math/big"
+        go run test.go -args="-test.run=^Test -test.v math/bits"
+        go run test.go -args="-test.run=^Test -test.v math/cmplx"
+        go run test.go -args="-test.run=^Test -test.v math/rand"
+        go run test.go -args="-test.run=^Test -test.v -test.short runtime"
+        go run test.go -args="-test.run=^Test -test.v runtime/debug"
+        go run test.go -args="-test.run=^Test -test.v runtime/internal/atomic"
+        go run test.go -args="-test.run=^Test -test.v runtime/internal/math"
+        go run test.go -args="-test.run=^Test -test.v runtime/internal/sys"
+        go run test.go -args="-test.run=^Test -test.v strconv"
+        go run test.go -args="-test.run=^Test -test.v strings"
+        go run test.go -args="-test.run=^Test -test.v sort"
+        go run test.go -args="-test.run=^Test -test.v sync"
+        go run test.go -args="-test.run=^Test -test.v sync/atomic"
+        go run test.go -args="-test.run=^Test -test.v time"
