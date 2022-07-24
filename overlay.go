@@ -46,6 +46,8 @@ func TestPkg(pkg string) Option {
 
 // NumCPU represents a number of CPU.
 // The default value is runtime.NumCPU().
+//
+// NumCPU works only for Linux.
 func NumCPU(numCPU int) Option {
 	return func(cfg *config) {
 		cfg.numCPU = numCPU
@@ -54,8 +56,6 @@ func NumCPU(numCPU int) Option {
 
 // Args is arguments when executing.
 // The first argument must be a program name.
-//
-// Args works only on Linux.
 func Args(args ...string) Option {
 	return func(cfg *config) {
 		cfg.args = append(cfg.args, args...)
