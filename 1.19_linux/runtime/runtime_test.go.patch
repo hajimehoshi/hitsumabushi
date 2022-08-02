@@ -1,0 +1,23 @@
+//--from
+func testSetPanicOnFault(t *testing.T, addr uintptr, nfault *int) {
+	if GOOS == "js" {
+		t.Skip("js does not support catching faults")
+	}
+
+	defer func() {
+		if err := recover(); err != nil {
+			*nfault++
+		}
+	}()
+
+	// The read should fault, except that sometimes we hit
+	// addresses that have had C or kernel pages mapped there
+	// readable by user code. So just log the content.
+	// If no addresses fault, we'll fail the test.
+	v := *(*byte)(unsafe.Pointer(addr))
+	t.Logf("addr %#x: %#x\n", addr, v)
+}
+//--to
+func testSetPanicOnFault(t *testing.T, addr uintptr, nfault *int) {
+	t.Skip("catching faults is not supported in this environment")
+}

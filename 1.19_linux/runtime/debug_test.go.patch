@@ -1,0 +1,4 @@
+//--from
+//go:build (amd64 || arm64) && linux && !race
+//--to
+//go:build ignore

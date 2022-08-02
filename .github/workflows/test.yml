@@ -29,7 +29,7 @@ jobs:
         go-version: ${{ matrix.go }}
 
     - name: Test on Ubuntu
-      if: ${{ startsWith(matrix.os, 'ubuntu-') && !startsWith(matrix.go, '1.19.') }}
+      if: ${{ startsWith(matrix.os, 'ubuntu-') }}
       run: |
         GOARCH=arm64 go run test.go -qemu -args="-test.run=^Test -test.v fmt"
         GOARCH=arm64 go run test.go -qemu -args="-test.run=^Test -test.v internal/abi"

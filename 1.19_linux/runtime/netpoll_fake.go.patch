@@ -1,0 +1,4 @@
+//--from
+//go:build js && wasm
+//--to
+//go:build linux

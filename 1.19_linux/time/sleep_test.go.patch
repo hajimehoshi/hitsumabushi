@@ -1,0 +1,44 @@
+//--from
+func TestSleep(t *testing.T) {
+	const delay = 100 * Millisecond
+	go func() {
+		Sleep(delay / 2)
+		Interrupt()
+	}()
+	start := Now()
+	Sleep(delay)
+	delayadj := delay
+	if runtime.GOOS == "windows" {
+		delayadj -= windowsInaccuracy
+	}
+	duration := Now().Sub(start)
+	if duration < delayadj {
+		t.Fatalf("Sleep(%s) slept for only %s", delay, duration)
+	}
+}
+//--to
+func TestSleep(t *testing.T) {
+	t.Skip("Interrupt (syscall.Kill) is not supported in this environment")
+}
+//--from
+func TestIssue5745(t *testing.T) {
+	ticker := NewTicker(Hour)
+	defer func() {
+		// would deadlock here before the fix due to
+		// lock taken before the segfault.
+		ticker.Stop()
+
+		if r := recover(); r == nil {
+			t.Error("Expected panic, but none happened.")
+		}
+	}()
+
+	// cause a panic due to a segfault
+	var timer *Timer
+	timer.Stop()
+	t.Error("Should be unreachable.")
+}
+//--to
+func TestIssue5745(t *testing.T) {
+	t.Skip("handling nil pointer access is not supported in this environment")
+}

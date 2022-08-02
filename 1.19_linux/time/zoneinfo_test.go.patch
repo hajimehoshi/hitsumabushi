@@ -1,0 +1,193 @@
+//--from
+import (
+	"errors"
+	"fmt"
+	"internal/testenv"
+	"os"
+	"reflect"
+	"testing"
+	"time"
+)
+//--to
+import (
+	"fmt"
+	"testing"
+	"time"
+)
+//--from
+func TestEnvVarUsage(t *testing.T) {
+	time.ResetZoneinfoForTesting()
+
+	const testZoneinfo = "foo.zip"
+	const env = "ZONEINFO"
+
+	t.Setenv(env, testZoneinfo)
+
+	// Result isn't important, we're testing the side effect of this command
+	time.LoadLocation("Asia/Jerusalem")
+	defer time.ResetZoneinfoForTesting()
+
+	if zoneinfo := time.ZoneinfoForTesting(); testZoneinfo != *zoneinfo {
+		t.Errorf("zoneinfo does not match env variable: got %q want %q", *zoneinfo, testZoneinfo)
+	}
+}
+//--to
+func TestEnvVarUsage(t *testing.T) {
+	t.Skip("location is not supported in this environment")
+}
+//--from
+func TestBadLocationErrMsg(t *testing.T) {
+	time.ResetZoneinfoForTesting()
+	loc := "Asia/SomethingNotExist"
+	want := errors.New("unknown time zone " + loc)
+	_, err := time.LoadLocation(loc)
+	if err.Error() != want.Error() {
+		t.Errorf("LoadLocation(%q) error = %v; want %v", loc, err, want)
+	}
+}
+//--to
+func TestBadLocationErrMsg(t *testing.T) {
+	t.Skip("location is not supported in this environment")
+}
+//--from
+func TestVersion3(t *testing.T) {
+	undo := time.DisablePlatformSources()
+	defer undo()
+	_, err := time.LoadLocation("Asia/Jerusalem")
+	if err != nil {
+		t.Fatal(err)
+	}
+}
+//--to
+func TestVersion3(t *testing.T) {
+	t.Skip("location is not supported in this environment")
+}
+//--from
+func TestFirstZone(t *testing.T) {
+	undo := time.DisablePlatformSources()
+	defer undo()
+
+	const format = "Mon, 02 Jan 2006 15:04:05 -0700 (MST)"
+	var tests = []struct {
+		zone  string
+		unix  int64
+		want1 string
+		want2 string
+	}{
+		{
+			"PST8PDT",
+			-1633269601,
+			"Sun, 31 Mar 1918 01:59:59 -0800 (PST)",
+			"Sun, 31 Mar 1918 03:00:00 -0700 (PDT)",
+		},
+		{
+			"Pacific/Fakaofo",
+			1325242799,
+			"Thu, 29 Dec 2011 23:59:59 -1100 (-11)",
+			"Sat, 31 Dec 2011 00:00:00 +1300 (+13)",
+		},
+	}
+
+	for _, test := range tests {
+		z, err := time.LoadLocation(test.zone)
+		if err != nil {
+			t.Fatal(err)
+		}
+		s := time.Unix(test.unix, 0).In(z).Format(format)
+		if s != test.want1 {
+			t.Errorf("for %s %d got %q want %q", test.zone, test.unix, s, test.want1)
+		}
+		s = time.Unix(test.unix+1, 0).In(z).Format(format)
+		if s != test.want2 {
+			t.Errorf("for %s %d got %q want %q", test.zone, test.unix, s, test.want2)
+		}
+	}
+}
+//--to
+func TestFirstZone(t *testing.T) {
+	t.Skip("location is not supported in this environment")
+}
+//--from
+func TestLoadLocationFromTZData(t *testing.T) {
+	undo := time.DisablePlatformSources()
+	defer undo()
+
+	const locationName = "Asia/Jerusalem"
+	reference, err := time.LoadLocation(locationName)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	gorootSource, ok := time.GorootZoneSource(testenv.GOROOT(t))
+	if !ok {
+		t.Fatal("Failed to locate tzinfo source in GOROOT.")
+	}
+	tzinfo, err := time.LoadTzinfo(locationName, gorootSource)
+	if err != nil {
+		t.Fatal(err)
+	}
+	sample, err := time.LoadLocationFromTZData(locationName, tzinfo)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	if !reflect.DeepEqual(reference, sample) {
+		t.Errorf("return values of LoadLocationFromTZData and LoadLocation don't match")
+	}
+}
+//--to
+func TestLoadLocationFromTZData(t *testing.T) {
+	t.Skip("location is not supported in this environment")
+}
+//--from
+func TestEarlyLocation(t *testing.T) {
+	undo := time.DisablePlatformSources()
+	defer undo()
+
+	const locName = "America/New_York"
+	loc, err := time.LoadLocation(locName)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	d := time.Date(1900, time.January, 1, 0, 0, 0, 0, loc)
+	tzName, tzOffset := d.Zone()
+	if want := "EST"; tzName != want {
+		t.Errorf("Zone name == %s, want %s", tzName, want)
+	}
+	if want := -18000; tzOffset != want {
+		t.Errorf("Zone offset == %d, want %d", tzOffset, want)
+	}
+}
+//--to
+func TestEarlyLocation(t *testing.T) {
+	t.Skip("location is not supported in this environment")
+}
+//--from
+func TestLoadLocationFromTZDataSlim(t *testing.T) {
+	for _, test := range slimTests {
+		tzData, err := os.ReadFile("testdata/" + test.fileName)
+		if err != nil {
+			t.Error(err)
+			continue
+		}
+		reference, err := time.LoadLocationFromTZData(test.zoneName, tzData)
+		if err != nil {
+			t.Error(err)
+			continue
+		}
+
+		d := test.date(reference)
+		tzName, tzOffset := d.Zone()
+		if tzName != test.wantName {
+			t.Errorf("Zone name == %s, want %s", tzName, test.wantName)
+		}
+		if tzOffset != test.wantOffset {
+			t.Errorf("Zone offset == %d, want %d", tzOffset, test.wantOffset)
+		}
+	}
+}
+//--to
+func TestLoadLocationFromTZDataSlim(t *testing.T) {
+	t.Skip("location is not supported in this environment")
+}

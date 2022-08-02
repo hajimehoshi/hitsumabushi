@@ -1,0 +1,132 @@
+//--from
+import (
+	"bytes"
+	"errors"
+	"flag"
+	"fmt"
+	"internal/testenv"
+	"os"
+	"os/exec"
+	"path/filepath"
+	"regexp"
+	"runtime"
+	"strings"
+	"sync"
+	"testing"
+)
+//--to
+import (
+	"bytes"
+	"flag"
+	"internal/testenv"
+	"os"
+	"os/exec"
+	"regexp"
+	"runtime"
+	"strings"
+	"sync"
+	"testing"
+)
+//--from
+func buildTestProg(t *testing.T, binary string, flags ...string) (string, error) {
+	if *flagQuick {
+		t.Skip("-quick")
+	}
+	testenv.MustHaveGoBuild(t)
+
+	testprog.Lock()
+	if testprog.dir == "" {
+		dir, err := os.MkdirTemp("", "go-build")
+		if err != nil {
+			t.Fatalf("failed to create temp directory: %v", err)
+		}
+		testprog.dir = dir
+		toRemove = append(toRemove, dir)
+	}
+
+	if testprog.target == nil {
+		testprog.target = make(map[string]*buildexe)
+	}
+	name := binary
+	if len(flags) > 0 {
+		name += "_" + strings.Join(flags, "_")
+	}
+	target, ok := testprog.target[name]
+	if !ok {
+		target = &buildexe{}
+		testprog.target[name] = target
+	}
+
+	dir := testprog.dir
+
+	// Unlock testprog while actually building, so that other
+	// tests can look up executables that were already built.
+	testprog.Unlock()
+
+	target.once.Do(func() {
+		// Only do two "go build"'s at a time,
+		// to keep load from getting too high.
+		serializeBuild <- true
+		defer func() { <-serializeBuild }()
+
+		// Don't get confused if testenv.GoToolPath calls t.Skip.
+		target.err = errors.New("building test called t.Skip")
+
+		exe := filepath.Join(dir, name+".exe")
+
+		t.Logf("running go build -o %s %s", exe, strings.Join(flags, " "))
+		cmd := exec.Command(testenv.GoToolPath(t), append([]string{"build", "-o", exe}, flags...)...)
+		cmd.Dir = "testdata/" + binary
+		out, err := testenv.CleanCmdEnv(cmd).CombinedOutput()
+		if err != nil {
+			target.err = fmt.Errorf("building %s %v: %v\n%s", binary, flags, err, out)
+		} else {
+			target.exe = exe
+			target.err = nil
+		}
+	})
+
+	return target.exe, target.err
+}
+//--to
+func buildTestProg(t *testing.T, binary string, flags ...string) (string, error) {
+	t.Skip("buildTestProg is not supported in this environment")
+	return "", nil
+}
+//--from
+func TestPanicInlined(t *testing.T) {
+	defer func() {
+		r := recover()
+		if r == nil {
+			t.Fatalf("recover failed")
+		}
+		buf := make([]byte, 2048)
+		n := runtime.Stack(buf, false)
+		buf = buf[:n]
+		if !bytes.Contains(buf, []byte("(*point).negate(")) {
+			t.Fatalf("expecting stack trace to contain call to (*point).negate()")
+		}
+	}()
+
+	pt := new(point)
+	pt.negate()
+}
+//--to
+func TestPanicInlined(t *testing.T) {
+	t.Skip("handling nil pointer access is not supported in this environment")
+	defer func() {
+		r := recover()
+		if r == nil {
+			t.Fatalf("recover failed")
+		}
+		buf := make([]byte, 2048)
+		n := runtime.Stack(buf, false)
+		buf = buf[:n]
+		if !bytes.Contains(buf, []byte("(*point).negate(")) {
+			t.Fatalf("expecting stack trace to contain call to (*point).negate()")
+		}
+	}()
+
+	pt := new(point)
+	pt.negate()
+}
