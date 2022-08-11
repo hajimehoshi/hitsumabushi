@@ -176,7 +176,7 @@ func GenOverlayJSON(options ...Option) ([]byte, error) {
 			return err
 		}
 		pkg := filepath.ToSlash(filepath.Dir(shortPath))
-		origDir, err := goPkgDir(pkg)
+		origDir, err := goPkgDir(pkg, cfg.os)
 		if err != nil {
 			return err
 		}
@@ -310,7 +310,7 @@ int32_t c_sched_getaffinity(pid_t pid, size_t cpusetsize, void *mask) {
 			return 0;
 		}`, "{{.SetCPU}}", strings.Join(setCPU, "\n"), 1)
 
-			if err := replace(tmpDir, replaces, "runtime/cgo", "gcc_libinit.c", old, new); err != nil {
+			if err := replace(tmpDir, replaces, "runtime/cgo", "gcc_libinit.c", old, new, cfg.os); err != nil {
 				return nil, err
 			}
 		}
@@ -343,7 +343,7 @@ func goargs() {
 		argslice[i] = __argv[i]
 	}
 }`, argvDef, len(cfg.args))
-			if err := replace(tmpDir, replaces, "runtime", "runtime1.go", old, new); err != nil {
+			if err := replace(tmpDir, replaces, "runtime", "runtime1.go", old, new, cfg.os); err != nil {
 				return nil, err
 			}
 		}
@@ -353,7 +353,7 @@ func goargs() {
 			old := "#define clock_gettime clock_gettime"
 			new := fmt.Sprintf(`void %[1]s(clockid_t, struct timespec *);
 #define clock_gettime %[1]s`, cfg.clockGettimeName)
-			if err := replace(tmpDir, replaces, "runtime/cgo", "gcc_linux_arm64.c", old, new); err != nil {
+			if err := replace(tmpDir, replaces, "runtime/cgo", "gcc_linux_arm64.c", old, new, cfg.os); err != nil {
 				return nil, err
 			}
 		}
@@ -363,7 +363,7 @@ func goargs() {
 			old := "#undef user_futex"
 			new := fmt.Sprintf(`int32_t %[1]s(uint32_t *uaddr, int32_t futex_op, uint32_t val, const struct timespec *timeout, uint32_t *uaddr2, uint32_t val3);
 #define user_futex %[1]s`, cfg.futexName)
-			if err := replace(tmpDir, replaces, "runtime/cgo", "gcc_linux_arm64.c", old, new); err != nil {
+			if err := replace(tmpDir, replaces, "runtime/cgo", "gcc_linux_arm64.c", old, new, cfg.os); err != nil {
 				return nil, err
 			}
 		}
@@ -398,7 +398,7 @@ func init() {
 	}
 	Args = __argv
 }`, argvDef)
-			if err := replace(tmpDir, replaces, "os", "exec_windows.go", old, new); err != nil {
+			if err := replace(tmpDir, replaces, "os", "exec_windows.go", old, new, cfg.os); err != nil {
 				return nil, err
 			}
 
@@ -415,7 +415,7 @@ func init() {
 	"sync/atomic"
 	"syscall"
 	"time"
-)`); err != nil {
+)`, cfg.os); err != nil {
 				return nil, err
 			}
 		}
@@ -475,7 +475,7 @@ func syscall_SyscallN(trap uintptr, args ...uintptr) (r1, r2, err uintptr) {
 			}
 			new = strings.ReplaceAll(new, "{{.Froms}}", strings.Join(froms, "\n\t"))
 			new = strings.ReplaceAll(new, "{{.Tos}}", strings.Join(tos, "\n\t"))
-			if err := replace(tmpDir, replaces, "runtime", "syscall_windows.go", old, new); err != nil {
+			if err := replace(tmpDir, replaces, "runtime", "syscall_windows.go", old, new, cfg.os); err != nil {
 				return nil, err
 			}
 		}
@@ -528,9 +528,10 @@ func syscall_SyscallN(trap uintptr, args ...uintptr) (r1, r2, err uintptr) {
 	return json.Marshal(&overlay{Replace: replaces})
 }
 
-func goPkgDir(pkg string) (string, error) {
+func goPkgDir(pkg string, goos string) (string, error) {
 	var buf bytes.Buffer
 	cmd := exec.Command("go", "list", "-f", "{{.Dir}}", pkg)
+	cmd.Env = append(os.Environ(), "GOOS=" + goos)
 	cmd.Stderr = &buf
 	out, err := cmd.Output()
 	if err != nil {
@@ -573,8 +574,8 @@ func goPkgName(pkg string) (string, error) {
 	return strings.TrimSpace(string(out)), nil
 }
 
-func replace(tmpDir string, replaces map[string]string, pkg string, filename string, old, new string) error {
-	origDir, err := goPkgDir(pkg)
+func replace(tmpDir string, replaces map[string]string, pkg string, filename string, old, new string, goos string) error {
+	origDir, err := goPkgDir(pkg, goos)
 	if err != nil {
 		return err
 	}
