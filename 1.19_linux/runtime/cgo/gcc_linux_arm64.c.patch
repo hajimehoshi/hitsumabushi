@@ -425,11 +425,6 @@ uint32_t c_gettid() {
   return tid;
 }
 
-uintptr_t c_calloc(size_t num, size_t size) {
-  void *ptr = calloc(num, size);
-  return (uintptr_t)ptr;
-}
-
 int64_t c_nanotime1() {
   struct timespec tp;
   clock_gettime(CLOCK_MONOTONIC, &tp);

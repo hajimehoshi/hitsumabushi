@@ -453,10 +453,53 @@ TEXT runtime·sched_getaffinity_trampoline(SB),NOSPLIT,$0-28
 	BL	c_sched_getaffinity(SB)
 	RET
 //--append
-TEXT runtime·calloc_trampoline(SB),NOSPLIT,$0
+TEXT runtime·sysAllocOS_trampoline(SB),NOSPLIT,$0
+	MOVD	R0, R19		// R19 is callee-save
+	MOVD	0(R0), R0
+	BL	hitsumabushi_sysAllocOS(SB)
+	MOVD	R0, 8(R19)	// return value
+	RET
+
+TEXT runtime·sysUnusedOS_trampoline(SB),NOSPLIT,$0
+	MOVD	8(R0), R1
+	MOVD	0(R0), R0
+	BL	hitsumabushi_sysUnusedOS(SB)
+	RET
+
+TEXT runtime·sysUsedOS_trampoline(SB),NOSPLIT,$0
+	MOVD	8(R0), R1
+	MOVD	0(R0), R0
+	BL	hitsumabushi_sysUsedOS(SB)
+	RET
+
+TEXT runtime·sysHugePageOS_trampoline(SB),NOSPLIT,$0
+	MOVD	8(R0), R1
+	MOVD	0(R0), R0
+	BL	hitsumabushi_sysHugePageOS(SB)
+	RET
+
+TEXT runtime·sysFreeOS_trampoline(SB),NOSPLIT,$0
+	MOVD	8(R0), R1
+	MOVD	0(R0), R0
+	BL	hitsumabushi_sysFreeOS(SB)
+	RET
+
+TEXT runtime·sysFaultOS_trampoline(SB),NOSPLIT,$0
+	MOVD	8(R0), R1
+	MOVD	0(R0), R0
+	BL	hitsumabushi_sysFaultOS(SB)
+	RET
+
+TEXT runtime·sysReserveOS_trampoline(SB),NOSPLIT,$0
 	MOVD	R0, R19		// R19 is callee-save
 	MOVD	8(R0), R1
 	MOVD	0(R0), R0
-	BL	c_calloc(SB)
+	BL	hitsumabushi_sysReserveOS(SB)
 	MOVD	R0, 16(R19)	// return value
+	RET
+
+TEXT runtime·sysMapOS_trampoline(SB),NOSPLIT,$0
+	MOVD	8(R0), R1
+	MOVD	0(R0), R0
+	BL	hitsumabushi_sysMapOS(SB)
 	RET

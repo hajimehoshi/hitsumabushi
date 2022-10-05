@@ -249,10 +249,6 @@ func runPerThreadSyscall() {
 	// needPerThreadSyscall should never be 1 as syscall_runtime_doAllThreadsSyscall is not available with Cgo.
 }
 //--append
-//go:linkname c_calloc c_calloc
-//go:cgo_import_static c_calloc
-var c_calloc byte
-
 //go:linkname c_closefd c_closefd
 //go:cgo_import_static c_closefd
 var c_closefd byte
@@ -296,3 +292,35 @@ var c_walltime1 byte
 //go:linkname c_write1 c_write1
 //go:cgo_import_static c_write1
 var c_write1 byte
+
+//go:linkname hitsumabushi_sysAllocOS hitsumabushi_sysAllocOS 
+//go:cgo_import_static hitsumabushi_sysAllocOS 
+var hitsumabushi_sysAllocOS byte
+
+//go:linkname hitsumabushi_sysUnusedOS hitsumabushi_sysUnusedOS 
+//go:cgo_import_static hitsumabushi_sysUnusedOS 
+var hitsumabushi_sysUnusedOS byte
+
+//go:linkname hitsumabushi_sysUsedOS hitsumabushi_sysUsedOS 
+//go:cgo_import_static hitsumabushi_sysUsedOS 
+var hitsumabushi_sysUsedOS byte
+
+//go:linkname hitsumabushi_sysHugePageOS hitsumabushi_sysHugePageOS 
+//go:cgo_import_static hitsumabushi_sysHugePageOS 
+var hitsumabushi_sysHugePageOS byte
+
+//go:linkname hitsumabushi_sysFreeOS hitsumabushi_sysFreeOS 
+//go:cgo_import_static hitsumabushi_sysFreeOS 
+var hitsumabushi_sysFreeOS byte
+
+//go:linkname hitsumabushi_sysFaultOS hitsumabushi_sysFaultOS 
+//go:cgo_import_static hitsumabushi_sysFaultOS 
+var hitsumabushi_sysFaultOS byte
+
+//go:linkname hitsumabushi_sysReserveOS hitsumabushi_sysReserveOS 
+//go:cgo_import_static hitsumabushi_sysReserveOS 
+var hitsumabushi_sysReserveOS byte
+
+//go:linkname hitsumabushi_sysMapOS hitsumabushi_sysMapOS 
+//go:cgo_import_static hitsumabushi_sysMapOS 
+var hitsumabushi_sysMapOS byte

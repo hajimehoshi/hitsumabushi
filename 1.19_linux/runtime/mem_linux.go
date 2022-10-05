@@ -16,44 +16,62 @@ import (
 // prevents us from allocating more stack.
 //
 //go:nosplit
-func sysAllocOS(n uintptr) unsafe.Pointer {
-	return sysReserveOS(nil, n)
+//go:cgo_unsafe_args
+func sysAllocOS(n uintptr) (ptr unsafe.Pointer) {
+	libcCall(unsafe.Pointer(abi.FuncPCABI0(sysAllocOS_trampoline)), unsafe.Pointer(&n))
+	return
 }
+func sysAllocOS_trampoline(n uintptr, size uintptr) uintptr
 
+//go:nosplit
+//go:cgo_unsafe_args
 func sysUnusedOS(v unsafe.Pointer, n uintptr) {
+	libcCall(unsafe.Pointer(abi.FuncPCABI0(sysUnusedOS_trampoline)), unsafe.Pointer(&v))
 }
+func sysUnusedOS_trampoline(n uintptr, size uintptr)
 
+//go:nosplit
+//go:cgo_unsafe_args
 func sysUsedOS(v unsafe.Pointer, n uintptr) {
+	libcCall(unsafe.Pointer(abi.FuncPCABI0(sysUsedOS_trampoline)), unsafe.Pointer(&v))
 }
+func sysUsedOS_trampoline(n uintptr, size uintptr)
 
+//go:nosplit
+//go:cgo_unsafe_args
 func sysHugePageOS(v unsafe.Pointer, n uintptr) {
+	libcCall(unsafe.Pointer(abi.FuncPCABI0(sysHugePageOS_trampoline)), unsafe.Pointer(&v))
 }
+func sysHugePageOS_trampoline(n uintptr, size uintptr)
 
 // Don't split the stack as this function may be invoked without a valid G,
 // which prevents us from allocating more stack.
 //
 //go:nosplit
+//go:cgo_unsafe_args
 func sysFreeOS(v unsafe.Pointer, n uintptr) {
+	libcCall(unsafe.Pointer(abi.FuncPCABI0(sysFreeOS_trampoline)), unsafe.Pointer(&v))
 }
-
-func sysFaultOS(v unsafe.Pointer, n uintptr) {
-}
-
-func sysReserveOS(v unsafe.Pointer, n uintptr) unsafe.Pointer {
-	if v != nil {
-		return nil
-	}
-	ptr := calloc(n, 1)
-	return unsafe.Pointer(ptr)
-}
+func sysFreeOS_trampoline(n uintptr, size uintptr)
 
 //go:nosplit
 //go:cgo_unsafe_args
-func calloc(n uintptr, size uintptr) (ret uintptr) {
-	libcCall(unsafe.Pointer(abi.FuncPCABI0(calloc_trampoline)), unsafe.Pointer(&n))
+func sysFaultOS(v unsafe.Pointer, n uintptr) {
+	libcCall(unsafe.Pointer(abi.FuncPCABI0(sysFaultOS_trampoline)), unsafe.Pointer(&v))
+}
+func sysFaultOS_trampoline(n uintptr, size uintptr)
+
+//go:nosplit
+//go:cgo_unsafe_args
+func sysReserveOS(v unsafe.Pointer, n uintptr) (ptr unsafe.Pointer) {
+	libcCall(unsafe.Pointer(abi.FuncPCABI0(sysReserveOS_trampoline)), unsafe.Pointer(&v))
 	return
 }
-func calloc_trampoline(n uintptr, size uintptr) uintptr
+func sysReserveOS_trampoline(n uintptr, size uintptr) uintptr
 
+//go:nosplit
+//go:cgo_unsafe_args
 func sysMapOS(v unsafe.Pointer, n uintptr) {
+	libcCall(unsafe.Pointer(abi.FuncPCABI0(sysMapOS_trampoline)), unsafe.Pointer(&v))
 }
+func sysMapOS_trampoline(n uintptr, size uintptr)
