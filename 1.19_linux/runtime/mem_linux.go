@@ -17,7 +17,7 @@ import (
 //
 //go:nosplit
 func sysAllocOS(n uintptr) unsafe.Pointer {
-	return sysReserve(nil, n)
+	return sysReserveOS(nil, n)
 }
 
 func sysUnusedOS(v unsafe.Pointer, n uintptr) {
