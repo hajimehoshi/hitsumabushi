@@ -23,7 +23,7 @@ import (
 
 type Option func(*config)
 
-type replaceDLL struct {
+type replaceString struct {
 	from string
 	to   string
 }
@@ -35,7 +35,8 @@ type config struct {
 	args             []string
 	clockGettimeName string
 	futexName        string
-	replaceDLLs      []replaceDLL
+	replaceDLLs      []replaceString
+	overlay          []replaceString
 }
 
 // TestPkg represents a package for testing.
@@ -99,7 +100,17 @@ func GOOS(os string) Option {
 // This works only for Windows.
 func ReplaceDLL(from, to string) Option {
 	return func(cfg *config) {
-		cfg.replaceDLLs = append(cfg.replaceDLLs, replaceDLL{
+		cfg.replaceDLLs = append(cfg.replaceDLLs, replaceString{
+			from: from,
+			to:   to,
+		})
+	}
+}
+
+// Overlay adds or replaces an entry for the -overlay option.
+func Overlay(from, to string) Option {
+	return func(cfg *config) {
+		cfg.overlay = append(cfg.overlay, replaceString{
 			from: from,
 			to:   to,
 		})
@@ -520,6 +531,10 @@ func syscall_SyscallN(trap uintptr, args ...uintptr) (r1, r2, err uintptr) {
 		}
 
 		replaces[origPath] = dst.Name()
+	}
+
+	for _, r := range cfg.overlay {
+		replaces[r.from] = r.to
 	}
 
 	return json.Marshal(&overlay{Replace: replaces})
