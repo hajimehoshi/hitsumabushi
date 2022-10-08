@@ -5,6 +5,7 @@ package hitsumabushi
 
 import (
 	"bytes"
+	"embed"
 	"encoding/json"
 	"errors"
 	"fmt"
@@ -12,6 +13,7 @@ import (
 	"io/fs"
 	"os"
 	"os/exec"
+	"path"
 	"path/filepath"
 	"regexp"
 	"runtime"
@@ -104,10 +106,8 @@ func ReplaceDLL(from, to string) Option {
 	}
 }
 
-func currentDir() string {
-	_, currentPath, _, _ := runtime.Caller(1)
-	return filepath.Dir(currentPath)
-}
+//go:embed 1.*_*
+var patchFiles embed.FS
 
 // reGoVersion represents a regular expression for Go version.
 // With gotip, the version might start with "devel ", so '^' is not used here.
@@ -131,22 +131,23 @@ func GenOverlayJSON(options ...Option) ([]byte, error) {
 	}
 
 	m := reGoVersion.FindStringSubmatch(runtime.Version())
-	dir := filepath.Join(currentDir(), m[1]+"_"+cfg.os)
-	if _, err := os.Stat(dir); err != nil {
-		if errors.Is(err, os.ErrNotExist) {
-			return nil, fmt.Errorf("Hitsumabushi does not support the Go version %s and GOOS=%s", runtime.Version(), cfg.os)
+	root := m[1] + "_" + cfg.os
+	subFiles, err := fs.Sub(patchFiles, root)
+	if err != nil {
+		if errors.Is(err, fs.ErrNotExist) {
+			return nil, fmt.Errorf("hitsumabushi: Hitsumabushi does not support the Go version %s and GOOS=%s", runtime.Version(), cfg.os)
 		}
 		return nil, err
 	}
-	replaces := map[string]string{}
 
 	tmpDir, err := os.MkdirTemp("", "")
 	if err != nil {
 		return nil, err
 	}
 
-	if err := filepath.Walk(dir, func(path string, info fs.FileInfo, err error) error {
-		if info.IsDir() {
+	replaces := map[string]string{}
+	if err := fs.WalkDir(subFiles, ".", func(entryPath string, d fs.DirEntry, err error) error {
+		if d.IsDir() {
 			return nil
 		}
 
@@ -157,7 +158,7 @@ func GenOverlayJSON(options ...Option) ([]byte, error) {
 		)
 		modType := modTypeReplace
 
-		origFilename := filepath.Base(path)
+		origFilename := path.Base(entryPath)
 		for _, m := range []string{modTypeAppend, modTypePatch} {
 			if strings.HasSuffix(origFilename, m) {
 				origFilename = origFilename[:len(origFilename)-len(m)]
@@ -166,31 +167,27 @@ func GenOverlayJSON(options ...Option) ([]byte, error) {
 			}
 		}
 
-		ext := filepath.Ext(origFilename)
+		ext := path.Ext(origFilename)
 		if ext != ".go" && ext != ".c" && ext != ".h" && ext != ".s" {
 			return nil
 		}
 
-		shortPath, err := filepath.Rel(dir, path)
-		if err != nil {
-			return err
-		}
-		pkg := filepath.ToSlash(filepath.Dir(shortPath))
+		pkg := path.Dir(entryPath)
 		origDir, err := goPkgDir(pkg, cfg.os)
 		if err != nil {
 			return err
 		}
 
-		src, err := os.Open(path)
+		src, err := subFiles.Open(entryPath)
 		if err != nil {
 			return err
 		}
 		defer src.Close()
 
-		if err := os.MkdirAll(filepath.Join(tmpDir, pkg), 0755); err != nil {
+		if err := os.MkdirAll(filepath.Join(tmpDir, filepath.FromSlash(pkg)), 0755); err != nil {
 			return err
 		}
-		dst, err := os.Create(filepath.Join(tmpDir, pkg, origFilename))
+		dst, err := os.Create(filepath.Join(tmpDir, filepath.FromSlash(pkg), origFilename))
 		if err != nil {
 			return err
 		}
@@ -225,7 +222,7 @@ func GenOverlayJSON(options ...Option) ([]byte, error) {
 			}
 			defer orig.Close()
 
-			p, err := parsePatch(shortPath, src)
+			p, err := parsePatch(entryPath, src)
 			if err != nil {
 				return err
 			}
@@ -504,10 +501,10 @@ func syscall_SyscallN(trap uintptr, args ...uintptr) (r1, r2, err uintptr) {
 			return nil, err
 		}
 
-		if err := os.MkdirAll(filepath.Join(tmpDir, pkg), 0755); err != nil {
+		if err := os.MkdirAll(filepath.Join(tmpDir, filepath.FromSlash(pkg)), 0755); err != nil {
 			return nil, err
 		}
-		dst, err := os.Create(filepath.Join(tmpDir, pkg, filepath.Base(origPath)))
+		dst, err := os.Create(filepath.Join(tmpDir, filepath.FromSlash(pkg), filepath.Base(origPath)))
 		if err != nil {
 			return nil, err
 		}
@@ -531,7 +528,7 @@ func syscall_SyscallN(trap uintptr, args ...uintptr) (r1, r2, err uintptr) {
 func goPkgDir(pkg string, goos string) (string, error) {
 	var buf bytes.Buffer
 	cmd := exec.Command("go", "list", "-f", "{{.Dir}}", pkg)
-	cmd.Env = append(os.Environ(), "GOOS=" + goos)
+	cmd.Env = append(os.Environ(), "GOOS="+goos)
 	cmd.Stderr = &buf
 	out, err := cmd.Output()
 	if err != nil {
@@ -592,10 +589,10 @@ func replace(tmpDir string, replaces map[string]string, pkg string, filename str
 		return err
 	}
 
-	if err := os.MkdirAll(filepath.Join(tmpDir, pkg), 0755); err != nil {
+	if err := os.MkdirAll(filepath.Join(tmpDir, filepath.FromSlash(pkg)), 0755); err != nil {
 		return err
 	}
-	dst, err := os.Create(filepath.Join(tmpDir, pkg, filepath.Base(origPath)))
+	dst, err := os.Create(filepath.Join(tmpDir, filepath.FromSlash(pkg), filepath.Base(origPath)))
 	if err != nil {
 		return err
 	}
