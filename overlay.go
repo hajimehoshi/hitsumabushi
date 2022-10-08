@@ -640,14 +640,14 @@ func utf16FromString(s string) ([]uint16, error) {
 // MemoryFilePath returns a C file's path for the memory functions.
 // The file includes these functions:
 //
-// - void* hitsumabushi_sysAllocOS(uintptr_t n)
-// - void hitsumabushi_sysUnusedOS(void* v, uintptr_t n)
-// - void hitsumabushi_sysUsedOS(void* v, uintptr_t n)
-// - void hitsumabushi_sysHugePageOS(void* v, uintptr_t n)
-// - void hitsumabushi_sysFreeOS(void* v, uintptr_t n)
-// - void hitsumabushi_sysFaultOS(void* v, uintptr_t n)
-// - void* hitsumabushi_sysReserveOS(void* v, uintptr_t n)
-// - void hitsumabushi_sysMapOS(uintptr_t n, uintptr_t size)
+//   - void* hitsumabushi_sysAllocOS(uintptr_t n)
+//   - void hitsumabushi_sysUnusedOS(void* v, uintptr_t n)
+//   - void hitsumabushi_sysUsedOS(void* v, uintptr_t n)
+//   - void hitsumabushi_sysHugePageOS(void* v, uintptr_t n)
+//   - void hitsumabushi_sysFreeOS(void* v, uintptr_t n)
+//   - void hitsumabushi_sysFaultOS(void* v, uintptr_t n)
+//   - void* hitsumabushi_sysReserveOS(void* v, uintptr_t n)
+//   - void hitsumabushi_sysMapOS(uintptr_t n, uintptr_t size)
 //
 // For the implementation details, see https://cs.opensource.google/go/go/+/master:src/runtime/mem.go .
 func MemoryFilePath(os string) (string, error) {
