@@ -29,5 +29,5 @@ void* hitsumabushi_sysReserveOS(void* v, uintptr_t n) {
   return calloc(n, 1);
 }
 
-void hitsumabushi_sysMapOS(uintptr_t n, uintptr_t size) {
+void hitsumabushi_sysMapOS(void* v, uintptr_t n) {
 }
