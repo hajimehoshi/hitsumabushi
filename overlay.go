@@ -17,6 +17,7 @@ import (
 	"path/filepath"
 	"regexp"
 	"runtime"
+	"strconv"
 	"strings"
 	"unicode/utf16"
 )
@@ -124,6 +125,11 @@ var patchFiles embed.FS
 // With gotip, the version might start with "devel ", so '^' is not used here.
 var reGoVersion = regexp.MustCompile(`go(\d+\.\d+)`)
 
+func goVersion() string {
+	m := reGoVersion.FindStringSubmatch(runtime.Version())
+	return m[1]
+}
+
 // GenOverlayJSON generates a JSON file for go-build's `-overlay` option.
 // GenOverlayJSON returns a JSON file content, or an error if generating it fails.
 //
@@ -141,8 +147,7 @@ func GenOverlayJSON(options ...Option) ([]byte, error) {
 		op(&cfg)
 	}
 
-	m := reGoVersion.FindStringSubmatch(runtime.Version())
-	root := m[1] + "_" + cfg.os
+	root := goVersion() + "_" + cfg.os
 	subFiles, err := fs.Sub(patchFiles, root)
 	if err != nil {
 		if errors.Is(err, fs.ErrNotExist) {
@@ -630,4 +635,42 @@ func utf16FromString(s string) ([]uint16, error) {
 		return nil, fmt.Errorf("hitsumabushi: the given string must not include a NUL character")
 	}
 	return utf16.Encode([]rune(s + "\x00")), nil
+}
+
+// MemoryFilePath returns a C file's path for the memory functions.
+// The file includes these functions:
+//
+// - void* hitsumabushi_sysAllocOS(uintptr_t n)
+// - void hitsumabushi_sysUnusedOS(void* v, uintptr_t n)
+// - void hitsumabushi_sysUsedOS(void* v, uintptr_t n)
+// - void hitsumabushi_sysHugePageOS(void* v, uintptr_t n)
+// - void hitsumabushi_sysFreeOS(void* v, uintptr_t n)
+// - void hitsumabushi_sysFaultOS(void* v, uintptr_t n)
+// - void* hitsumabushi_sysReserveOS(void* v, uintptr_t n)
+// - void hitsumabushi_sysMapOS(uintptr_t n, uintptr_t size)
+//
+// For the implementation details, see https://cs.opensource.google/go/go/+/master:src/runtime/mem.go .
+func MemoryFilePath(os string) (string, error) {
+	if os != "linux" {
+		return "", fmt.Errorf("hitsumabushi: MemoryFilePath is not available in this environment: GOOS: %s", os)
+	}
+
+	tokens := strings.Split(goVersion(), ".")
+	major, err := strconv.Atoi(tokens[0])
+	if err != nil {
+		return "", err
+	}
+	minor, err := strconv.Atoi(tokens[1])
+	if err != nil {
+		return "", err
+	}
+	if major == 1 && minor < 19 {
+		return "", fmt.Errorf("hitsumabushi: MemoryFilePath is not available in this environment: Go version: %s", runtime.Version())
+	}
+
+	dir, err := goPkgDir("runtime/cgo", os)
+	if err != nil {
+		return "", err
+	}
+	return filepath.Join(dir, "hitsumabushi_mem_linux.c"), nil
 }
