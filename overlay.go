@@ -705,7 +705,7 @@ func FutexFilePath(os string) (string, error) {
 //   - void hitsumabushi_sysFreeOS(void* v, uintptr_t n)
 //   - void hitsumabushi_sysFaultOS(void* v, uintptr_t n)
 //   - void* hitsumabushi_sysReserveOS(void* v, uintptr_t n)
-//   - void hitsumabushi_sysMapOS(uintptr_t n, uintptr_t size)
+//   - void hitsumabushi_sysMapOS(void* v, uintptr_t n)
 //
 // The default implementation is a pseudo allocation by calloc without free.
 //
