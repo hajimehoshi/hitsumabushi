@@ -81,7 +81,8 @@ func ReplaceClockGettime(name string) Option {
 // If name is an empty string, a pseudo futex implementation is used.
 // This is useful for special environments where the pseudo `futex` doesn't work correctly.
 //
-// ReplaceFutex works only for Linux.
+// ReplaceFutex works only for Linux with Go 1.18 and older.
+// For Go 1.19 and newer, use Overlay.
 func ReplaceFutex(name string) Option {
 	return func(cfg *config) {
 		cfg.futexName = name
@@ -637,6 +638,42 @@ func utf16FromString(s string) ([]uint16, error) {
 	return utf16.Encode([]rune(s + "\x00")), nil
 }
 
+func checkReplacementFileAvailability(os string) error {
+	if os != "linux" {
+		return fmt.Errorf("hitsumabushi: MemoryFilePath is not available in this environment: GOOS: %s", os)
+	}
+
+	tokens := strings.Split(goVersion(), ".")
+	major, err := strconv.Atoi(tokens[0])
+	if err != nil {
+		return err
+	}
+	minor, err := strconv.Atoi(tokens[1])
+	if err != nil {
+		return err
+	}
+	if major == 1 && minor < 19 {
+		return fmt.Errorf("hitsumabushi: MemoryFilePath is not available in this environment: Go version: %s", runtime.Version())
+	}
+	return nil
+}
+
+// FutexFilePath returns a C file's path for the futex functions.
+// The file includes this function:
+//
+//   - int32_t hitsumabushi_futex(uint32_t *uaddr, int32_t futex_op, uint32_t val, const struct timespec *timeout, uint32_t *uaddr2, uint32_t val3)
+func FutexFilePath(os string) (string, error) {
+	if err := checkReplacementFileAvailability(os); err != nil {
+		return "", err
+	}
+
+	dir, err := goPkgDir("runtime/cgo", os)
+	if err != nil {
+		return "", err
+	}
+	return filepath.Join(dir, "hitsumabushi_futex_linux.c"), nil
+}
+
 // MemoryFilePath returns a C file's path for the memory functions.
 // The file includes these functions:
 //
@@ -651,21 +688,8 @@ func utf16FromString(s string) ([]uint16, error) {
 //
 // For the implementation details, see https://cs.opensource.google/go/go/+/master:src/runtime/mem.go .
 func MemoryFilePath(os string) (string, error) {
-	if os != "linux" {
-		return "", fmt.Errorf("hitsumabushi: MemoryFilePath is not available in this environment: GOOS: %s", os)
-	}
-
-	tokens := strings.Split(goVersion(), ".")
-	major, err := strconv.Atoi(tokens[0])
-	if err != nil {
+	if err := checkReplacementFileAvailability(os); err != nil {
 		return "", err
-	}
-	minor, err := strconv.Atoi(tokens[1])
-	if err != nil {
-		return "", err
-	}
-	if major == 1 && minor < 19 {
-		return "", fmt.Errorf("hitsumabushi: MemoryFilePath is not available in this environment: Go version: %s", runtime.Version())
 	}
 
 	dir, err := goPkgDir("runtime/cgo", os)

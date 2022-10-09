@@ -412,7 +412,7 @@ TEXT runtime·futex_trampoline(SB),NOSPLIT,$0
 	MOVD	24(R0), R4
 	MOVW	32(R0), R5
 	MOVD	0(R0), R0
-	BL	c_futex(SB)
+	BL	hitsumabushi_futex(SB)
 	RET
 //--from
 TEXT runtime·sigaltstack(SB),NOSPLIT|NOFRAME,$0
