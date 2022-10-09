@@ -70,7 +70,8 @@ func Args(args ...string) Option {
 // If name is an empty string, the function is not replaced.
 // This is useful for special environments where `clock_gettime` doesn't work correctly.
 //
-// ReplaceClockGettime works only for Linux.
+// ReplaceClockGettime works only for Linux with Go 1.18 and older.
+// For Go 1.19 and newer, use Overlay and ClockFilePath.
 func ReplaceClockGettime(name string) Option {
 	return func(cfg *config) {
 		cfg.clockGettimeName = name
@@ -82,7 +83,7 @@ func ReplaceClockGettime(name string) Option {
 // This is useful for special environments where the pseudo `futex` doesn't work correctly.
 //
 // ReplaceFutex works only for Linux with Go 1.18 and older.
-// For Go 1.19 and newer, use Overlay.
+// For Go 1.19 and newer, use Overlay and FutexFilePath.
 func ReplaceFutex(name string) Option {
 	return func(cfg *config) {
 		cfg.futexName = name
@@ -658,10 +659,30 @@ func checkReplacementFileAvailability(os string) error {
 	return nil
 }
 
+// ClockFilePath returns a C file's path for the clok functions.
+// The file includes this function:
+//
+//   - int hitsumabushi_clock_gettime(clockid_t clk_id, struct timespec *tp)
+//
+// The default implementation calls clock_gettime.
+func ClockFilePath(os string) (string, error) {
+	if err := checkReplacementFileAvailability(os); err != nil {
+		return "", err
+	}
+
+	dir, err := goPkgDir("runtime/cgo", os)
+	if err != nil {
+		return "", err
+	}
+	return filepath.Join(dir, "hitsumabushi_clock_linux.c"), nil
+}
+
 // FutexFilePath returns a C file's path for the futex functions.
 // The file includes this function:
 //
 //   - int32_t hitsumabushi_futex(uint32_t *uaddr, int32_t futex_op, uint32_t val, const struct timespec *timeout, uint32_t *uaddr2, uint32_t val3)
+//
+// The default implementation is a pseudo futex by pthread.
 func FutexFilePath(os string) (string, error) {
 	if err := checkReplacementFileAvailability(os); err != nil {
 		return "", err
@@ -685,6 +706,8 @@ func FutexFilePath(os string) (string, error) {
 //   - void hitsumabushi_sysFaultOS(void* v, uintptr_t n)
 //   - void* hitsumabushi_sysReserveOS(void* v, uintptr_t n)
 //   - void hitsumabushi_sysMapOS(uintptr_t n, uintptr_t size)
+//
+// The default implementation is a pseudo allocation by calloc without free.
 //
 // For the implementation details, see https://cs.opensource.google/go/go/+/master:src/runtime/mem.go .
 func MemoryFilePath(os string) (string, error) {

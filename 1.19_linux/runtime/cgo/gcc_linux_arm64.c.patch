@@ -17,9 +17,6 @@
 
 #include <stdatomic.h>
 #include <unistd.h> // for usleep
-
-// This will be replaced at overlay.go later.
-#define clock_gettime clock_gettime
 //--from
 void
 _cgo_sys_thread_start(ThreadStart *ts)
@@ -150,6 +147,8 @@ x_cgo_init(G *g, void (*setg)(void*), void **tlsg, void **tlsbase)
 // Define C functions and system calls for Cgo.
 
 typedef unsigned int gid_t;
+
+int hitsumabushi_clock_gettime(clockid_t clk_id, struct timespec *tp);
 
 void *mmap(void *addr, size_t length, int prot, int flags, int fd, off_t offset) {
   abort();
@@ -325,7 +324,7 @@ uint32_t c_gettid() {
 
 int64_t c_nanotime1() {
   struct timespec tp;
-  clock_gettime(CLOCK_MONOTONIC, &tp);
+  hitsumabushi_clock_gettime(CLOCK_MONOTONIC, &tp);
   return (int64_t)(tp.tv_sec) * 1000000000ll + (int64_t)tp.tv_nsec;
 }
 
@@ -367,7 +366,7 @@ void c_usleep(useconds_t usec) {
 
 void c_walltime1(int64_t* sec, int32_t* nsec) {
   struct timespec tp;
-  clock_gettime(CLOCK_REALTIME, &tp);
+  hitsumabushi_clock_gettime(CLOCK_REALTIME, &tp);
   *sec = tp.tv_sec;
   *nsec = tp.tv_nsec;
 }
