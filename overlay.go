@@ -268,41 +268,6 @@ func GenOverlayJSON(options ...Option) ([]byte, error) {
 			return fmt.Errorf("hitsumabushi: unexpected modType: %s", modType)
 		}
 
-		switch {
-		case cfg.os == "linux" && pkg == "runtime/cgo" && origFilename == "gcc_linux_arm64.c":
-			// The number of CPU is defined at runtime/cgo/gcc_linux_arm64.c
-			numBytes := (cfg.numCPU-1)/8 + 1
-			tmpl := `
-int32_t c_sched_getaffinity(pid_t pid, size_t cpusetsize, void *mask) {
-{{.Masking}}
-  // https://man7.org/linux/man-pages/man2/sched_setaffinity.2.html
-  // > On success, the raw sched_getaffinity() system call returns the
-  // > number of bytes placed copied into the mask buffer;
-  return {{.NumBytes}};
-}
-`
-			n := cfg.numCPU
-			var masking string
-			for i := 0; i < numBytes; i++ {
-				mask := 0
-				m := 8
-				if n < m {
-					m = n
-				}
-				for j := 0; j < m; j++ {
-					mask |= 1 << j
-				}
-				masking += fmt.Sprintf("  ((char*)mask)[%d] = 0x%x;\n", i, mask)
-				n -= 8
-			}
-
-			tmpl = strings.ReplaceAll(tmpl, "{{.Masking}}", masking)
-			tmpl = strings.ReplaceAll(tmpl, "{{.NumBytes}}", fmt.Sprintf("%d", numBytes))
-			if _, err := dst.Write([]byte(tmpl)); err != nil {
-				return err
-			}
-		}
-
 		return nil
 	}); err != nil {
 		return nil, err
@@ -310,34 +275,9 @@ int32_t c_sched_getaffinity(pid_t pid, size_t cpusetsize, void *mask) {
 
 	switch cfg.os {
 	case "linux":
-		// Add pthread_setaffinity_np.
-		{
-			indent := "\t\t\t"
-			setCPU := []string{
-				indent + fmt.Sprintf(`cpu_set_t *cpu_set = CPU_ALLOC(%d);`, cfg.numCPU),
-				indent + fmt.Sprintf(`size_t size = CPU_ALLOC_SIZE(%d);`, cfg.numCPU),
-				indent + `CPU_ZERO_S(size, cpu_set);`,
-				indent + fmt.Sprintf(`for (int i = 0; i < %d; i++) {`, cfg.numCPU),
-				indent + `	CPU_SET_S(i, size, cpu_set);`,
-				indent + `}`,
-				indent + `pthread_setaffinity_np(*thread, size, cpu_set);`,
-				indent + `CPU_FREE(cpu_set);`,
-			}
-
-			old := `		err = pthread_create(thread, attr, pfn, arg);
-		if (err == 0) {
-			pthread_detach(*thread);
-			return 0;
-		}`
-
-			new := strings.Replace(`		err = pthread_create(thread, attr, pfn, arg);
-		if (err == 0) {
-			pthread_detach(*thread);
-{{.SetCPU}}
-			return 0;
-		}`, "{{.SetCPU}}", strings.Join(setCPU, "\n"), 1)
-
-			if err := replace(tmpDir, replaces, "runtime/cgo", "gcc_libinit.c", old, new, cfg.os); err != nil {
+		// Replace {{.NumCPU}} with the configured number of CPUs
+		for _, file := range []string{"gcc_linux_arm64.c", "gcc_libinit.c"} {
+			if err := replace(tmpDir, replaces, "runtime/cgo", file, "{{.NumCPU}}", fmt.Sprintf("%d", cfg.numCPU), cfg.os); err != nil {
 				return nil, err
 			}
 		}
