@@ -31,6 +31,7 @@ type replaceString struct {
 
 type config struct {
 	testPkgs         []string
+	overlayDir       string
 	numCPU           int
 	os               string
 	args             []string
@@ -46,6 +47,13 @@ func TestPkg(pkg string) Option {
 	return func(cfg *config) {
 		cfg.testPkgs = append(cfg.testPkgs, pkg)
 	}
+}
+
+// OverlayDir sets the temporary working directory where overlay files are stored.
+func OverlayDir(dir string) Option {
+        return func(cfg *config) {
+                cfg.overlayDir = dir
+        }
 }
 
 // NumCPU represents a number of CPU.
@@ -158,9 +166,13 @@ func GenOverlayJSON(options ...Option) ([]byte, error) {
 		return nil, err
 	}
 
-	tmpDir, err := os.MkdirTemp("", "")
-	if err != nil {
-		return nil, err
+	tmpDir := cfg.overlayDir
+	if tmpDir == "" {
+		var err error
+		tmpDir, err = os.MkdirTemp("", "")
+		if err != nil {
+			return nil, err
+		}
 	}
 
 	replaces := map[string]string{}
