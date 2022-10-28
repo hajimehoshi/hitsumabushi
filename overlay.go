@@ -658,7 +658,7 @@ func MemoryFilePath(os string) (string, error) {
 //
 //   - int32_t hitsumabushi_getproccount()
 //
-// The default implementation uses the hardcoded cfg.NumCPU
+// The default implementation uses the NumCPU option value.
 func CPUFilePath(os string) (string, error) {
 	return replacementFilePath("CPUFilePath", "runtime/cgo", os, "hitsumabushi_cpu_linux.c")
 }
