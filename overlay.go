@@ -268,41 +268,6 @@ func GenOverlayJSON(options ...Option) ([]byte, error) {
 			return fmt.Errorf("hitsumabushi: unexpected modType: %s", modType)
 		}
 
-		switch {
-		case cfg.os == "linux" && pkg == "runtime/cgo" && origFilename == "gcc_linux_arm64.c":
-			// The number of CPU is defined at runtime/cgo/gcc_linux_arm64.c
-			numBytes := (cfg.numCPU-1)/8 + 1
-			tmpl := `
-int32_t c_sched_getaffinity(pid_t pid, size_t cpusetsize, void *mask) {
-{{.Masking}}
-  // https://man7.org/linux/man-pages/man2/sched_setaffinity.2.html
-  // > On success, the raw sched_getaffinity() system call returns the
-  // > number of bytes placed copied into the mask buffer;
-  return {{.NumBytes}};
-}
-`
-			n := cfg.numCPU
-			var masking string
-			for i := 0; i < numBytes; i++ {
-				mask := 0
-				m := 8
-				if n < m {
-					m = n
-				}
-				for j := 0; j < m; j++ {
-					mask |= 1 << j
-				}
-				masking += fmt.Sprintf("  ((char*)mask)[%d] = 0x%x;\n", i, mask)
-				n -= 8
-			}
-
-			tmpl = strings.ReplaceAll(tmpl, "{{.Masking}}", masking)
-			tmpl = strings.ReplaceAll(tmpl, "{{.NumBytes}}", fmt.Sprintf("%d", numBytes))
-			if _, err := dst.Write([]byte(tmpl)); err != nil {
-				return err
-			}
-		}
-
 		return nil
 	}); err != nil {
 		return nil, err
@@ -310,36 +275,9 @@ int32_t c_sched_getaffinity(pid_t pid, size_t cpusetsize, void *mask) {
 
 	switch cfg.os {
 	case "linux":
-		// Add pthread_setaffinity_np.
-		{
-			indent := "\t\t\t"
-			setCPU := []string{
-				indent + fmt.Sprintf(`cpu_set_t *cpu_set = CPU_ALLOC(%d);`, cfg.numCPU),
-				indent + fmt.Sprintf(`size_t size = CPU_ALLOC_SIZE(%d);`, cfg.numCPU),
-				indent + `CPU_ZERO_S(size, cpu_set);`,
-				indent + fmt.Sprintf(`for (int i = 0; i < %d; i++) {`, cfg.numCPU),
-				indent + `	CPU_SET_S(i, size, cpu_set);`,
-				indent + `}`,
-				indent + `pthread_setaffinity_np(*thread, size, cpu_set);`,
-				indent + `CPU_FREE(cpu_set);`,
-			}
-
-			old := `		err = pthread_create(thread, attr, pfn, arg);
-		if (err == 0) {
-			pthread_detach(*thread);
-			return 0;
-		}`
-
-			new := strings.Replace(`		err = pthread_create(thread, attr, pfn, arg);
-		if (err == 0) {
-			pthread_detach(*thread);
-{{.SetCPU}}
-			return 0;
-		}`, "{{.SetCPU}}", strings.Join(setCPU, "\n"), 1)
-
-			if err := replace(tmpDir, replaces, "runtime/cgo", "gcc_libinit.c", old, new, cfg.os); err != nil {
-				return nil, err
-			}
+		// Replace {{.NumCPU}} with the configured number of CPUs
+		if err := replace(tmpDir, replaces, "runtime/cgo", "hitsumabushi_cpu_linux.c", "{{.NumCPU}}", fmt.Sprintf("%d", cfg.numCPU), cfg.os); err != nil {
+			return nil, err
 		}
 
 		// Replace the arguments.
@@ -651,42 +589,39 @@ func utf16FromString(s string) ([]uint16, error) {
 	return utf16.Encode([]rune(s + "\x00")), nil
 }
 
-func checkReplacementFileAvailability(os string) error {
+func replacementFilePath(fn, pkg, os, file string) (string, error) {
 	if os != "linux" {
-		return fmt.Errorf("hitsumabushi: MemoryFilePath is not available in this environment: GOOS: %s", os)
+		return "", fmt.Errorf("hitsumabushi: %s() is not available in this environment: GOOS: %s", fn, os)
 	}
 
 	tokens := strings.Split(goVersion(), ".")
 	major, err := strconv.Atoi(tokens[0])
 	if err != nil {
-		return err
+		return "", err
 	}
 	minor, err := strconv.Atoi(tokens[1])
 	if err != nil {
-		return err
+		return "", err
 	}
 	if major == 1 && minor < 19 {
-		return fmt.Errorf("hitsumabushi: MemoryFilePath is not available in this environment: Go version: %s", runtime.Version())
+		return "", fmt.Errorf("hitsumabushi: %s() is not available in this environment: Go version: %s", fn, runtime.Version())
 	}
-	return nil
+
+	dir, err := goPkgDir(pkg, os)
+	if err != nil {
+		return "", err
+	}
+	return filepath.Join(dir, file), nil
 }
 
-// ClockFilePath returns a C file's path for the clok functions.
+// ClockFilePath returns a C file's path for the clock functions.
 // The file includes this function:
 //
 //   - int hitsumabushi_clock_gettime(clockid_t clk_id, struct timespec *tp)
 //
 // The default implementation calls clock_gettime.
 func ClockFilePath(os string) (string, error) {
-	if err := checkReplacementFileAvailability(os); err != nil {
-		return "", err
-	}
-
-	dir, err := goPkgDir("runtime/cgo", os)
-	if err != nil {
-		return "", err
-	}
-	return filepath.Join(dir, "hitsumabushi_clock_linux.c"), nil
+	return replacementFilePath("ClockFilePath", "runtime/cgo", os, "hitsumabushi_clock_linux.c")
 }
 
 // FutexFilePath returns a C file's path for the futex functions.
@@ -696,15 +631,7 @@ func ClockFilePath(os string) (string, error) {
 //
 // The default implementation is a pseudo futex by pthread.
 func FutexFilePath(os string) (string, error) {
-	if err := checkReplacementFileAvailability(os); err != nil {
-		return "", err
-	}
-
-	dir, err := goPkgDir("runtime/cgo", os)
-	if err != nil {
-		return "", err
-	}
-	return filepath.Join(dir, "hitsumabushi_futex_linux.c"), nil
+	return replacementFilePath("FutexFilePath", "runtime/cgo", os, "hitsumabushi_futex_linux.c")
 }
 
 // MemoryFilePath returns a C file's path for the memory functions.
@@ -723,13 +650,15 @@ func FutexFilePath(os string) (string, error) {
 //
 // For the implementation details, see https://cs.opensource.google/go/go/+/master:src/runtime/mem.go .
 func MemoryFilePath(os string) (string, error) {
-	if err := checkReplacementFileAvailability(os); err != nil {
-		return "", err
-	}
+	return replacementFilePath("MemoryFilePath", "runtime/cgo", os, "hitsumabushi_mem_linux.c")
+}
 
-	dir, err := goPkgDir("runtime/cgo", os)
-	if err != nil {
-		return "", err
-	}
-	return filepath.Join(dir, "hitsumabushi_mem_linux.c"), nil
+// CPUFilePath returns a C file's path for the CPU functions.
+// The file includes this function:
+//
+//   - int32_t hitsumabushi_getproccount()
+//
+// The default implementation uses the NumCPU option value.
+func CPUFilePath(os string) (string, error) {
+	return replacementFilePath("CPUFilePath", "runtime/cgo", os, "hitsumabushi_cpu_linux.c")
 }
