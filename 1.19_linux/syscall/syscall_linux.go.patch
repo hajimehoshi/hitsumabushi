@@ -43,6 +43,14 @@ func Syscall(trap, a1, a2, a3 uintptr) (r1, r2 uintptr, err Errno) {
 		r = lseek1(a1, int64(a2), int32(a3))
 	case SYS_CLOSE:
 		r = runtime_closefd(int32(a1))
+	case SYS_MKDIRAT:
+		println("syscall mkdirat() is not implemented")
+		// Default to permission denied. TODO: implement this
+		return 0, 0, EPERM
+	case SYS_GETDENTS64:
+		println("syscall getdents64() is not implemented")
+		// Default to empty directory. TODO: implement this
+		return 0, 0, 0
 	default:
 		println("unimplemented syscall at runtime.Syscall", trap)
 		panic("syscall.Syscall")
@@ -55,6 +63,8 @@ func Syscall(trap, a1, a2, a3 uintptr) (r1, r2 uintptr, err Errno) {
 	return uintptr(r), 0, 0
 }
 
+//go:linkname open runtime.open
+func open(name *byte, mode, perm int32) int32
 //go:linkname write1 runtime.write1
 func write1(fd uintptr, p unsafe.Pointer, n int32) int32
 //go:linkname fcntl1 runtime.fcntl1
@@ -96,4 +106,20 @@ func Syscall6(trap, a1, a2, a3, a4, a5, a6 uintptr) (r1, r2 uintptr, err Errno) 
 		return 0, 0, Errno(-r)
 	}
 	return uintptr(r), 0, 0
+}
+//--from
+func Open(path string, mode int, perm uint32) (fd int, err error) {
+	return openat(_AT_FDCWD, path, mode|O_LARGEFILE, perm)
+}
+//--to
+func Open(path string, mode int, perm uint32) (fd int, err error) {
+	p0, err := BytePtrFromString(path)
+	if err != nil {
+		return -1, errnoErr(EINVAL)
+	}
+	fd = int(open(p0, int32(mode|O_LARGEFILE), int32(perm)))
+	if fd < 0 {
+		return -1, errnoErr(ENOENT)
+	}
+	return
 }
