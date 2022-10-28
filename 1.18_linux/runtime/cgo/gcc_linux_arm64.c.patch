@@ -469,13 +469,16 @@ int32_t c_osyield() {
   return sched_yield();
 }
 
+extern int32_t hitsumabushi_getproccount();
+
 int32_t c_sched_getaffinity(pid_t pid, size_t cpusetsize, void *mask) {
-    for (int32_t i = 0; i < {{.NumCPU}}; i += 8)
-        ((unsigned char*)mask)[i / 8] = (unsigned char)((1u << ({{.NumCPU}} - i)) - 1);
+    int32_t numcpu = hitsumabushi_getproccount();
+    for (int32_t i = 0; i < numcpu; i += 8)
+        ((unsigned char*)mask)[i / 8] = (unsigned char)((1u << (numcpu - i)) - 1);
     // https://man7.org/linux/man-pages/man2/sched_setaffinity.2.html
     // > On success, the raw sched_getaffinity() system call returns the
     // > number of bytes placed copied into the mask buffer;
-    return ({{.NumCPU}} + 7) / 8;
+    return (numcpu + 7) / 8;
 }
 
 int32_t c_read(int32_t fd, void *p, int32_t n) {

@@ -276,10 +276,8 @@ func GenOverlayJSON(options ...Option) ([]byte, error) {
 	switch cfg.os {
 	case "linux":
 		// Replace {{.NumCPU}} with the configured number of CPUs
-		for _, file := range []string{"gcc_linux_arm64.c", "gcc_libinit.c"} {
-			if err := replace(tmpDir, replaces, "runtime/cgo", file, "{{.NumCPU}}", fmt.Sprintf("%d", cfg.numCPU), cfg.os); err != nil {
-				return nil, err
-			}
+		if err := replace(tmpDir, replaces, "runtime/cgo", "hitsumabushi_cpu_linux.c", "{{.NumCPU}}", fmt.Sprintf("%d", cfg.numCPU), cfg.os); err != nil {
+			return nil, err
 		}
 
 		// Replace the arguments.
