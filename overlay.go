@@ -589,42 +589,39 @@ func utf16FromString(s string) ([]uint16, error) {
 	return utf16.Encode([]rune(s + "\x00")), nil
 }
 
-func checkReplacementFileAvailability(os string) error {
+func replacementFilePath(fn, pkg, os, file string) (string, error) {
 	if os != "linux" {
-		return fmt.Errorf("hitsumabushi: MemoryFilePath is not available in this environment: GOOS: %s", os)
+		return "", fmt.Errorf("hitsumabushi: %s() is not available in this environment: GOOS: %s", fn, os)
 	}
 
 	tokens := strings.Split(goVersion(), ".")
 	major, err := strconv.Atoi(tokens[0])
 	if err != nil {
-		return err
+		return "", err
 	}
 	minor, err := strconv.Atoi(tokens[1])
 	if err != nil {
-		return err
+		return "", err
 	}
 	if major == 1 && minor < 19 {
-		return fmt.Errorf("hitsumabushi: MemoryFilePath is not available in this environment: Go version: %s", runtime.Version())
+		return "", fmt.Errorf("hitsumabushi: %s() is not available in this environment: Go version: %s", fn, runtime.Version())
 	}
-	return nil
+
+	dir, err := goPkgDir(pkg, os)
+	if err != nil {
+		return "", err
+	}
+	return filepath.Join(dir, file), nil
 }
 
-// ClockFilePath returns a C file's path for the clok functions.
+// ClockFilePath returns a C file's path for the clock functions.
 // The file includes this function:
 //
 //   - int hitsumabushi_clock_gettime(clockid_t clk_id, struct timespec *tp)
 //
 // The default implementation calls clock_gettime.
 func ClockFilePath(os string) (string, error) {
-	if err := checkReplacementFileAvailability(os); err != nil {
-		return "", err
-	}
-
-	dir, err := goPkgDir("runtime/cgo", os)
-	if err != nil {
-		return "", err
-	}
-	return filepath.Join(dir, "hitsumabushi_clock_linux.c"), nil
+	return replacementFilePath("ClockFilePath", "runtime/cgo", os, "hitsumabushi_clock_linux.c")
 }
 
 // FutexFilePath returns a C file's path for the futex functions.
@@ -634,15 +631,7 @@ func ClockFilePath(os string) (string, error) {
 //
 // The default implementation is a pseudo futex by pthread.
 func FutexFilePath(os string) (string, error) {
-	if err := checkReplacementFileAvailability(os); err != nil {
-		return "", err
-	}
-
-	dir, err := goPkgDir("runtime/cgo", os)
-	if err != nil {
-		return "", err
-	}
-	return filepath.Join(dir, "hitsumabushi_futex_linux.c"), nil
+	return replacementFilePath("FutexFilePath", "runtime/cgo", os, "hitsumabushi_futex_linux.c")
 }
 
 // MemoryFilePath returns a C file's path for the memory functions.
@@ -661,13 +650,5 @@ func FutexFilePath(os string) (string, error) {
 //
 // For the implementation details, see https://cs.opensource.google/go/go/+/master:src/runtime/mem.go .
 func MemoryFilePath(os string) (string, error) {
-	if err := checkReplacementFileAvailability(os); err != nil {
-		return "", err
-	}
-
-	dir, err := goPkgDir("runtime/cgo", os)
-	if err != nil {
-		return "", err
-	}
-	return filepath.Join(dir, "hitsumabushi_mem_linux.c"), nil
+	return replacementFilePath("MemoryFilePath", "runtime/cgo", os, "hitsumabushi_mem_linux.c")
 }
