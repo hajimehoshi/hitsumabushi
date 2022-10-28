@@ -9,6 +9,7 @@
 #include <signal.h>
 #include <stdlib.h>
 #include <stdatomic.h>
+#include <fcntl.h>
 #include <sys/stat.h>
 #include <unistd.h> // for usleep
 
@@ -266,6 +267,7 @@ int32_t c_write1(uintptr_t fd, void *p, int32_t n) {
     break;
   default:
     fprintf(stderr, "syscall write(%lu, %p, %d) is not implemented\n", fd, p, n);
+    ret = -ENOSYS;
     break;
   }
   pthread_mutex_unlock(&m);
@@ -279,6 +281,11 @@ int32_t c_lseek(uintptr_t fd, off_t offset, int32_t whence) {
 
 int c_fcntl(int fd, int cmd, int arg)
 {
+  if (fd == 0 || fd == 1 || fd == 2) {
+    if (cmd == F_GETFL) {
+      return 0;
+    }
+  }
   fprintf(stderr, "syscall fcntl(%d, %d, %d) is not implemented\n", fd, cmd, arg);
   return -ENOSYS;
 }
