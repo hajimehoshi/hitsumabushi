@@ -1,4 +1,7 @@
-// Define C functions and system calls for Cgo.
+// SPDX-License-Identifier: Apache-2.0
+// SPDX-FileCopyrightText: 2022 The Hitsumabushi Authors
+
+// This file defines C functions and system calls for Cgo.
 
 #include <pthread.h>
 #include <errno.h>
