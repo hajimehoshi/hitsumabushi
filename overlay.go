@@ -32,7 +32,6 @@ type replaceString struct {
 type config struct {
 	testPkgs         []string
 	overlayDir       string
-	numCPU           int
 	os               string
 	args             []string
 	clockGettimeName string
@@ -51,18 +50,8 @@ func TestPkg(pkg string) Option {
 
 // OverlayDir sets the temporary working directory where overlay files are stored.
 func OverlayDir(dir string) Option {
-        return func(cfg *config) {
-                cfg.overlayDir = dir
-        }
-}
-
-// NumCPU represents a number of CPU.
-// The default value is runtime.NumCPU().
-//
-// NumCPU works only for Linux.
-func NumCPU(numCPU int) Option {
 	return func(cfg *config) {
-		cfg.numCPU = numCPU
+		cfg.overlayDir = dir
 	}
 }
 
@@ -150,8 +139,7 @@ func GenOverlayJSON(options ...Option) ([]byte, error) {
 	}
 
 	cfg := config{
-		numCPU: runtime.NumCPU(),
-		os:     runtime.GOOS,
+		os: runtime.GOOS,
 	}
 	for _, op := range options {
 		op(&cfg)
@@ -275,11 +263,6 @@ func GenOverlayJSON(options ...Option) ([]byte, error) {
 
 	switch cfg.os {
 	case "linux":
-		// Replace {{.NumCPU}} with the configured number of CPUs
-		if err := replace(tmpDir, replaces, "runtime/cgo", "hitsumabushi_cpu_linux.c", "{{.NumCPU}}", fmt.Sprintf("%d", cfg.numCPU), cfg.os); err != nil {
-			return nil, err
-		}
-
 		// Replace the arguments.
 		{
 			var strs []string
@@ -658,7 +641,7 @@ func MemoryFilePath(os string) (string, error) {
 //
 //   - int32_t hitsumabushi_getproccount()
 //
-// The default implementation uses the NumCPU option value.
+// The default implementation uses 1.
 func CPUFilePath(os string) (string, error) {
 	return replacementFilePath("CPUFilePath", "runtime/cgo", os, "hitsumabushi_cpu_linux.c")
 }
