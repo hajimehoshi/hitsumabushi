@@ -1,0 +1,4 @@
+//--from
+//go:build !faketime
+//--to
+//go:build !faketime && false
