@@ -29,37 +29,48 @@ func Syscall(trap, a1, a2, a3 uintptr) (r1, r2 uintptr, err Errno) {
 }
 //--to
 func Syscall(trap, a1, a2, a3 uintptr) (r1, r2 uintptr, err Errno) {
+	var r int32
 	switch trap {
 	case SYS_FCNTL:
-		if a1 == uintptr(Stdin) || a1 == uintptr(Stdout) || a1 == uintptr(Stderr) {
-			if a2 == F_GETFL {
-				return 0, 0, 0
-			}
-		}
-		println("unexpected fcntl:", a1, a2, a3)
+		r = fcntl1(a1, a2, a3)
+	case SYS_FSTAT:
+		r = fstat1(a1, unsafe.Pointer(a2))
 	case SYS_READ:
-		if a1 == uintptr(Stdin) {
-			if a3 == 0 {
-				return 0, 0, 0
-			}
-			// TODO: Implement this
-		}
+		r = runtime_read(uintptr(a1), unsafe.Pointer(a2), int32(a3))
 	case SYS_WRITE:
-		if a1 == uintptr(Stdout) || a1 == uintptr(Stderr) {
-			if a3 == 0 {
-				return 0, 0, 0
-			}
-			r := write1(a1, unsafe.Pointer(a2), int32(a3))
-			return uintptr(r), 0, 0
-		}
+		r = write1(a1, unsafe.Pointer(a2), int32(a3))
+	case SYS_LSEEK:
+		r = lseek1(a1, int64(a2), int32(a3))
+	case SYS_CLOSE:
+		r = runtime_closefd(int32(a1))
+	default:
+		println("unimplemented syscall at runtime.Syscall", trap)
+		panic("syscall.Syscall")
+		return 0, 0, ENOSYS
 	}
-	println("not implemented syscall at runtime.Syscall", trap)
-	panic("syscall.Syscall")
-	return 0, 0, ENOSYS
+
+	if r < 0 {
+		return 0, 0, Errno(-r)
+	}
+	return uintptr(r), 0, 0
 }
 
 //go:linkname write1 runtime.write1
 func write1(fd uintptr, p unsafe.Pointer, n int32) int32
+//go:linkname fcntl1 runtime.fcntl1
+func fcntl1(fd uintptr, a uintptr, b uintptr) int32
+//go:linkname fstat1 runtime.fstat1
+func fstat1(fd uintptr, p unsafe.Pointer) int32
+//go:linkname lseek1 runtime.lseek1
+func lseek1(fd uintptr, offset int64, whence int32) int32
+//go:linkname runtime_read runtime.read
+func runtime_read(fd uintptr, p unsafe.Pointer, n int32) int32
+//go:linkname runtime_closefd runtime.closefd
+func runtime_closefd(fd int32) int32
+//go:linkname runtime_fstatat runtime.fstatat
+func runtime_fstatat(fd uintptr, name unsafe.Pointer, p unsafe.Pointer, n int32) int32
+//go:linkname runtime_renameat runtime.renameat
+func runtime_renameat(fd1 uintptr, name1 unsafe.Pointer, fd2 uintptr, name2 unsafe.Pointer) int32
 //--from
 func Syscall6(trap, a1, a2, a3, a4, a5, a6 uintptr) (r1, r2 uintptr, err Errno) {
 	runtime_entersyscall()
@@ -69,11 +80,20 @@ func Syscall6(trap, a1, a2, a3, a4, a5, a6 uintptr) (r1, r2 uintptr, err Errno) 
 }
 //--to
 func Syscall6(trap, a1, a2, a3, a4, a5, a6 uintptr) (r1, r2 uintptr, err Errno) {
+	var r int32
 	switch trap {
 	case SYS_FSTATAT, SYS_NEWFSTATAT:
-		return 0, 0, ENOENT
+		r = runtime_fstatat(uintptr(a1), unsafe.Pointer(a2), unsafe.Pointer(a3), int32(a4))
+	case SYS_RENAMEAT:
+		r = runtime_renameat(uintptr(a1), unsafe.Pointer(a2), uintptr(a3), unsafe.Pointer(a4))
+	default:
+		println("unimplemented syscall at runtime.Syscall6", trap)
+		panic("syscall.Syscall6")
+		return 0, 0, ENOSYS
 	}
-	println("not implemented syscall at runtime.Syscall6", trap)
-	panic("syscall.Syscall6")
-	return 0, 0, ENOSYS
+
+	if r < 0 {
+		return 0, 0, Errno(-r)
+	}
+	return uintptr(r), 0, 0
 }
