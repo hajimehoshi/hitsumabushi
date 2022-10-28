@@ -292,3 +292,38 @@ var c_walltime1 byte
 //go:linkname c_write1 c_write1
 //go:cgo_import_static c_write1
 var c_write1 byte
+
+//go:nosplit
+//go:cgo_unsafe_args
+func fcntl1(fd, cmd, arg int) int32 {
+	return libcCall(unsafe.Pointer(abi.FuncPCABI0(fcntl_trampoline)), unsafe.Pointer(&fd))
+}
+func fcntl_trampoline()
+
+//go:nosplit
+//go:cgo_unsafe_args
+func fstat1(fd int, stat unsafe.Pointer) int32 {
+	return libcCall(unsafe.Pointer(abi.FuncPCABI0(fstat_trampoline)), unsafe.Pointer(&fd))
+}
+func fstat_trampoline(fd int, stat unsafe.Pointer) int32
+
+//go:nosplit
+//go:cgo_unsafe_args
+func lseek1(fd int, offset int64, whence int) int32 {
+	return libcCall(unsafe.Pointer(abi.FuncPCABI0(lseek_trampoline)), unsafe.Pointer(&fd))
+}
+func lseek_trampoline()
+
+//go:nosplit
+//go:cgo_unsafe_args
+func renameat(fd1 int, name1 unsafe.Pointer, fd2 int, name2 unsafe.Pointer) int32 {
+	return libcCall(unsafe.Pointer(abi.FuncPCABI0(renameat_trampoline)), unsafe.Pointer(&fd1))
+}
+func renameat_trampoline()
+
+//go:nosplit
+//go:cgo_unsafe_args
+func fstatat(fd uintptr, name unsafe.Pointer, p unsafe.Pointer, n int32) int32 {
+	return libcCall(unsafe.Pointer(abi.FuncPCABI0(fstatat_trampoline)), unsafe.Pointer(&fd))
+}
+func fstatat_trampoline()

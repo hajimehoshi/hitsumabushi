@@ -9,6 +9,7 @@
 #include <signal.h>
 #include <stdlib.h>
 #include <stdatomic.h>
+#include <sys/stat.h>
 #include <unistd.h> // for usleep
 
 #include "libcgo.h"
@@ -269,6 +270,35 @@ int32_t c_write1(uintptr_t fd, void *p, int32_t n) {
   }
   pthread_mutex_unlock(&m);
   return ret;
+}
+
+int32_t c_lseek(uintptr_t fd, off_t offset, int32_t whence) {
+  fprintf(stderr, "syscall lseek(%lu, %lu, %d) is not implemented\n", fd, offset, whence);
+  return -ENOSYS;
+}
+
+int c_fcntl(int fd, int cmd, int arg)
+{
+  fprintf(stderr, "syscall fcntl(%d, %d, %d) is not implemented\n", fd, cmd, arg);
+  return -ENOSYS;
+}
+
+int c_fstat(int fd, struct stat *stat)
+{
+  fprintf(stderr, "syscall fstat(%d, %p) is not implemented\n", fd, stat);
+  return -ENOSYS;
+}
+
+int c_renameat(int fd1, char* name1, int fd2, char* name2)
+{
+  fprintf(stderr, "syscall renameat(%d, %s, %d, %s) is not implemented\n", fd1, name1, fd2, name2);
+  return -ENOSYS;
+}
+
+int c_fstatat(int fd, char* name, struct stat* p, int flags)
+{
+  fprintf(stderr, "syscall fstatat(%d, %s, %p, %d) is not implemented\n", fd, name, p, flags);
+  return -ENOSYS;
 }
 
 void c_exit(int32_t code) {
