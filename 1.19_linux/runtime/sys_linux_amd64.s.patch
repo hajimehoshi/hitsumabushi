@@ -41,7 +41,7 @@ TEXT runtime·futex(SB),NOSPLIT,$0
 TEXT runtime·futex_trampoline(SB),NOSPLIT,$0
 	PUSHQ	BP
 	MOVQ	SP, BP
-        MOVQ	DI, BX
+	MOVQ	DI, BX
 	MOVQ	0(BX), DI		// arg 1 addr
 	MOVL	8(BX), SI		// arg 2 op
 	MOVL	12(BX), DX		// arg 3 val
@@ -337,7 +337,7 @@ TEXT runtime·sysAllocOS_trampoline(SB),NOSPLIT,$0
 	MOVQ	SP, BP
 	MOVQ	DI, BX
 	MOVQ	0(DI), DI
-        CALL	hitsumabushi_sysAllocOS(SB)
+	CALL	hitsumabushi_sysAllocOS(SB)
 	MOVQ	AX, 8(BX)
 	POPQ	BP
 	RET
@@ -347,45 +347,45 @@ TEXT runtime·sysUnusedOS_trampoline(SB),NOSPLIT,$0
 	MOVQ	SP, BP
 	MOVQ	8(DI), SI
 	MOVQ	0(DI), DI
-        CALL	hitsumabushi_sysUnusedOS(SB)
+	CALL	hitsumabushi_sysUnusedOS(SB)
 	POPQ	BP
-        RET
+	RET
 
 TEXT runtime·sysUsedOS_trampoline(SB),NOSPLIT,$0
 	PUSHQ	BP
 	MOVQ	SP, BP
 	MOVQ	8(DI), SI
 	MOVQ	0(DI), DI
-        CALL	hitsumabushi_sysUsedOS(SB)
+	CALL	hitsumabushi_sysUsedOS(SB)
 	POPQ	BP
-        RET
+	RET
 
 TEXT runtime·sysHugePageOS_trampoline(SB),NOSPLIT,$0
 	PUSHQ	BP
 	MOVQ	SP, BP
 	MOVQ	8(DI), SI
 	MOVQ	0(DI), DI
-        CALL	hitsumabushi_sysHugePageOS(SB)
+	CALL	hitsumabushi_sysHugePageOS(SB)
 	POPQ	BP
-        RET
+	RET
 
 TEXT runtime·sysFreeOS_trampoline(SB),NOSPLIT,$0
 	PUSHQ	BP
 	MOVQ	SP, BP
 	MOVQ	8(DI), SI
 	MOVQ	0(DI), DI
-        CALL	hitsumabushi_sysFreeOS(SB)
+	CALL	hitsumabushi_sysFreeOS(SB)
 	POPQ	BP
-        RET
+	RET
 
 TEXT runtime·sysFaultOS_trampoline(SB),NOSPLIT,$0
 	PUSHQ	BP
 	MOVQ	SP, BP
 	MOVQ	8(DI), SI
 	MOVQ	0(DI), DI
-        CALL	hitsumabushi_sysFaultOS(SB)
+	CALL	hitsumabushi_sysFaultOS(SB)
 	POPQ	BP
-        RET
+	RET
 
 TEXT runtime·sysReserveOS_trampoline(SB),NOSPLIT,$0
 	PUSHQ	BP
@@ -393,19 +393,19 @@ TEXT runtime·sysReserveOS_trampoline(SB),NOSPLIT,$0
 	MOVQ	DI, BX		// BX is callee-saved
 	MOVQ	8(DI), SI
 	MOVQ	0(DI), DI
-        CALL	hitsumabushi_sysReserveOS(SB)
+	CALL	hitsumabushi_sysReserveOS(SB)
 	MOVQ	AX, 16(BX)
 	POPQ	BP
-        RET
+	RET
 
 TEXT runtime·sysMapOS_trampoline(SB),NOSPLIT,$0
 	PUSHQ	BP
 	MOVQ	SP, BP
 	MOVQ	8(DI), SI
 	MOVQ	0(DI), DI
-        CALL	hitsumabushi_sysMapOS(SB)
+	CALL	hitsumabushi_sysMapOS(SB)
 	POPQ	BP
-        RET
+	RET
 
 TEXT runtime·walltime1_trampoline(SB),NOSPLIT,$0
 	PUSHQ	BP
