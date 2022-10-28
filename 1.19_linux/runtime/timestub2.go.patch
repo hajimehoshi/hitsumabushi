@@ -1,4 +1,8 @@
 //--from
+//go:build !aix && !darwin && !freebsd && !openbsd && !solaris && !windows && !(linux && amd64)
+//--to
+//go:build !aix && !darwin && !freebsd && !openbsd && !solaris && !windows
+//--from
 package runtime
 //--to
 package runtime
