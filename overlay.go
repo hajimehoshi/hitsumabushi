@@ -652,3 +652,13 @@ func FutexFilePath(os string) (string, error) {
 func MemoryFilePath(os string) (string, error) {
 	return replacementFilePath("MemoryFilePath", "runtime/cgo", os, "hitsumabushi_mem_linux.c")
 }
+
+// CPUFilePath returns a C file's path for the CPU functions.
+// The file includes this function:
+//
+//   - int32_t hitsumabushi_getproccount()
+//
+// The default implementation uses the hardcoded cfg.NumCPU
+func CPUFilePath(os string) (string, error) {
+	return replacementFilePath("CPUFilePath", "runtime/cgo", os, "hitsumabushi_cpu_linux.c")
+}
