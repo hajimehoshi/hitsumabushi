@@ -1,0 +1,6 @@
+//--from
+func TestMirrorWithReflect(t *testing.T) {
+//--to
+func TestMirrorWithReflect(t *testing.T) {
+       t.Skip("file is not supported in this environment")
+       return
