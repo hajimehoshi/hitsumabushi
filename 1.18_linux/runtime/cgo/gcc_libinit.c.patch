@@ -15,7 +15,7 @@
 		err = pthread_create(thread, attr, pfn, arg);
 		if (err == 0) {
 			pthread_detach(*thread);
-#ifdef __USE_GNU // pthread_setaffinity_np() is a glibc extension
+#ifdef _USE_PTHREAD_AFFINITY_NP
 			extern int32_t hitsumabushi_getproccount();
 			int32_t numcpu = hitsumabushi_getproccount();
 			cpu_set_t *cpu_set = CPU_ALLOC(numcpu);
