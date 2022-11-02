@@ -287,8 +287,13 @@ func goargs() {
 		return
 	}
 	argslice = make([]string, %[2]d)
-	for i := int32(0); i < %[2]d; i++ {
-		argslice[i] = __argv[i]
+	if len(argslice) == 0 {
+		// os.Executable is not available here. Give a dummy name.
+		argslice = []string{"hitsumabushi_app"}
+	} else {
+		for i := int32(0); i < %[2]d; i++ {
+			argslice[i] = __argv[i]
+		}
 	}
 }`, argvDef, len(cfg.args))
 			if err := replace(tmpDir, replaces, "runtime", "runtime1.go", old, new, cfg.os); err != nil {
