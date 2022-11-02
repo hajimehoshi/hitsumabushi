@@ -1,8 +1,12 @@
 //--from
-import "unsafe"
+import (
+	"runtime/internal/atomic"
+	"unsafe"
+)
 //--to
 import (
 	"internal/abi"
+	"runtime/internal/atomic"
 	"unsafe"
 )
 //--from
