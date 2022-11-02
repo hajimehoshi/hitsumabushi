@@ -598,6 +598,8 @@ func replacementFilePath(fn, pkg, os, file string) (string, error) {
 }
 
 // ClockFilePath returns a C file's path for the clock functions.
+// This file works only when linux is specified as the GOOS option.
+//
 // The file includes this function:
 //
 //   - int hitsumabushi_clock_gettime(clockid_t clk_id, struct timespec *tp)
@@ -608,6 +610,8 @@ func ClockFilePath(os string) (string, error) {
 }
 
 // FutexFilePath returns a C file's path for the futex functions.
+// This file works only when linux is specified as the GOOS option.
+//
 // The file includes this function:
 //
 //   - int32_t hitsumabushi_futex(uint32_t *uaddr, int32_t futex_op, uint32_t val, const struct timespec *timeout, uint32_t *uaddr2, uint32_t val3)
@@ -618,6 +622,8 @@ func FutexFilePath(os string) (string, error) {
 }
 
 // MemoryFilePath returns a C file's path for the memory functions.
+// This file works only when linux is specified as the GOOS option.
+//
 // The file includes these functions:
 //
 //   - void* hitsumabushi_sysAllocOS(uintptr_t n)
@@ -637,6 +643,8 @@ func MemoryFilePath(os string) (string, error) {
 }
 
 // CPUFilePath returns a C file's path for the CPU functions.
+// This file works only when linux is specified as the GOOS option.
+//
 // The file includes this function:
 //
 //   - int32_t hitsumabushi_getproccount()
