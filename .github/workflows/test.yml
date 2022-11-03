@@ -28,7 +28,7 @@ jobs:
       with:
         go-version: ${{ matrix.go }}
 
-    - name: Test on Ubuntu with qemu
+    - name: Test (Linux, arm64)
       if: ${{ startsWith(matrix.os, 'ubuntu-') }}
       run: |
         GOARCH=arm64 go run test.go -qemu -args="-test.run=^Test -test.v fmt"
@@ -55,7 +55,7 @@ jobs:
         GOARCH=arm64 go run test.go -qemu -args="-test.run=^Test -test.v sync/atomic"
         GOARCH=arm64 go run test.go -qemu -args="-test.run=^Test -test.v time"
 
-    - name: Test on Ubuntu or Windows
+    - name: Test
       if: ${{ (startsWith(matrix.os, 'ubuntu-') || startsWith(matrix.os, 'windows-')) && startsWith(matrix.go, '1.19.') }}
       run: |
         go run test.go -args="-test.run=^Test -test.v fmt"
