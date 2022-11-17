@@ -267,7 +267,7 @@ int32_t hitsumabushi_write1(uintptr_t fd, void *p, int32_t n) {
     break;
   default:
     fprintf(stderr, "syscall write(%lu, %p, %d) is not implemented\n", fd, p, n);
-    ret = -ENOSYS;
+    ret = -EBADF;
     break;
   }
   pthread_mutex_unlock(&m);
@@ -287,7 +287,7 @@ int hitsumabushi_fcntl(int fd, int cmd, int arg)
     }
   }
   fprintf(stderr, "syscall fcntl(%d, %d, %d) is not implemented\n", fd, cmd, arg);
-  return -ENOSYS;
+  return -EBADF;
 }
 
 int hitsumabushi_fstat(int fd, struct stat *stat)
