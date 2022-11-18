@@ -198,7 +198,7 @@ TEXT runtime·sched_getaffinity_trampoline(SB),NOSPLIT,$0
 	MOVQ	8(DI), SI	// arg 2 len
 	MOVQ	16(DI), DX	// arg 3 buf
 	MOVQ	0(DI), DI	// arg 1 pid
-	CALL	c_sched_getaffinity(SB)
+	CALL	hitsumabushi_sched_getaffinity(SB)
 	POPQ	BP
 	RET
 //--from

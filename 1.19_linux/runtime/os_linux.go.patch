@@ -277,9 +277,9 @@ var hitsumabushi_osyield byte
 //go:cgo_import_static c_read
 var c_read byte
 
-//go:linkname c_sched_getaffinity c_sched_getaffinity
-//go:cgo_import_static c_sched_getaffinity
-var c_sched_getaffinity byte
+//go:linkname hitsumabushi_sched_getaffinity hitsumabushi_sched_getaffinity
+//go:cgo_import_static hitsumabushi_sched_getaffinity
+var hitsumabushi_sched_getaffinity byte
 
 //go:linkname hitsumabushi_usleep hitsumabushi_usleep
 //go:cgo_import_static hitsumabushi_usleep

@@ -17,8 +17,6 @@
 
 typedef unsigned int gid_t;
 
-extern int32_t hitsumabushi_getproccount();
-
 void *mmap(void *addr, size_t length, int prot, int flags, int fd, off_t offset) {
   abort();
   return NULL;
@@ -202,16 +200,6 @@ int32_t c_open(char *name, int32_t mode, int32_t perm) {
   fprintf(stderr, "syscall open(%s, %d, %d) is not implemented\n", name, mode, perm);
   const static int kENOENT = 0x2;
   return kENOENT;
-}
-
-int32_t c_sched_getaffinity(pid_t pid, size_t cpusetsize, void *mask) {
-    int32_t numcpu = hitsumabushi_getproccount();
-    for (int32_t i = 0; i < numcpu; i += 8)
-        ((unsigned char*)mask)[i / 8] = (unsigned char)((1u << (numcpu - i)) - 1);
-    // https://man7.org/linux/man-pages/man2/sched_setaffinity.2.html
-    // > On success, the raw sched_getaffinity() system call returns the
-    // > number of bytes placed copied into the mask buffer;
-    return (numcpu + 7) / 8;
 }
 
 int32_t c_read(int32_t fd, void *p, int32_t n) {

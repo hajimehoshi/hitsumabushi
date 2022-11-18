@@ -655,11 +655,12 @@ func MemoryFilePath(os string) (string, error) {
 // CPUFilePath returns a C file's path for the CPU functions.
 // This file works only when linux is specified as the GOOS option.
 //
-// The file includes this function:
+// The file includes these functions:
 //
 //   - int32_t hitsumabushi_getproccount()
+//   - int32_t hitsumabushi_sched_getaffinity(pid_t pid, size_t cpusetsize, void *mask)
 //
-// The default implementation uses 1.
+// The default implementation uses only 1 CPU.
 func CPUFilePath(os string) (string, error) {
 	return replacementFilePath("CPUFilePath", "runtime/cgo", os, "hitsumabushi_cpu_linux.c")
 }
