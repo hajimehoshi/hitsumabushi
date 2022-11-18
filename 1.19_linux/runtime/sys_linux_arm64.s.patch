@@ -170,7 +170,7 @@ TEXT runtime·usleep(SB),NOSPLIT,$24-4
 //--to
 TEXT runtime·usleep_trampoline(SB),NOSPLIT,$0
 	MOVW	0(R0), R0
-	BL	c_usleep(SB)
+	BL	hitsumabushi_usleep(SB)
 	RET
 //--from
 TEXT runtime·gettid(SB),NOSPLIT,$0-4
@@ -296,7 +296,7 @@ finish:
 TEXT runtime·walltime1_trampoline(SB),NOSPLIT,$0
 	MOVD	8(R0), R1
 	MOVD	0(R0), R0
-	BL	c_walltime1(SB)
+	BL	hitsumabushi_walltime1(SB)
 	RET
 //--from
 TEXT runtime·nanotime1(SB),NOSPLIT,$24-8
@@ -389,7 +389,7 @@ finish:
 //--to
 TEXT runtime·nanotime1_trampoline(SB),NOSPLIT,$0
 	MOVD	R0, R19		// R19 is callee-save
-	BL	c_nanotime1(SB)
+	BL	hitsumabushi_nanotime1(SB)
 	MOVD	R0, 0(R19)	// return value
 	RET
 //--from

@@ -235,7 +235,7 @@ TEXT runtime·usleep_trampoline(SB),NOSPLIT,$0
 	PUSHQ	BP
 	MOVQ	SP, BP
 	MOVL	0(DI), DI	// arg 1 usec
-	CALL	c_usleep(SB)
+	CALL	hitsumabushi_usleep(SB)
 	POPQ	BP
 	RET
 //--from
@@ -327,7 +327,7 @@ TEXT runtime·nanotime1_trampoline(SB),NOSPLIT,$0
 	PUSHQ	BP
 	MOVQ	DI, BX		// BX is callee-saved
 	MOVQ	SP, BP
-	CALL	c_nanotime1(SB)
+	CALL	hitsumabushi_nanotime1(SB)
 	MOVQ	AX, 0(BX)
 	POPQ	BP
 	RET
@@ -413,7 +413,7 @@ TEXT runtime·walltime1_trampoline(SB),NOSPLIT,$0
 	MOVQ	DI, BX		// BX is callee-saved
 	MOVQ	8(DI), SI
 	MOVQ	0(DI), DI
-	CALL	c_walltime1(SB)
+	CALL	hitsumabushi_walltime1(SB)
 	MOVQ	AX, 16(BX)	// return value
 	POPQ	BP
 	RET

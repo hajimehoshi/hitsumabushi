@@ -605,11 +605,13 @@ func replacementFilePath(fn, pkg, os, file string) (string, error) {
 // ClockFilePath returns a C file's path for the clock functions.
 // This file works only when linux is specified as the GOOS option.
 //
-// The file includes this function:
+// The file includes these functions:
 //
-//   - int hitsumabushi_clock_gettime(clockid_t clk_id, struct timespec *tp)
+//   - void hitsumabushi_usleep(useconds_t usec)
+//   - void hitsumabushi_walltime1(int64_t* sec, int32_t* nsec)
+//   - int64_t hitsumabushi_nanotime1()
 //
-// The default implementation calls clock_gettime.
+// The default implementations use usleep and clock_gettime.
 func ClockFilePath(os string) (string, error) {
 	return replacementFilePath("ClockFilePath", "runtime/cgo", os, "hitsumabushi_clock_linux.c")
 }

@@ -11,14 +11,12 @@
 #include <stdatomic.h>
 #include <fcntl.h>
 #include <sys/stat.h>
-#include <unistd.h> // for usleep
 
 #include "libcgo.h"
 #include "libcgo_unix.h"
 
 typedef unsigned int gid_t;
 
-extern int hitsumabushi_clock_gettime(clockid_t clk_id, struct timespec *tp);
 extern int32_t hitsumabushi_getproccount();
 
 void *mmap(void *addr, size_t length, int prot, int flags, int fd, off_t offset) {
@@ -187,12 +185,6 @@ int32_t c_closefd(int32_t fd) {
   return 0;
 }
 
-int64_t c_nanotime1() {
-  struct timespec tp;
-  hitsumabushi_clock_gettime(CLOCK_MONOTONIC, &tp);
-  return (int64_t)(tp.tv_sec) * 1000000000ll + (int64_t)tp.tv_nsec;
-}
-
 int32_t c_open(char *name, int32_t mode, int32_t perm) {
   if (strcmp(name, "/proc/self/auxv") == 0) {
     static const char auxv[] =
@@ -229,17 +221,6 @@ int32_t c_read(int32_t fd, void *p, int32_t n) {
   fprintf(stderr, "syscall read(%d, %p, %d) is not implemented\n", fd, p, n);
   const static int kEBADF = 0x9;
   return kEBADF;
-}
-
-void c_usleep(useconds_t usec) {
-  usleep(usec);
-}
-
-void c_walltime1(int64_t* sec, int32_t* nsec) {
-  struct timespec tp;
-  hitsumabushi_clock_gettime(CLOCK_REALTIME, &tp);
-  *sec = tp.tv_sec;
-  *nsec = tp.tv_nsec;
 }
 
 int32_t c_write1(uintptr_t fd, void *p, int32_t n) {

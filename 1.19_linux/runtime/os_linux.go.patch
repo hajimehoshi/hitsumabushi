@@ -261,9 +261,9 @@ var hitsumabushi_exit byte
 //go:cgo_import_static hitsumabushi_gettid
 var hitsumabushi_gettid byte
 
-//go:linkname c_nanotime1 c_nanotime1
-//go:cgo_import_static c_nanotime1
-var c_nanotime1 byte
+//go:linkname hitsumabushi_nanotime1 hitsumabushi_nanotime1
+//go:cgo_import_static hitsumabushi_nanotime1
+var hitsumabushi_nanotime1 byte
 
 //go:linkname c_open c_open
 //go:cgo_import_static c_open
@@ -281,13 +281,13 @@ var c_read byte
 //go:cgo_import_static c_sched_getaffinity
 var c_sched_getaffinity byte
 
-//go:linkname c_usleep c_usleep
-//go:cgo_import_static c_usleep
-var c_usleep byte
+//go:linkname hitsumabushi_usleep hitsumabushi_usleep
+//go:cgo_import_static hitsumabushi_usleep
+var hitsumabushi_usleep byte
 
-//go:linkname c_walltime1 c_walltime1
-//go:cgo_import_static c_walltime1
-var c_walltime1 byte
+//go:linkname hitsumabushi_walltime1 hitsumabushi_walltime1
+//go:cgo_import_static hitsumabushi_walltime1
+var hitsumabushi_walltime1 byte
 
 //go:linkname c_write1 c_write1
 //go:cgo_import_static c_write1
