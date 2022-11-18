@@ -249,9 +249,9 @@ func runPerThreadSyscall() {
 	// needPerThreadSyscall should never be 1 as syscall_runtime_doAllThreadsSyscall is not available with Cgo.
 }
 //--append
-//go:linkname c_closefd c_closefd
-//go:cgo_import_static c_closefd
-var c_closefd byte
+//go:linkname hitsumabushi_closefd hitsumabushi_closefd
+//go:cgo_import_static hitsumabushi_closefd
+var hitsumabushi_closefd byte
 
 //go:linkname hitsumabushi_exit hitsumabushi_exit
 //go:cgo_import_static hitsumabushi_exit
@@ -265,17 +265,17 @@ var hitsumabushi_gettid byte
 //go:cgo_import_static hitsumabushi_nanotime1
 var hitsumabushi_nanotime1 byte
 
-//go:linkname c_open c_open
-//go:cgo_import_static c_open
-var c_open byte
+//go:linkname hitsumabushi_open hitsumabushi_open
+//go:cgo_import_static hitsumabushi_open
+var hitsumabushi_open byte
 
 //go:linkname hitsumabushi_osyield hitsumabushi_osyield
 //go:cgo_import_static hitsumabushi_osyield
 var hitsumabushi_osyield byte
 
-//go:linkname c_read c_read
-//go:cgo_import_static c_read
-var c_read byte
+//go:linkname hitsumabushi_read hitsumabushi_read
+//go:cgo_import_static hitsumabushi_read
+var hitsumabushi_read byte
 
 //go:linkname hitsumabushi_sched_getaffinity hitsumabushi_sched_getaffinity
 //go:cgo_import_static hitsumabushi_sched_getaffinity
@@ -289,9 +289,9 @@ var hitsumabushi_usleep byte
 //go:cgo_import_static hitsumabushi_walltime1
 var hitsumabushi_walltime1 byte
 
-//go:linkname c_write1 c_write1
-//go:cgo_import_static c_write1
-var c_write1 byte
+//go:linkname hitsumabushi_write1 hitsumabushi_write1
+//go:cgo_import_static hitsumabushi_write1
+var hitsumabushi_write1 byte
 
 //go:nosplit
 //go:cgo_unsafe_args

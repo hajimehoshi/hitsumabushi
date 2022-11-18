@@ -98,7 +98,7 @@ TEXT runtime·open_trampoline(SB),NOSPLIT,$0
 	MOVW	8(R0), R1
 	MOVW	12(R0), R2
 	MOVD	0(R0), R0
-	BL	c_open(SB)
+	BL	hitsumabushi_open(SB)
 	RET
 //--from
 TEXT runtime·closefd(SB),NOSPLIT|NOFRAME,$0-12
@@ -114,7 +114,7 @@ done:
 //--to
 TEXT runtime·closefd_trampoline(SB),NOSPLIT,$0-12
 	MOVW	0(R0), R0
-	BL	c_closefd(SB)
+	BL	hitsumabushi_closefd(SB)
 	RET
 //--from
 TEXT runtime·write1(SB),NOSPLIT|NOFRAME,$0-28
@@ -130,7 +130,7 @@ TEXT runtime·write1_trampoline(SB),NOSPLIT,$0-28
 	MOVD	8(R0), R1
 	MOVW	16(R0), R2
 	MOVD	0(R0), R0
-	BL	c_write1(SB)
+	BL	hitsumabushi_write1(SB)
 	RET
 //--from
 TEXT runtime·read(SB),NOSPLIT|NOFRAME,$0-28
@@ -146,7 +146,7 @@ TEXT runtime·read_trampoline(SB),NOSPLIT,$0-28
 	MOVD	8(R0), R1
 	MOVW	16(R0), R2
 	MOVW	0(R0), R0
-	BL	c_read(SB)
+	BL	hitsumabushi_read(SB)
 	RET
 //--from
 TEXT runtime·usleep(SB),NOSPLIT,$24-4
@@ -509,7 +509,7 @@ TEXT runtime·fcntl_trampoline(SB),NOSPLIT,$0
 	MOVW	8(R0), R1
 	MOVW	16(R0), R2
 	MOVW	0(R0), R0
-	BL	c_fcntl(SB)
+	BL	hitsumabushi_fcntl(SB)
 	MOVW	R0, 24(R19)	// return value
 	RET
 
@@ -517,7 +517,7 @@ TEXT runtime·fstat_trampoline(SB),NOSPLIT,$0
 	MOVD	R0, R19		// R19 is callee-save
 	MOVD	8(R0), R1
 	MOVW	0(R0), R0
-	BL	c_fstat(SB)
+	BL	hitsumabushi_fstat(SB)
 	MOVW	R0, 16(R19)	// return value
 	RET
 
@@ -526,7 +526,7 @@ TEXT runtime·lseek_trampoline(SB),NOSPLIT,$0
 	MOVD	8(R0), R1
 	MOVW	16(R0), R2
 	MOVW	0(R0), R0
-	BL	c_lseek(SB)
+	BL	hitsumabushi_lseek(SB)
 	MOVW	R0, 24(R19)	// return value
 	RET
 
@@ -536,7 +536,7 @@ TEXT runtime·renameat_trampoline(SB),NOSPLIT,$0
 	MOVD	16(R0), R2
 	MOVW	24(R0), R3
 	MOVD	0(R0), R0
-	BL	c_renameat(SB)
+	BL	hitsumabushi_renameat(SB)
 	MOVW	R0, 32(R19)	// return value
 	RET
 
@@ -546,6 +546,6 @@ TEXT runtime·fstatat_trampoline(SB),NOSPLIT,$0
 	MOVD	16(R0), R2
 	MOVW	24(R0), R3
 	MOVD	0(R0), R0
-	BL	c_fstatat(SB)
+	BL	hitsumabushi_fstatat(SB)
 	MOVW	R0, 32(R19)	// return value
 	RET
