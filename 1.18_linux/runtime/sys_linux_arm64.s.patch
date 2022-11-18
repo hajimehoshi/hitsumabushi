@@ -77,7 +77,7 @@ TEXT runtime·exit(SB),NOSPLIT|NOFRAME,$0-4
 //--to
 TEXT runtime·exit_trampoline(SB),NOSPLIT,$0
 	MOVW	0(R0), R0
-	BL	c_exit(SB)
+	BL	hitsumabushi_exit(SB)
 	RET
 //--from
 TEXT runtime·open(SB),NOSPLIT|NOFRAME,$0-20
@@ -98,7 +98,7 @@ TEXT runtime·open_trampoline(SB),NOSPLIT,$0
 	MOVW	8(R0), R1
 	MOVW	12(R0), R2
 	MOVD	0(R0), R0
-	BL	c_open(SB)
+	BL	hitsumabushi_open(SB)
 	RET
 //--from
 TEXT runtime·closefd(SB),NOSPLIT|NOFRAME,$0-12
@@ -114,7 +114,7 @@ done:
 //--to
 TEXT runtime·closefd_trampoline(SB),NOSPLIT,$0-12
 	MOVW	0(R0), R0
-	BL	c_closefd(SB)
+	BL	hitsumabushi_closefd(SB)
 	RET
 //--from
 TEXT runtime·write1(SB),NOSPLIT|NOFRAME,$0-28
@@ -130,7 +130,7 @@ TEXT runtime·write1_trampoline(SB),NOSPLIT,$0-28
 	MOVD	8(R0), R1
 	MOVW	16(R0), R2
 	MOVD	0(R0), R0
-	BL	c_write1(SB)
+	BL	hitsumabushi_write1(SB)
 	RET
 //--from
 TEXT runtime·read(SB),NOSPLIT|NOFRAME,$0-28
@@ -146,7 +146,7 @@ TEXT runtime·read_trampoline(SB),NOSPLIT,$0-28
 	MOVD	8(R0), R1
 	MOVW	16(R0), R2
 	MOVW	0(R0), R0
-	BL	c_read(SB)
+	BL	hitsumabushi_read(SB)
 	RET
 //--from
 TEXT runtime·usleep(SB),NOSPLIT,$24-4
@@ -170,7 +170,7 @@ TEXT runtime·usleep(SB),NOSPLIT,$24-4
 //--to
 TEXT runtime·usleep_trampoline(SB),NOSPLIT,$0
 	MOVW	0(R0), R0
-	BL	c_usleep(SB)
+	BL	hitsumabushi_usleep(SB)
 	RET
 //--from
 TEXT runtime·gettid(SB),NOSPLIT,$0-4
@@ -181,7 +181,7 @@ TEXT runtime·gettid(SB),NOSPLIT,$0-4
 //--to
 TEXT runtime·gettid_trampoline(SB),NOSPLIT,$0
 	MOVD	R0, R19		// R19 is callee-save
-	BL	c_gettid(SB)
+	BL	hitsumabushi_gettid(SB)
 	MOVW	R0, 0(R19)	// return value
 	RET
 //--from
@@ -296,7 +296,7 @@ finish:
 TEXT runtime·walltime1_trampoline(SB),NOSPLIT,$0
 	MOVD	8(R0), R1
 	MOVD	0(R0), R0
-	BL	c_walltime1(SB)
+	BL	hitsumabushi_walltime1(SB)
 	RET
 //--from
 TEXT runtime·nanotime1(SB),NOSPLIT,$24-8
@@ -389,7 +389,7 @@ finish:
 //--to
 TEXT runtime·nanotime1_trampoline(SB),NOSPLIT,$0
 	MOVD	R0, R19		// R19 is callee-save
-	BL	c_nanotime1(SB)
+	BL	hitsumabushi_nanotime1(SB)
 	MOVD	R0, 0(R19)	// return value
 	RET
 //--from
@@ -412,7 +412,7 @@ TEXT runtime·futex_trampoline(SB),NOSPLIT,$0
 	MOVD	24(R0), R4
 	MOVW	32(R0), R5
 	MOVD	0(R0), R0
-	BL	c_futex(SB)
+	BL	hitsumabushi_futex(SB)
 	RET
 //--from
 TEXT runtime·sigaltstack(SB),NOSPLIT|NOFRAME,$0
@@ -434,7 +434,7 @@ TEXT runtime·osyield(SB),NOSPLIT|NOFRAME,$0
 	RET
 //--to
 TEXT runtime·osyield_trampoline(SB),NOSPLIT,$0
-	BL	c_osyield(SB)
+	BL	hitsumabushi_osyield(SB)
 	RET
 //--from
 TEXT runtime·sched_getaffinity(SB),NOSPLIT|NOFRAME,$0
@@ -450,13 +450,13 @@ TEXT runtime·sched_getaffinity_trampoline(SB),NOSPLIT,$0-28
 	MOVD	8(R0), R1
 	MOVD	16(R0), R2
 	MOVD	0(R0), R0
-	BL	c_sched_getaffinity(SB)
+	BL	hitsumabushi_sched_getaffinity(SB)
 	RET
 //--append
 TEXT runtime·calloc_trampoline(SB),NOSPLIT,$0
 	MOVD	R0, R19		// R19 is callee-save
 	MOVD	8(R0), R1
 	MOVD	0(R0), R0
-	BL	c_calloc(SB)
+	BL	hitsumabushi_calloc(SB)
 	MOVD	R0, 16(R19)	// return value
 	RET

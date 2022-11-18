@@ -21,7 +21,7 @@ TEXT runtime·open_trampoline(SB),NOSPLIT,$0
 	MOVL	12(DI), DX		// arg 3 mode
 	MOVQ	0(DI), DI		// arg 1 pathname
 	XORL	AX, AX			// vararg: say "no float args"
-	CALL	c_open(SB)
+	CALL	hitsumabushi_open(SB)
 	MOVQ	AX, 16(BX)
 	POPQ	BP
 	RET
@@ -63,7 +63,7 @@ TEXT runtime·exit_trampoline(SB),NOSPLIT,$0
 	PUSHQ	BP
 	MOVQ	SP, BP
 	MOVL	0(DI), DI		// arg 1 exit status
-	CALL	c_exit(SB)
+	CALL	hitsumabushi_exit(SB)
 	MOVL	$0xf1, 0xf1  // crash
 	POPQ	BP
 	RET
@@ -84,7 +84,7 @@ TEXT runtime·read_trampoline(SB),NOSPLIT,$0
 	MOVQ	0(BX), DI	// arg 1 fd
 	MOVQ	8(BX), SI	// arg 2 buf
 	MOVQ	16(BX), DX	// arg 3 count
-	CALL	c_read(SB)
+	CALL	hitsumabushi_read(SB)
 	MOVQ	AX, 24(BX)	// return value
 	POPQ	BP
 	RET
@@ -103,7 +103,7 @@ TEXT runtime·closefd_trampoline(SB),NOSPLIT,$0
 	PUSHQ	BP
 	MOVQ	SP, BP
 	MOVL	0(DI), DI		// arg 1 fd
-	CALL	c_closefd(SB)
+	CALL	hitsumabushi_closefd(SB)
 	POPQ	BP
 	RET
 //--from
@@ -116,7 +116,7 @@ TEXT runtime·gettid(SB),NOSPLIT,$0-4
 TEXT runtime·gettid_trampoline(SB),NOSPLIT,$0
 	PUSHQ	BP
 	MOVQ	SP, BP
-	CALL	c_gettid(SB)
+	CALL	hitsumabushi_gettid(SB)
 	POPQ	BP
 	RET
 //--from
@@ -135,7 +135,7 @@ TEXT runtime·sigaltstack_trampoline(SB),NOSPLIT,$0
 	MOVQ	SP, BP
 	MOVQ	8(DI), SI		// arg 2 old
 	MOVQ	0(DI), DI		// arg 1 new
-	CALL	c_sigaltstack(SB)
+	CALL	hitsumabushi_sigaltstack(SB)
 	TESTQ	AX, AX
 	JEQ	2(PC)
 	MOVL	$0xf1, 0xf1  // crash
@@ -159,7 +159,7 @@ TEXT runtime·raise_trampoline(SB),NOSPLIT,$0
 	PUSHQ	BP
 	MOVQ	SP, BP
 	MOVL	0(DI), DI	// arg 1 signal
-	CALL	c_raise(SB)
+	CALL	hitsumabushi_raise(SB)
 	POPQ	BP
 	RET
 //--from
@@ -176,10 +176,10 @@ TEXT runtime·raiseproc_trampoline(SB),NOSPLIT,$0
 	PUSHQ	BP
 	MOVQ	SP, BP
 	MOVL	0(DI), BX	// signal
-	CALL	c_getpid(SB)
+	CALL	hitsumabushi_getpid(SB)
 	MOVL	AX, DI		// arg 1 pid
 	MOVL	BX, SI		// arg 2 signal
-	CALL	c_kill(SB)
+	CALL	hitsumabushi_kill(SB)
 	POPQ	BP
 	RET
 //--from
@@ -198,7 +198,7 @@ TEXT runtime·sched_getaffinity_trampoline(SB),NOSPLIT,$0
 	MOVQ	8(DI), SI	// arg 2 len
 	MOVQ	16(DI), DX	// arg 3 buf
 	MOVQ	0(DI), DI	// arg 1 pid
-	CALL	c_sched_getaffinity(SB)
+	CALL	hitsumabushi_sched_getaffinity(SB)
 	POPQ	BP
 	RET
 //--from
@@ -210,7 +210,7 @@ TEXT runtime·osyield(SB),NOSPLIT,$0
 TEXT runtime·osyield_trampoline(SB),NOSPLIT,$0
 	PUSHQ	BP
 	MOVQ	SP, BP
-	CALL	c_osyield(SB)
+	CALL	hitsumabushi_osyield(SB)
 	POPQ	BP
 	RET
 //--from
@@ -235,7 +235,7 @@ TEXT runtime·usleep_trampoline(SB),NOSPLIT,$0
 	PUSHQ	BP
 	MOVQ	SP, BP
 	MOVL	0(DI), DI	// arg 1 usec
-	CALL	c_usleep(SB)
+	CALL	hitsumabushi_usleep(SB)
 	POPQ	BP
 	RET
 //--from
@@ -254,7 +254,7 @@ TEXT runtime·write1_trampoline(SB),NOSPLIT,$0
 	MOVQ	8(DI), SI	// arg 2 p
 	MOVQ	16(DI), DX	// arg 3 n
 	MOVQ	0(DI), DI	// arg 1 fd
-	CALL	c_write1(SB)
+	CALL	hitsumabushi_write1(SB)
 	POPQ	BP
 	RET
 //--from
@@ -327,7 +327,7 @@ TEXT runtime·nanotime1_trampoline(SB),NOSPLIT,$0
 	PUSHQ	BP
 	MOVQ	DI, BX		// BX is callee-saved
 	MOVQ	SP, BP
-	CALL	c_nanotime1(SB)
+	CALL	hitsumabushi_nanotime1(SB)
 	MOVQ	AX, 0(BX)
 	POPQ	BP
 	RET
@@ -413,7 +413,7 @@ TEXT runtime·walltime1_trampoline(SB),NOSPLIT,$0
 	MOVQ	DI, BX		// BX is callee-saved
 	MOVQ	8(DI), SI
 	MOVQ	0(DI), DI
-	CALL	c_walltime1(SB)
+	CALL	hitsumabushi_walltime1(SB)
 	MOVQ	AX, 16(BX)	// return value
 	POPQ	BP
 	RET

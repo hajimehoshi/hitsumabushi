@@ -176,7 +176,7 @@ static void close_pseudo_file(int32_t fd) {
   pthread_mutex_unlock(pseudo_file_mutex());
 }
 
-int32_t c_closefd(int32_t fd) {
+int32_t hitsumabushi_closefd(int32_t fd) {
   if (fd >= kFDOffset) {
     close_pseudo_file(fd);
     return 0;
@@ -185,19 +185,19 @@ int32_t c_closefd(int32_t fd) {
   return 0;
 }
 
-uint32_t c_gettid() {
+uint32_t hitsumabushi_gettid() {
   uint64_t tid64 = (uint64_t)(pthread_self());
   uint32_t tid = (uint32_t)(tid64 >> 32) ^ (uint32_t)(tid64);
   return tid;
 }
 
-int64_t c_nanotime1() {
+int64_t hitsumabushi_nanotime1() {
   struct timespec tp;
   hitsumabushi_clock_gettime(CLOCK_MONOTONIC, &tp);
   return (int64_t)(tp.tv_sec) * 1000000000ll + (int64_t)tp.tv_nsec;
 }
 
-int32_t c_open(char *name, int32_t mode, int32_t perm) {
+int32_t hitsumabushi_open(char *name, int32_t mode, int32_t perm) {
   if (strcmp(name, "/proc/self/auxv") == 0) {
     static const char auxv[] =
       "\x06\x00\x00\x00\x00\x00\x00\x00"  // _AT_PAGESZ tag (6)
@@ -216,11 +216,11 @@ int32_t c_open(char *name, int32_t mode, int32_t perm) {
   return kENOENT;
 }
 
-int32_t c_osyield() {
+int32_t hitsumabushi_osyield() {
   return sched_yield();
 }
 
-int32_t c_sched_getaffinity(pid_t pid, size_t cpusetsize, void *mask) {
+int32_t hitsumabushi_sched_getaffinity(pid_t pid, size_t cpusetsize, void *mask) {
     int32_t numcpu = hitsumabushi_getproccount();
     for (int32_t i = 0; i < numcpu; i += 8)
         ((unsigned char*)mask)[i / 8] = (unsigned char)((1u << (numcpu - i)) - 1);
@@ -230,7 +230,7 @@ int32_t c_sched_getaffinity(pid_t pid, size_t cpusetsize, void *mask) {
     return (numcpu + 7) / 8;
 }
 
-int32_t c_read(int32_t fd, void *p, int32_t n) {
+int32_t hitsumabushi_read(int32_t fd, void *p, int32_t n) {
   if (fd >= kFDOffset) {
     return read_pseudo_file(fd, p, n);
   }
@@ -239,18 +239,18 @@ int32_t c_read(int32_t fd, void *p, int32_t n) {
   return kEBADF;
 }
 
-void c_usleep(useconds_t usec) {
+void hitsumabushi_usleep(useconds_t usec) {
   usleep(usec);
 }
 
-void c_walltime1(int64_t* sec, int32_t* nsec) {
+void hitsumabushi_walltime1(int64_t* sec, int32_t* nsec) {
   struct timespec tp;
   hitsumabushi_clock_gettime(CLOCK_REALTIME, &tp);
   *sec = tp.tv_sec;
   *nsec = tp.tv_nsec;
 }
 
-int32_t c_write1(uintptr_t fd, void *p, int32_t n) {
+int32_t hitsumabushi_write1(uintptr_t fd, void *p, int32_t n) {
   static pthread_mutex_t m = PTHREAD_MUTEX_INITIALIZER;
   int32_t ret = 0;
   pthread_mutex_lock(&m);
@@ -271,6 +271,6 @@ int32_t c_write1(uintptr_t fd, void *p, int32_t n) {
   return ret;
 }
 
-void c_exit(int32_t code) {
+void hitsumabushi_exit(int32_t code) {
   exit(code);
 }
