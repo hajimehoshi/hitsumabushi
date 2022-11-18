@@ -1,14 +1,8 @@
 //--from
-import (
-	"runtime/internal/atomic"
-	"unsafe"
-)
+package runtime
 //--to
-import (
-	"internal/abi"
-	"runtime/internal/atomic"
-	"unsafe"
-)
+package runtime
+import "internal/abi"
 //--from
 func read(fd int32, p unsafe.Pointer, n int32) int32
 //--to
