@@ -626,6 +626,26 @@ func FutexFilePath(os string) (string, error) {
 	return replacementFilePath("FutexFilePath", "runtime/cgo", os, "hitsumabushi_futex_linux.c")
 }
 
+// FilesystemFilePath returns a C file's path for the filesystem functions.
+// This file works only when linux is specified as the GOOS option.
+//
+// The file includes these functions:
+//
+//   - int32_t hitsumabushi_closefd(int32_t fd)
+//   - int32_t hitsumabushi_open(char *name, int32_t mode, int32_t perm)
+//   - int32_t hitsumabushi_read(int32_t fd, void *p, int32_t n)
+//   - int32_t hitsumabushi_write1(uintptr_t fd, void *p, int32_t n)
+//   - int32_t hitsumabushi_lseek(uintptr_t fd, off_t offset, int32_t whence)
+//   - int32_t hitsumabushi_fcntl(int32_t fd, int32_t cmd, int32_t arg)
+//   - int32_t hitsumabushi_fstat(int32_t fd, struct stat *stat)
+//   - int32_t hitsumabushi_renameat(int32_t fd1, char* name1, int32_t fd2, char* name2)
+//   - int32_t hitsumabushi_fstatat(int32_t fd, char* name, struct stat* p, int32_t flags)
+//
+// The default implementation only handles stdout, stderr, and some pseudo-files.
+func FilesystemFilePath(os string) (string, error) {
+	return replacementFilePath("FilesystemFilePath", "runtime/cgo", os, "hitsumabushi_filesystem_linux.c")
+}
+
 // MemoryFilePath returns a C file's path for the memory functions.
 // This file works only when linux is specified as the GOOS option.
 //
