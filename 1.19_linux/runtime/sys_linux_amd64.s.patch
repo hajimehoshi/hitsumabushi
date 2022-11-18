@@ -63,7 +63,7 @@ TEXT runtime·exit_trampoline(SB),NOSPLIT,$0
 	PUSHQ	BP
 	MOVQ	SP, BP
 	MOVL	0(DI), DI		// arg 1 exit status
-	CALL	c_exit(SB)
+	CALL	hitsumabushi_exit(SB)
 	MOVL	$0xf1, 0xf1  // crash
 	POPQ	BP
 	RET
@@ -116,7 +116,7 @@ TEXT runtime·gettid(SB),NOSPLIT,$0-4
 TEXT runtime·gettid_trampoline(SB),NOSPLIT,$0
 	PUSHQ	BP
 	MOVQ	SP, BP
-	CALL	c_gettid(SB)
+	CALL	hitsumabushi_gettid(SB)
 	POPQ	BP
 	RET
 //--from
@@ -210,7 +210,7 @@ TEXT runtime·osyield(SB),NOSPLIT,$0
 TEXT runtime·osyield_trampoline(SB),NOSPLIT,$0
 	PUSHQ	BP
 	MOVQ	SP, BP
-	CALL	c_osyield(SB)
+	CALL	hitsumabushi_osyield(SB)
 	POPQ	BP
 	RET
 //--from

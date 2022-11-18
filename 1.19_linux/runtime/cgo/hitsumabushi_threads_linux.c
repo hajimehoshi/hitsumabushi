@@ -100,3 +100,17 @@ int32_t hitsumabushi_futex(uint32_t *uaddr, int32_t futex_op, uint32_t val,
   // Just return 0.
   return 0;
 }
+
+uint32_t hitsumabushi_gettid() {
+  uint64_t tid64 = (uint64_t)(pthread_self());
+  uint32_t tid = (uint32_t)(tid64 >> 32) ^ (uint32_t)(tid64);
+  return tid;
+}
+
+int32_t hitsumabushi_osyield() {
+  return sched_yield();
+}
+
+void hitsumabushi_exit(int32_t code) {
+  exit(code);
+}

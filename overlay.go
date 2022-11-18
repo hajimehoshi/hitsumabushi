@@ -617,11 +617,14 @@ func ClockFilePath(os string) (string, error) {
 // ThreadsFilePath returns a C file's path for the threading functions.
 // This file works only when linux is specified as the GOOS option.
 //
-// The file includes this function:
+// The file includes these functions:
 //
 //   - int32_t hitsumabushi_futex(uint32_t *uaddr, int32_t futex_op, uint32_t val, const struct timespec *timeout, uint32_t *uaddr2, uint32_t val3)
+//   - uint32_t hitsumabushi_gettid()
+//   - int32_t hitsumabushi_osyield()
+//   - void hitsumabushi_exit(int32_t code)
 //
-// The default implementation is a pseudo futex by pthread.
+// The default implementation uses pthreads and sched_yield().
 func ThreadsFilePath(os string) (string, error) {
 	return replacementFilePath("ThreadsFilePath", "runtime/cgo", os, "hitsumabushi_threads_linux.c")
 }

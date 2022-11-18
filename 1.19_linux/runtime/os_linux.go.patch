@@ -253,13 +253,13 @@ func runPerThreadSyscall() {
 //go:cgo_import_static c_closefd
 var c_closefd byte
 
-//go:linkname c_exit c_exit
-//go:cgo_import_static c_exit
-var c_exit byte
+//go:linkname hitsumabushi_exit hitsumabushi_exit
+//go:cgo_import_static hitsumabushi_exit
+var hitsumabushi_exit byte
 
-//go:linkname c_gettid c_gettid
-//go:cgo_import_static c_gettid
-var c_gettid byte
+//go:linkname hitsumabushi_gettid hitsumabushi_gettid
+//go:cgo_import_static hitsumabushi_gettid
+var hitsumabushi_gettid byte
 
 //go:linkname c_nanotime1 c_nanotime1
 //go:cgo_import_static c_nanotime1
@@ -269,9 +269,9 @@ var c_nanotime1 byte
 //go:cgo_import_static c_open
 var c_open byte
 
-//go:linkname c_osyield c_osyield
-//go:cgo_import_static c_osyield
-var c_osyield byte
+//go:linkname hitsumabushi_osyield hitsumabushi_osyield
+//go:cgo_import_static hitsumabushi_osyield
+var hitsumabushi_osyield byte
 
 //go:linkname c_read c_read
 //go:cgo_import_static c_read
