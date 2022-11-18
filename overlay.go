@@ -80,7 +80,7 @@ func ReplaceClockGettime(name string) Option {
 // This is useful for special environments where the pseudo `futex` doesn't work correctly.
 //
 // ReplaceFutex works only for Linux with Go 1.18 and older.
-// For Go 1.19 and newer, use Overlay and FutexFilePath.
+// For Go 1.19 and newer, use Overlay and ThreadsFilePath.
 func ReplaceFutex(name string) Option {
 	return func(cfg *config) {
 		cfg.futexName = name
@@ -614,7 +614,7 @@ func ClockFilePath(os string) (string, error) {
 	return replacementFilePath("ClockFilePath", "runtime/cgo", os, "hitsumabushi_clock_linux.c")
 }
 
-// FutexFilePath returns a C file's path for the futex functions.
+// ThreadsFilePath returns a C file's path for the threading functions.
 // This file works only when linux is specified as the GOOS option.
 //
 // The file includes this function:
@@ -622,8 +622,8 @@ func ClockFilePath(os string) (string, error) {
 //   - int32_t hitsumabushi_futex(uint32_t *uaddr, int32_t futex_op, uint32_t val, const struct timespec *timeout, uint32_t *uaddr2, uint32_t val3)
 //
 // The default implementation is a pseudo futex by pthread.
-func FutexFilePath(os string) (string, error) {
-	return replacementFilePath("FutexFilePath", "runtime/cgo", os, "hitsumabushi_futex_linux.c")
+func ThreadsFilePath(os string) (string, error) {
+	return replacementFilePath("ThreadsFilePath", "runtime/cgo", os, "hitsumabushi_threads_linux.c")
 }
 
 // MemoryFilePath returns a C file's path for the memory functions.
