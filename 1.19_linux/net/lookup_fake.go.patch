@@ -1,0 +1,4 @@
+//--from
+//go:build js && wasm
+//--to
+// We want to actually build this file (because we disable lookup_unix.go)

@@ -1,0 +1,4 @@
+//--from
+//go:build cgo && !netgo && unix
+//--to
+//go:build ignore

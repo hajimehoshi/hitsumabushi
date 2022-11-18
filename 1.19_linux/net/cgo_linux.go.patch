@@ -1,0 +1,4 @@
+//--from
+//go:build !android && cgo && !netgo
+//--to
+//go:build ignore
