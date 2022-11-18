@@ -1,4 +1,4 @@
 //--from
 //go:build !faketime && (windows || (linux && amd64))
 //--to
-//go:build disable
+//go:build !faketime && windows
