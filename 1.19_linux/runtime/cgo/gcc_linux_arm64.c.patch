@@ -1,7 +1,6 @@
 //--from
 #include <signal.h>
 //--to
-
 //--from
 void
 _cgo_sys_thread_start(ThreadStart *ts)
