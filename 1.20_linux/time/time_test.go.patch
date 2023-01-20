@@ -1,0 +1,143 @@
+//--from
+func TestLoadFixed(t *testing.T) {
+	// Issue 4064: handle locations without any zone transitions.
+	loc, err := LoadLocation("Etc/GMT+1")
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	// The tzdata name Etc/GMT+1 uses "east is negative",
+	// but Go and most other systems use "east is positive".
+	// So GMT+1 corresponds to -3600 in the Go zone, not +3600.
+	name, offset := Now().In(loc).Zone()
+	// The zone abbreviation is "-01" since tzdata-2016g, and "GMT+1"
+	// on earlier versions; we accept both. (Issue #17276).
+	if !(name == "GMT+1" || name == "-01") || offset != -1*60*60 {
+		t.Errorf("Now().In(loc).Zone() = %q, %d, want %q or %q, %d",
+			name, offset, "GMT+1", "-01", -1*60*60)
+	}
+}
+//--to
+func TestLoadFixed(t *testing.T) {
+	t.Skip("location is not supported in this environment")
+}
+//--from
+func TestTimeIsDST(t *testing.T) {
+	undo := DisablePlatformSources()
+	defer undo()
+
+	tzWithDST, err := LoadLocation("Australia/Sydney")
+	if err != nil {
+		t.Fatalf("could not load tz 'Australia/Sydney': %v", err)
+	}
+	tzWithoutDST, err := LoadLocation("Australia/Brisbane")
+	if err != nil {
+		t.Fatalf("could not load tz 'Australia/Brisbane': %v", err)
+	}
+	tzFixed := FixedZone("FIXED_TIME", 12345)
+
+	tests := [...]struct {
+		time Time
+		want bool
+	}{
+		0: {Date(2009, 1, 1, 12, 0, 0, 0, UTC), false},
+		1: {Date(2009, 6, 1, 12, 0, 0, 0, UTC), false},
+		2: {Date(2009, 1, 1, 12, 0, 0, 0, tzWithDST), true},
+		3: {Date(2009, 6, 1, 12, 0, 0, 0, tzWithDST), false},
+		4: {Date(2009, 1, 1, 12, 0, 0, 0, tzWithoutDST), false},
+		5: {Date(2009, 6, 1, 12, 0, 0, 0, tzWithoutDST), false},
+		6: {Date(2009, 1, 1, 12, 0, 0, 0, tzFixed), false},
+		7: {Date(2009, 6, 1, 12, 0, 0, 0, tzFixed), false},
+	}
+
+	for i, tt := range tests {
+		got := tt.time.IsDST()
+		if got != tt.want {
+			t.Errorf("#%d:: (%#v).IsDST()=%t, want %t", i, tt.time.Format(RFC3339), got, tt.want)
+		}
+	}
+}
+//--to
+func TestTimeIsDST(t *testing.T) {
+	t.Skip("location is not supported in this environment")
+}
+//--from
+func TestTimeWithZoneTransition(t *testing.T) {
+	undo := DisablePlatformSources()
+	defer undo()
+
+	loc, err := LoadLocation("Asia/Shanghai")
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	tests := [...]struct {
+		give Time
+		want Time
+	}{
+		// 14 Apr 1991 - Daylight Saving Time Started
+		// When time of "Asia/Shanghai" was about to reach
+		// Sunday, 14 April 1991, 02:00:00 clocks were turned forward 1 hour to
+		// Sunday, 14 April 1991, 03:00:00 local daylight time instead.
+		// The UTC time was 13 April 1991, 18:00:00
+		0: {Date(1991, April, 13, 17, 50, 0, 0, loc), Date(1991, April, 13, 9, 50, 0, 0, UTC)},
+		1: {Date(1991, April, 13, 18, 0, 0, 0, loc), Date(1991, April, 13, 10, 0, 0, 0, UTC)},
+		2: {Date(1991, April, 14, 1, 50, 0, 0, loc), Date(1991, April, 13, 17, 50, 0, 0, UTC)},
+		3: {Date(1991, April, 14, 3, 0, 0, 0, loc), Date(1991, April, 13, 18, 0, 0, 0, UTC)},
+
+		// 15 Sep 1991 - Daylight Saving Time Ended
+		// When local daylight time of "Asia/Shanghai" was about to reach
+		// Sunday, 15 September 1991, 02:00:00 clocks were turned backward 1 hour to
+		// Sunday, 15 September 1991, 01:00:00 local standard time instead.
+		// The UTC time was 14 September 1991, 17:00:00
+		4: {Date(1991, September, 14, 16, 50, 0, 0, loc), Date(1991, September, 14, 7, 50, 0, 0, UTC)},
+		5: {Date(1991, September, 14, 17, 0, 0, 0, loc), Date(1991, September, 14, 8, 0, 0, 0, UTC)},
+		6: {Date(1991, September, 15, 0, 50, 0, 0, loc), Date(1991, September, 14, 15, 50, 0, 0, UTC)},
+		7: {Date(1991, September, 15, 2, 00, 0, 0, loc), Date(1991, September, 14, 18, 00, 0, 0, UTC)},
+	}
+
+	for i, tt := range tests {
+		if !tt.give.Equal(tt.want) {
+			t.Errorf("#%d:: %#v is not equal to %#v", i, tt.give.Format(RFC3339), tt.want.Format(RFC3339))
+		}
+	}
+}
+//--to
+func TestTimeWithZoneTransition(t *testing.T) {
+	t.Skip("location is not supported in this environment")
+}
+//--from
+func TestMarshalBinaryVersion2(t *testing.T) {
+	t0, err := Parse(RFC3339, "1880-01-01T00:00:00Z")
+	if err != nil {
+		t.Errorf("Failed to parse time, error = %v", err)
+	}
+	loc, err := LoadLocation("US/Eastern")
+	if err != nil {
+		t.Errorf("Failed to load location, error = %v", err)
+	}
+	t1 := t0.In(loc)
+	b, err := t1.MarshalBinary()
+	if err != nil {
+		t.Errorf("Failed to Marshal, error = %v", err)
+	}
+
+	t2 := Time{}
+	err = t2.UnmarshalBinary(b)
+	if err != nil {
+		t.Errorf("Failed to Unmarshal, error = %v", err)
+	}
+
+	if !(t0.Equal(t1) && t1.Equal(t2)) {
+		if !t0.Equal(t1) {
+			t.Errorf("The result t1: %+v after Marshal is not matched original t0: %+v", t1, t0)
+		}
+		if !t1.Equal(t2) {
+			t.Errorf("The result t2: %+v after Unmarshal is not matched original t1: %+v", t2, t1)
+		}
+	}
+}
+//--to
+func TestMarshalBinaryVersion2(t *testing.T) {
+	t.Skip("location is not supported in this environment")
+}

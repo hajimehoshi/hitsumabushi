@@ -7,7 +7,7 @@ jobs:
     strategy:
       matrix:
         os: [ubuntu-latest, windows-latest]
-        go: ['1.18.10', '1.19.5']
+        go: ['1.18.10', '1.19.5', '1.20.0-rc.3']
     name: Test with Go ${{ matrix.go }} on ${{ matrix.os }}
     runs-on: ${{ matrix.os }}
     defaults:
@@ -56,7 +56,7 @@ jobs:
         GOARCH=arm64 go run test.go -qemu -args="-test.run=^Test -test.v time"
 
     - name: Test (amd64)
-      if: (runner.os == 'Linux' && !startsWith(matrix.go, '1.18.')) || (runner.os == 'Windows' && !startsWith(matrix.go, '1.18.'))
+      if: (runner.os == 'Linux' && !startsWith(matrix.go, '1.18.')) || (runner.os == 'Windows' && startsWith(matrix.go, '1.19.'))
       run: |
         go run test.go -args="-test.run=^Test -test.v fmt"
         go run test.go -args="-test.run=^Test -test.v internal/abi"
