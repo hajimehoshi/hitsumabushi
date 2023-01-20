@@ -18,7 +18,7 @@ jobs:
       uses: actions/checkout@v2
 
     - name: Set up the prerequisites
-      if: ${{ startsWith(matrix.os, 'ubuntu-') }}
+      if: runner.os == 'Linux'
       run: |
         sudo apt-get update
         sudo apt-get install -y gcc-aarch64-linux-gnu qemu-user
@@ -29,7 +29,7 @@ jobs:
         go-version: ${{ matrix.go }}
 
     - name: Test (Linux, arm64)
-      if: ${{ startsWith(matrix.os, 'ubuntu-') }}
+      if: runner.os == 'Linux'
       run: |
         GOARCH=arm64 go run test.go -qemu -args="-test.run=^Test -test.v fmt"
         GOARCH=arm64 go run test.go -qemu -args="-test.run=^Test -test.v internal/abi"
@@ -55,8 +55,8 @@ jobs:
         GOARCH=arm64 go run test.go -qemu -args="-test.run=^Test -test.v sync/atomic"
         GOARCH=arm64 go run test.go -qemu -args="-test.run=^Test -test.v time"
 
-    - name: Test
-      if: ${{ (startsWith(matrix.os, 'ubuntu-') || startsWith(matrix.os, 'windows-')) && startsWith(matrix.go, '1.19.') }}
+    - name: Test (amd64)
+      if: (runner.os == 'Linux' && !startsWith(matrix.go, '1.18.')) || (runner.os == 'Windows' && !startsWith(matrix.go, '1.18.'))
       run: |
         go run test.go -args="-test.run=^Test -test.v fmt"
         go run test.go -args="-test.run=^Test -test.v internal/abi"
