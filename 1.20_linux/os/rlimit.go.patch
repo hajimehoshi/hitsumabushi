@@ -1,4 +1,0 @@
-//--from
-//go:build unix
-//--to
-//go:build unix && !linux
