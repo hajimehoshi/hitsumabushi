@@ -574,6 +574,8 @@ func utf16FromString(s string) ([]uint16, error) {
 	if strings.IndexByte(s, 0) != -1 {
 		return nil, fmt.Errorf("hitsumabushi: the given string must not include a NUL character")
 	}
+	// TODO: Use golang.org/x/sys/windows.UTF16FromString, but be careful that his is available only on Windows.
+	// See https://github.com/golang/go/issues/59971
 	return utf16.Encode([]rune(s + "\x00")), nil
 }
 
