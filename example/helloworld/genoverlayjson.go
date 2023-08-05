@@ -2,7 +2,6 @@
 // SPDX-FileCopyrightText: 2022 Hajime Hoshi
 
 //go:build ignore
-// +build ignore
 
 package main
 
