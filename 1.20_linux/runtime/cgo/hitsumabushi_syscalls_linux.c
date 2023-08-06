@@ -6,12 +6,10 @@
 #include <pthread.h>
 #include <errno.h>
 #include <string.h>
-#include <signal.h>
 #include <stdlib.h>
 #include <stdatomic.h>
 #include <unistd.h> // for usleep
 #include <stddef.h> // for size_t
-#include <signal.h> // for sigset_t and struct sigaction
 
 #include "libcgo.h"
 #include "libcgo_unix.h"
@@ -31,7 +29,7 @@ int munmap(void *addr, size_t length) {
   return 0;
 }
 
-int pthread_sigmask(int how, const sigset_t *set, sigset_t *oldset) {
+int pthread_sigmask(int how, void *set, void *oldset) {
   // Do nothing.
   return 0;
 }
@@ -81,27 +79,27 @@ int setuid(uid_t gid) {
   return 0;
 }
 
-int sigaction(int signum, const struct sigaction *act, struct sigaction *oldact) {
+int sigaction(int signum, void *act, void *oldact) {
   // Do nothing.
   return 0;
 }
 
-int sigaddset(sigset_t *set, int signum) {
+int sigaddset(void *set, int signum) {
   // Do nothing.
   return 0;
 }
 
-int sigemptyset(sigset_t *set) {
+int sigemptyset(void *set) {
   // Do nothing.
   return 0;
 }
 
-int sigfillset(sigset_t *set) {
+int sigfillset(void *set) {
   // Do nothing.
   return 0;
 }
 
-int sigismember(const sigset_t *set, int signum) {
+int sigismember(void *set, int signum) {
   // Do nothing.
   return 0;
 }
