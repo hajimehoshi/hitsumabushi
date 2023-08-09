@@ -1,0 +1,4 @@
+//--from
+//go:build linux && (amd64 || arm64 || ppc64le)
+//--to
+//go:build linux && (arm64 || ppc64le)

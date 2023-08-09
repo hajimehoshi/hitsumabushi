@@ -1,0 +1,84 @@
+//--from
+#include <grp.h>
+#include <sys/types.h>
+#include <unistd.h>
+#include <errno.h>
+#include "libcgo.h"
+//--to
+#include <sys/types.h>
+#include <unistd.h>
+#include <errno.h>
+#include "libcgo.h"
+//--from
+void
+_cgo_libc_setegid(argset_t* x) {
+	SET_RETVAL(setegid((gid_t) x->args[0]));
+}
+//--to
+void
+_cgo_libc_setegid(argset_t* x) {
+}
+//--from
+void
+_cgo_libc_seteuid(argset_t* x) {
+	SET_RETVAL(seteuid((uid_t) x->args[0]));
+}
+//--to
+void
+_cgo_libc_seteuid(argset_t* x) {
+}
+//--from
+void
+_cgo_libc_setgid(argset_t* x) {
+	SET_RETVAL(setgid((gid_t) x->args[0]));
+}
+//--to
+void
+_cgo_libc_setgid(argset_t* x) {
+}
+//--from
+void
+_cgo_libc_setgroups(argset_t* x) {
+	SET_RETVAL(setgroups((size_t) x->args[0], (const gid_t *) x->args[1]));
+}
+//--to
+void
+_cgo_libc_setgroups(argset_t* x) {
+}
+//--from
+void
+_cgo_libc_setregid(argset_t* x) {
+	SET_RETVAL(setregid((gid_t) x->args[0], (gid_t) x->args[1]));
+}
+//--to
+void
+_cgo_libc_setregid(argset_t* x) {
+}
+//--from
+void
+_cgo_libc_setresgid(argset_t* x) {
+	SET_RETVAL(setresgid((gid_t) x->args[0], (gid_t) x->args[1],
+			     (gid_t) x->args[2]));
+}
+//--to
+void
+_cgo_libc_setresgid(argset_t* x) {
+}
+//--from
+void
+_cgo_libc_setreuid(argset_t* x) {
+	SET_RETVAL(setreuid((uid_t) x->args[0], (uid_t) x->args[1]));
+}
+//--to
+void
+_cgo_libc_setreuid(argset_t* x) {
+}
+//--from
+void
+_cgo_libc_setuid(argset_t* x) {
+	SET_RETVAL(setuid((uid_t) x->args[0]));
+}
+//--to
+void
+_cgo_libc_setuid(argset_t* x) {
+}

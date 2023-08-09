@@ -1,0 +1,480 @@
+//--from
+TEXT runtime·open(SB),NOSPLIT,$0-20
+	// This uses openat instead of open, because Android O blocks open.
+	MOVL	$AT_FDCWD, DI // AT_FDCWD, so this acts like open
+	MOVQ	name+0(FP), SI
+	MOVL	mode+8(FP), DX
+	MOVL	perm+12(FP), R10
+	MOVL	$SYS_openat, AX
+	SYSCALL
+	CMPQ	AX, $0xfffffffffffff001
+	JLS	2(PC)
+	MOVL	$-1, AX
+	MOVL	AX, ret+16(FP)
+	RET
+//--to
+TEXT runtime·open_trampoline(SB),NOSPLIT|NOFRAME,$0
+	PUSHQ	BP
+	MOVQ	SP, BP
+	MOVQ	DI, BX			// BX is callee-saved
+	MOVL	8(DI), SI		// arg 2 flags
+	MOVL	12(DI), DX		// arg 3 mode
+	MOVQ	0(DI), DI		// arg 1 pathname
+	XORL	AX, AX			// vararg: say "no float args"
+	CALL	hitsumabushi_open(SB)
+	MOVQ	AX, 16(BX)
+	POPQ	BP
+	RET
+//--from
+TEXT runtime·futex(SB),NOSPLIT,$0
+	MOVQ	addr+0(FP), DI
+	MOVL	op+8(FP), SI
+	MOVL	val+12(FP), DX
+	MOVQ	ts+16(FP), R10
+	MOVQ	addr2+24(FP), R8
+	MOVL	val3+32(FP), R9
+	MOVL	$SYS_futex, AX
+	SYSCALL
+	MOVL	AX, ret+40(FP)
+	RET
+//--to
+TEXT runtime·futex_trampoline(SB),NOSPLIT|NOFRAME,$0
+	PUSHQ	BP
+	MOVQ	SP, BP
+	MOVQ	DI, BX
+	MOVQ	0(BX), DI		// arg 1 addr
+	MOVL	8(BX), SI		// arg 2 op
+	MOVL	12(BX), DX		// arg 3 val
+	MOVQ	16(BX), CX		// arg 4 ts
+	MOVQ	24(BX), R8		// arg 5 addr2
+	MOVL	32(BX), R9		// arg 6 val3
+	CALL	hitsumabushi_futex(SB)
+	MOVL	AX, 40(BX)
+	POPQ	BP
+	RET
+//--from
+TEXT runtime·exit(SB),NOSPLIT,$0-4
+	MOVL	code+0(FP), DI
+	MOVL	$SYS_exit_group, AX
+	SYSCALL
+	RET
+//--to
+TEXT runtime·exit_trampoline(SB),NOSPLIT|NOFRAME,$0
+	PUSHQ	BP
+	MOVQ	SP, BP
+	MOVL	0(DI), DI		// arg 1 exit status
+	CALL	hitsumabushi_exit(SB)
+	MOVL	$0xf1, 0xf1  // crash
+	POPQ	BP
+	RET
+//--from
+TEXT runtime·read(SB),NOSPLIT,$0-28
+	MOVL	fd+0(FP), DI
+	MOVQ	p+8(FP), SI
+	MOVL	n+16(FP), DX
+	MOVL	$SYS_read, AX
+	SYSCALL
+	MOVL	AX, ret+24(FP)
+	RET
+//--to
+TEXT runtime·read_trampoline(SB),NOSPLIT|NOFRAME,$0
+	PUSHQ	BP
+	MOVQ	SP, BP
+	MOVQ	DI, BX		// BX is callee-saved
+	MOVQ	0(BX), DI	// arg 1 fd
+	MOVQ	8(BX), SI	// arg 2 buf
+	MOVQ	16(BX), DX	// arg 3 count
+	CALL	hitsumabushi_read(SB)
+	MOVQ	AX, 24(BX)	// return value
+	POPQ	BP
+	RET
+//--from
+TEXT runtime·closefd(SB),NOSPLIT,$0-12
+	MOVL	fd+0(FP), DI
+	MOVL	$SYS_close, AX
+	SYSCALL
+	CMPQ	AX, $0xfffffffffffff001
+	JLS	2(PC)
+	MOVL	$-1, AX
+	MOVL	AX, ret+8(FP)
+	RET
+//--to
+TEXT runtime·closefd_trampoline(SB),NOSPLIT|NOFRAME,$0
+	PUSHQ	BP
+	MOVQ	SP, BP
+	MOVL	0(DI), DI		// arg 1 fd
+	CALL	hitsumabushi_closefd(SB)
+	POPQ	BP
+	RET
+//--from
+TEXT runtime·gettid(SB),NOSPLIT,$0-4
+	MOVL	$SYS_gettid, AX
+	SYSCALL
+	MOVL	AX, ret+0(FP)
+	RET
+//--to
+TEXT runtime·gettid_trampoline(SB),NOSPLIT|NOFRAME,$0
+	PUSHQ	BP
+	MOVQ	SP, BP
+	CALL	hitsumabushi_gettid(SB)
+	POPQ	BP
+	RET
+//--from
+TEXT runtime·sigaltstack(SB),NOSPLIT,$0
+	MOVQ	new+0(FP), DI
+	MOVQ	old+8(FP), SI
+	MOVQ	$SYS_sigaltstack, AX
+	SYSCALL
+	CMPQ	AX, $0xfffffffffffff001
+	JLS	2(PC)
+	MOVL	$0xf1, 0xf1  // crash
+	RET
+//--to
+TEXT runtime·sigaltstack_trampoline(SB),NOSPLIT|NOFRAME,$0
+	PUSHQ	BP
+	MOVQ	SP, BP
+	MOVQ	8(DI), SI		// arg 2 old
+	MOVQ	0(DI), DI		// arg 1 new
+	CALL	hitsumabushi_sigaltstack(SB)
+	TESTQ	AX, AX
+	JEQ	2(PC)
+	MOVL	$0xf1, 0xf1  // crash
+	POPQ	BP
+	RET
+//--from
+TEXT runtime·raise(SB),NOSPLIT,$0
+	MOVL	$SYS_getpid, AX
+	SYSCALL
+	MOVL	AX, R12
+	MOVL	$SYS_gettid, AX
+	SYSCALL
+	MOVL	AX, SI	// arg 2 tid
+	MOVL	R12, DI	// arg 1 pid
+	MOVL	sig+0(FP), DX	// arg 3
+	MOVL	$SYS_tgkill, AX
+	SYSCALL
+	RET
+//--to
+TEXT runtime·raise_trampoline(SB),NOSPLIT|NOFRAME,$0
+	PUSHQ	BP
+	MOVQ	SP, BP
+	MOVL	0(DI), DI	// arg 1 signal
+	CALL	hitsumabushi_raise(SB)
+	POPQ	BP
+	RET
+//--from
+TEXT runtime·raiseproc(SB),NOSPLIT,$0
+	MOVL	$SYS_getpid, AX
+	SYSCALL
+	MOVL	AX, DI	// arg 1 pid
+	MOVL	sig+0(FP), SI	// arg 2
+	MOVL	$SYS_kill, AX
+	SYSCALL
+	RET
+//--to
+TEXT runtime·raiseproc_trampoline(SB),NOSPLIT|NOFRAME,$0
+	PUSHQ	BP
+	MOVQ	SP, BP
+	MOVL	0(DI), BX	// signal
+	CALL	hitsumabushi_getpid(SB)
+	MOVL	AX, DI		// arg 1 pid
+	MOVL	BX, SI		// arg 2 signal
+	CALL	hitsumabushi_kill(SB)
+	POPQ	BP
+	RET
+//--from
+TEXT runtime·sched_getaffinity(SB),NOSPLIT,$0
+	MOVQ	pid+0(FP), DI
+	MOVQ	len+8(FP), SI
+	MOVQ	buf+16(FP), DX
+	MOVL	$SYS_sched_getaffinity, AX
+	SYSCALL
+	MOVL	AX, ret+24(FP)
+	RET
+//--to
+TEXT runtime·sched_getaffinity_trampoline(SB),NOSPLIT|NOFRAME,$0
+	PUSHQ	BP
+	MOVQ	SP, BP
+	MOVQ	8(DI), SI	// arg 2 len
+	MOVQ	16(DI), DX	// arg 3 buf
+	MOVQ	0(DI), DI	// arg 1 pid
+	CALL	hitsumabushi_sched_getaffinity(SB)
+	POPQ	BP
+	RET
+//--from
+TEXT runtime·osyield(SB),NOSPLIT,$0
+	MOVL	$SYS_sched_yield, AX
+	SYSCALL
+	RET
+//--to
+TEXT runtime·osyield_trampoline(SB),NOSPLIT|NOFRAME,$0
+	PUSHQ	BP
+	MOVQ	SP, BP
+	CALL	hitsumabushi_osyield(SB)
+	POPQ	BP
+	RET
+//--from
+TEXT runtime·usleep(SB),NOSPLIT,$16
+	MOVL	$0, DX
+	MOVL	usec+0(FP), AX
+	MOVL	$1000000, CX
+	DIVL	CX
+	MOVQ	AX, 0(SP)
+	MOVL	$1000, AX	// usec to nsec
+	MULL	DX
+	MOVQ	AX, 8(SP)
+
+	// nanosleep(&ts, 0)
+	MOVQ	SP, DI
+	MOVL	$0, SI
+	MOVL	$SYS_nanosleep, AX
+	SYSCALL
+	RET
+//--to
+TEXT runtime·usleep_trampoline(SB),NOSPLIT|NOFRAME,$0
+	PUSHQ	BP
+	MOVQ	SP, BP
+	MOVL	0(DI), DI	// arg 1 usec
+	CALL	hitsumabushi_usleep(SB)
+	POPQ	BP
+	RET
+//--from
+TEXT runtime·write1(SB),NOSPLIT,$0-28
+	MOVQ	fd+0(FP), DI
+	MOVQ	p+8(FP), SI
+	MOVL	n+16(FP), DX
+	MOVL	$SYS_write, AX
+	SYSCALL
+	MOVL	AX, ret+24(FP)
+	RET
+//--to
+TEXT runtime·write1_trampoline(SB),NOSPLIT|NOFRAME,$0
+	PUSHQ	BP
+	MOVQ	SP, BP
+	MOVQ	8(DI), SI	// arg 2 p
+	MOVQ	16(DI), DX	// arg 3 n
+	MOVQ	0(DI), DI	// arg 1 fd
+	CALL	hitsumabushi_write1(SB)
+	POPQ	BP
+	RET
+//--from
+TEXT runtime·nanotime1(SB),NOSPLIT,$16-8
+	// We don't know how much stack space the VDSO code will need,
+	// so switch to g0.
+	// In particular, a kernel configured with CONFIG_OPTIMIZE_INLINING=n
+	// and hardening can use a full page of stack space in gettime_sym
+	// due to stack probes inserted to avoid stack/heap collisions.
+	// See issue #20427.
+
+	MOVQ	SP, R12	// Save old SP; R12 unchanged by C code.
+
+	MOVQ	g_m(R14), BX // BX unchanged by C code.
+
+	// Set vdsoPC and vdsoSP for SIGPROF traceback.
+	// Save the old values on stack and restore them on exit,
+	// so this function is reentrant.
+	MOVQ	m_vdsoPC(BX), CX
+	MOVQ	m_vdsoSP(BX), DX
+	MOVQ	CX, 0(SP)
+	MOVQ	DX, 8(SP)
+
+	LEAQ	ret+0(FP), DX
+	MOVQ	-8(DX), CX
+	MOVQ	CX, m_vdsoPC(BX)
+	MOVQ	DX, m_vdsoSP(BX)
+
+	CMPQ	R14, m_curg(BX)	// Only switch if on curg.
+	JNE	noswitch
+
+	MOVQ	m_g0(BX), DX
+	MOVQ	(g_sched+gobuf_sp)(DX), SP	// Set SP to g0 stack
+
+noswitch:
+	SUBQ	$16, SP		// Space for results
+	ANDQ	$~15, SP	// Align for C code
+
+	MOVL	$1, DI // CLOCK_MONOTONIC
+	LEAQ	0(SP), SI
+	MOVQ	runtime·vdsoClockgettimeSym(SB), AX
+	CMPQ	AX, $0
+	JEQ	fallback
+	CALL	AX
+ret:
+	MOVQ	0(SP), AX	// sec
+	MOVQ	8(SP), DX	// nsec
+	MOVQ	R12, SP		// Restore real SP
+	// Restore vdsoPC, vdsoSP
+	// We don't worry about being signaled between the two stores.
+	// If we are not in a signal handler, we'll restore vdsoSP to 0,
+	// and no one will care about vdsoPC. If we are in a signal handler,
+	// we cannot receive another signal.
+	MOVQ	8(SP), CX
+	MOVQ	CX, m_vdsoSP(BX)
+	MOVQ	0(SP), CX
+	MOVQ	CX, m_vdsoPC(BX)
+	// sec is in AX, nsec in DX
+	// return nsec in AX
+	IMULQ	$1000000000, AX
+	ADDQ	DX, AX
+	MOVQ	AX, ret+0(FP)
+	RET
+fallback:
+	MOVQ	$SYS_clock_gettime, AX
+	SYSCALL
+	JMP	ret
+//--to
+TEXT runtime·nanotime1_trampoline(SB),NOSPLIT|NOFRAME,$0
+	PUSHQ	BP
+	MOVQ	DI, BX		// BX is callee-saved
+	MOVQ	SP, BP
+	CALL	hitsumabushi_nanotime1(SB)
+	MOVQ	AX, 0(BX)
+	POPQ	BP
+	RET
+//--append
+TEXT runtime·sysAllocOS_trampoline(SB),NOSPLIT|NOFRAME,$0
+	PUSHQ	BP
+	MOVQ	SP, BP
+	MOVQ	DI, BX
+	MOVQ	0(DI), DI
+	CALL	hitsumabushi_sysAllocOS(SB)
+	MOVQ	AX, 8(BX)
+	POPQ	BP
+	RET
+
+TEXT runtime·sysUnusedOS_trampoline(SB),NOSPLIT|NOFRAME,$0
+	PUSHQ	BP
+	MOVQ	SP, BP
+	MOVQ	8(DI), SI
+	MOVQ	0(DI), DI
+	CALL	hitsumabushi_sysUnusedOS(SB)
+	POPQ	BP
+	RET
+
+TEXT runtime·sysUsedOS_trampoline(SB),NOSPLIT|NOFRAME,$0
+	PUSHQ	BP
+	MOVQ	SP, BP
+	MOVQ	8(DI), SI
+	MOVQ	0(DI), DI
+	CALL	hitsumabushi_sysUsedOS(SB)
+	POPQ	BP
+	RET
+
+TEXT runtime·sysHugePageOS_trampoline(SB),NOSPLIT|NOFRAME,$0
+	PUSHQ	BP
+	MOVQ	SP, BP
+	MOVQ	8(DI), SI
+	MOVQ	0(DI), DI
+	CALL	hitsumabushi_sysHugePageOS(SB)
+	POPQ	BP
+	RET
+
+TEXT runtime·sysFreeOS_trampoline(SB),NOSPLIT|NOFRAME,$0
+	PUSHQ	BP
+	MOVQ	SP, BP
+	MOVQ	8(DI), SI
+	MOVQ	0(DI), DI
+	CALL	hitsumabushi_sysFreeOS(SB)
+	POPQ	BP
+	RET
+
+TEXT runtime·sysFaultOS_trampoline(SB),NOSPLIT|NOFRAME,$0
+	PUSHQ	BP
+	MOVQ	SP, BP
+	MOVQ	8(DI), SI
+	MOVQ	0(DI), DI
+	CALL	hitsumabushi_sysFaultOS(SB)
+	POPQ	BP
+	RET
+
+TEXT runtime·sysReserveOS_trampoline(SB),NOSPLIT|NOFRAME,$0
+	PUSHQ	BP
+	MOVQ	SP, BP
+	MOVQ	DI, BX		// BX is callee-saved
+	MOVQ	8(DI), SI
+	MOVQ	0(DI), DI
+	CALL	hitsumabushi_sysReserveOS(SB)
+	MOVQ	AX, 16(BX)
+	POPQ	BP
+	RET
+
+TEXT runtime·sysMapOS_trampoline(SB),NOSPLIT|NOFRAME,$0
+	PUSHQ	BP
+	MOVQ	SP, BP
+	MOVQ	8(DI), SI
+	MOVQ	0(DI), DI
+	CALL	hitsumabushi_sysMapOS(SB)
+	POPQ	BP
+	RET
+
+TEXT runtime·walltime1_trampoline(SB),NOSPLIT|NOFRAME,$0
+	PUSHQ	BP
+	MOVQ	SP, BP
+	MOVQ	DI, BX		// BX is callee-saved
+	MOVQ	8(DI), SI
+	MOVQ	0(DI), DI
+	CALL	hitsumabushi_walltime1(SB)
+	MOVQ	AX, 16(BX)	// return value
+	POPQ	BP
+	RET
+
+TEXT runtime·fcntl_trampoline(SB),NOSPLIT|NOFRAME,$0
+	PUSHQ	BP
+	MOVQ	SP, BP
+	MOVQ	8(DI), SI		// arg 2 cmd
+	MOVQ	16(DI), DX		// arg 3 arg
+	MOVQ	0(DI), DI		// arg 1 fd
+	XORL	AX, AX			// vararg: say "no float args"
+	CALL	hitsumabushi_fcntl(SB)
+	POPQ	BP
+	RET
+
+TEXT runtime·fstat_trampoline(SB),NOSPLIT|NOFRAME,$0
+	PUSHQ	BP
+	MOVQ	SP, BP
+	MOVQ	DI, BX
+	MOVQ	8(DI), SI		// arg 2 stat
+	MOVQ	0(DI), DI		// arg 1 fd
+	CALL	hitsumabushi_fstat(SB)
+	MOVQ	AX, 16(BX)	// return value
+	POPQ	BP
+	RET
+
+TEXT runtime·lseek_trampoline(SB),NOSPLIT|NOFRAME,$0
+	PUSHQ	BP
+	MOVQ	SP, BP
+	MOVQ	DI, BX
+	MOVQ	8(DI), SI		// arg 2 offset
+	MOVQ	16(DI), DX		// arg 3 whence
+	MOVQ	0(DI), DI		// arg 1 fd
+	XORL	AX, AX			// vararg: say "no float args"
+	CALL	hitsumabushi_lseek(SB)
+	MOVQ	AX, 24(BX)	// return value
+	POPQ	BP
+	RET
+
+TEXT runtime·renameat_trampoline(SB),NOSPLIT|NOFRAME,$0
+	PUSHQ	BP
+	MOVQ	SP, BP
+	MOVQ	DI, BX
+	MOVQ	0(BX), DI		// arg 1
+	MOVQ	8(BX), SI		// arg 2
+	MOVQ	16(BX), DX		// arg 3
+	MOVQ	24(BX), CX		// arg 4
+	CALL	hitsumabushi_renameat(SB)
+	MOVL	AX, 32(BX)
+	POPQ	BP
+	RET
+
+TEXT runtime·fstatat_trampoline(SB),NOSPLIT|NOFRAME,$0
+	PUSHQ	BP
+	MOVQ	SP, BP
+	MOVQ	DI, BX
+	MOVQ	0(BX), DI		// arg 1
+	MOVQ	8(BX), SI		// arg 2
+	MOVQ	16(BX), DX		// arg 3
+	MOVQ	24(BX), CX		// arg 4
+	CALL	hitsumabushi_fstatat(SB)
+	MOVL	AX, 32(BX)
+	POPQ	BP
+	RET

@@ -1,0 +1,20 @@
+//--from
+func TestLoadFixed(t *testing.T) {
+//--to
+func TestLoadFixed(t *testing.T) {
+	t.Skip("location is not supported in this environment")
+//--from
+func TestTimeIsDST(t *testing.T) {
+//--to
+func TestTimeIsDST(t *testing.T) {
+	t.Skip("location is not supported in this environment")
+//--from
+func TestTimeWithZoneTransition(t *testing.T) {
+//--to
+func TestTimeWithZoneTransition(t *testing.T) {
+	t.Skip("location is not supported in this environment")
+//--from
+func TestMarshalBinaryVersion2(t *testing.T) {
+//--to
+func TestMarshalBinaryVersion2(t *testing.T) {
+	t.Skip("location is not supported in this environment")
