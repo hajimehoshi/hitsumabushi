@@ -14,10 +14,8 @@ func args(c int32, v **byte) {
 }
 //--to
 func args(c int32, v **byte) {
-	// Malloc is not defined yet and getting an address of a global variable might fail here.
-	// Overwrite goargs later.
-
-	physPageSize = 4096
+	// In the original code, physPageSize is determined at sysargs.
+	// Hitsumabushi gives an initial value for physPageSize at its declaration, so sysargs doesn't have to be called.
 }
 //--append
 // Expose the entry point for some special environments.
