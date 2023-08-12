@@ -215,6 +215,12 @@ func osyield() {
 }
 func osyield_trampoline()
 //--from
+func sysSigaction(sig uint32, new, old *sigactiont) {
+//--to
+func sysSigaction(sig uint32, new, old *sigactiont) {
+	// Do nothing.
+	return
+//--from
 func signalM(mp *m, sig int) {
 	tgkill(getpid(), int(mp.procid), sig)
 }
