@@ -34,6 +34,7 @@ type config struct {
 	overlayDir       string
 	os               string
 	args             []string
+	pageSize         int
 	clockGettimeName string
 	futexName        string
 	replaceDLLs      []replaceString
@@ -67,7 +68,7 @@ func Args(args ...string) Option {
 // If name is an empty string, the function is not replaced.
 // This is useful for special environments where `clock_gettime` doesn't work correctly.
 //
-// ReplaceClockGettime works only for Linux with Go 1.18 and older.
+// ReplaceClockGettime works only for Linux.
 // For Go 1.19 and newer, use Overlay and ClockFilePath.
 func ReplaceClockGettime(name string) Option {
 	return func(cfg *config) {
@@ -79,7 +80,7 @@ func ReplaceClockGettime(name string) Option {
 // If name is an empty string, a pseudo futex implementation is used.
 // This is useful for special environments where the pseudo `futex` doesn't work correctly.
 //
-// ReplaceFutex works only for Linux with Go 1.18 and older.
+// ReplaceFutex works only for Linux.
 // For Go 1.19 and newer, use Overlay and FutexFilePath.
 func ReplaceFutex(name string) Option {
 	return func(cfg *config) {
@@ -92,6 +93,16 @@ func ReplaceFutex(name string) Option {
 func GOOS(os string) Option {
 	return func(cfg *config) {
 		cfg.os = os
+	}
+}
+
+// PageSize specifies the page size.
+// The deafult value is 4096.
+//
+// This works only for Linux.
+func PageSize(pageSize int) Option {
+	return func(cfg *config) {
+		cfg.pageSize = pageSize
 	}
 }
 
@@ -139,7 +150,8 @@ func GenOverlayJSON(options ...Option) ([]byte, error) {
 	}
 
 	cfg := config{
-		os: runtime.GOOS,
+		os:       runtime.GOOS,
+		pageSize: 4096,
 	}
 	for _, op := range options {
 		op(&cfg)
@@ -297,6 +309,14 @@ func goargs() {
 	}
 }`, argvDef, len(cfg.args))
 			if err := replace(tmpDir, replaces, "runtime", "runtime1.go", old, new, cfg.os); err != nil {
+				return nil, err
+			}
+		}
+
+		{
+			old := `var physPageSize uintptr`
+			new := fmt.Sprintf(`var physPageSize uintptr = %d`, cfg.pageSize)
+			if err := replace(tmpDir, replaces, "runtime", "malloc.go", old, new, cfg.os); err != nil {
 				return nil, err
 			}
 		}
