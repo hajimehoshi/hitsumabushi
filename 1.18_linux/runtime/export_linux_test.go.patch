@@ -1,8 +1,0 @@
-//--from
-import "unsafe"
-//--to
-//--from
-func Epollctl(epfd, op, fd int32, ev unsafe.Pointer) int32 {
-	return epollctl(epfd, op, fd, (*epollevent)(ev))
-}
-//--to

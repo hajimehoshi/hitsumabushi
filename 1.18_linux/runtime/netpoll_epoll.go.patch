@@ -1,4 +1,0 @@
-//--from
-//go:build linux
-//--to
-//go:build ignore

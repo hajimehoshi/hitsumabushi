@@ -30,15 +30,13 @@ type replaceString struct {
 }
 
 type config struct {
-	testPkgs         []string
-	overlayDir       string
-	os               string
-	args             []string
-	pageSize         int
-	clockGettimeName string
-	futexName        string
-	replaceDLLs      []replaceString
-	overlay          []replaceString
+	testPkgs    []string
+	overlayDir  string
+	os          string
+	args        []string
+	pageSize    int
+	replaceDLLs []replaceString
+	overlay     []replaceString
 }
 
 // TestPkg represents a package for testing.
@@ -61,30 +59,6 @@ func OverlayDir(dir string) Option {
 func Args(args ...string) Option {
 	return func(cfg *config) {
 		cfg.args = append(cfg.args, args...)
-	}
-}
-
-// ReplaceClockGettime replaces the C function `clock_gettime` with the given name.
-// If name is an empty string, the function is not replaced.
-// This is useful for special environments where `clock_gettime` doesn't work correctly.
-//
-// ReplaceClockGettime works only for Linux.
-// For Go 1.19 and newer, use Overlay and ClockFilePath.
-func ReplaceClockGettime(name string) Option {
-	return func(cfg *config) {
-		cfg.clockGettimeName = name
-	}
-}
-
-// ReplaceFutex replaces the system call `futex` with the given name.
-// If name is an empty string, a pseudo futex implementation is used.
-// This is useful for special environments where the pseudo `futex` doesn't work correctly.
-//
-// ReplaceFutex works only for Linux.
-// For Go 1.19 and newer, use Overlay and FutexFilePath.
-func ReplaceFutex(name string) Option {
-	return func(cfg *config) {
-		cfg.futexName = name
 	}
 }
 
@@ -317,26 +291,6 @@ func goargs() {
 			old := `var physPageSize uintptr`
 			new := fmt.Sprintf(`var physPageSize uintptr = %d`, cfg.pageSize)
 			if err := replace(tmpDir, replaces, "runtime", "malloc.go", old, new, cfg.os); err != nil {
-				return nil, err
-			}
-		}
-
-		// Replace clock_gettime.
-		if cfg.clockGettimeName != "" {
-			old := "#define clock_gettime clock_gettime"
-			new := fmt.Sprintf(`void %[1]s(clockid_t, struct timespec *);
-#define clock_gettime %[1]s`, cfg.clockGettimeName)
-			if err := replace(tmpDir, replaces, "runtime/cgo", "gcc_linux_arm64.c", old, new, cfg.os); err != nil {
-				return nil, err
-			}
-		}
-
-		// Replace futex.
-		if cfg.futexName != "" {
-			old := "#undef user_futex"
-			new := fmt.Sprintf(`int32_t %[1]s(uint32_t *uaddr, int32_t futex_op, uint32_t val, const struct timespec *timeout, uint32_t *uaddr2, uint32_t val3);
-#define user_futex %[1]s`, cfg.futexName)
-			if err := replace(tmpDir, replaces, "runtime/cgo", "gcc_linux_arm64.c", old, new, cfg.os); err != nil {
 				return nil, err
 			}
 		}
