@@ -47,7 +47,7 @@ func sysHugePageOS_trampoline(n uintptr, size uintptr)
 func sysNoHugePageOS(v unsafe.Pointer, n uintptr) {
 }
 
-func sysHugePageCollapse(v unsafe.Pointer, n uintptr) {
+func sysHugePageCollapseOS(v unsafe.Pointer, n uintptr) {
 }
 
 // Don't split the stack as this function may be invoked without a valid G,
