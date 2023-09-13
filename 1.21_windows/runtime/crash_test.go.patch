@@ -1,0 +1,10 @@
+//--from
+func TestRuntimePanic(t *testing.T) {
+//--to
+func TestRuntimePanic(t *testing.T) {
+	t.Skip("analyzing output is not supported in this environment")
+//--from
+func TestG0StackOverflow(t *testing.T) {
+//--to
+func TestG0StackOverflow(t *testing.T) {
+	t.Skip("analyzing output is not supported in this environment")

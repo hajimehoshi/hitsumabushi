@@ -1,0 +1,7 @@
+//--from
+func syscall_SyscallN(trap uintptr, args ...uintptr) (r1, r2, err uintptr) {
+//--to
+func syscall_SyscallN(trap uintptr, args ...uintptr) (r1, r2, err uintptr) {
+	if trap == 0 {
+		panic("trap must not be 0 at SyscallN")
+	}

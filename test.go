@@ -81,11 +81,31 @@ func createJSON(args []string) (string, error) {
 }
 
 func buildTestBinary(jsonPath string, args []string) error {
-	bin := "test"
+	// Create a temporary working directory to use a fixed Go version for go.mod.
+	// go.mod's Go version matters as this might change some Go's behavior (e.g. runtime.TestPanicNil).
+	tmp, err := os.MkdirTemp("", "hitsumabushi-*")
+	if err != nil {
+		return err
+	}
+	defer os.RemoveAll(tmp)
+
+	cmd := exec.Command("go", "mod", "init", "hitsumabushitest")
+	cmd.Stdout = os.Stdout
+	cmd.Stderr = os.Stderr
+	cmd.Dir = tmp
+	if err := cmd.Run(); err != nil {
+		return err
+	}
+
+	wd, err := os.Getwd()
+	if err != nil {
+		return err
+	}
+	bin := filepath.Join(wd, "test")
 	if runtime.GOOS == "windows" {
 		bin += ".exe"
 	}
-	cmd := exec.Command("go", "test", "-c", "-vet=off", "-overlay="+jsonPath, "-o="+bin)
+	cmd = exec.Command("go", "test", "-c", "-vet=off", "-overlay="+jsonPath, "-o="+bin)
 	cmd.Args = append(cmd.Args, args...)
 	cmd.Env = append(os.Environ(),
 		"CGO_ENABLED=1",
@@ -95,10 +115,11 @@ func buildTestBinary(jsonPath string, args []string) error {
 	}
 	cmd.Stdout = os.Stdout
 	cmd.Stderr = os.Stderr
-
+	cmd.Dir = tmp
 	if err := cmd.Run(); err != nil {
 		return err
 	}
+
 	return nil
 }
 

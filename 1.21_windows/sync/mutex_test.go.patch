@@ -1,0 +1,5 @@
+//--from
+func TestMutexMisuse(t *testing.T) {
+//--to
+func TestMutexMisuse(t *testing.T) {
+	t.Skip("analyzing output is not supported in this environment")
