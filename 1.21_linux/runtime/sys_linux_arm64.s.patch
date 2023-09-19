@@ -166,7 +166,7 @@ TEXT runtime·usleep(SB),NOSPLIT,$24-4
 	SVC
 	RET
 //--to
-TEXT runtime·usleep_trampoline(SB),NOSPLIT,$0
+TEXT runtime·usleep_trampoline(SB),NOSPLIT|NOFRAME,$0
 	MOVW	0(R0), R0
 	BL	hitsumabushi_usleep(SB)
 	RET
@@ -177,7 +177,7 @@ TEXT runtime·gettid(SB),NOSPLIT,$0-4
 	MOVW	R0, ret+0(FP)
 	RET
 //--to
-TEXT runtime·gettid_trampoline(SB),NOSPLIT,$0
+TEXT runtime·gettid_trampoline(SB),NOSPLIT|NOFRAME,$0
 	MOVD	R0, R19		// R19 is callee-save
 	BL	hitsumabushi_gettid(SB)
 	MOVW	R0, 0(R19)	// return value
