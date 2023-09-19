@@ -73,7 +73,7 @@ TEXT runtime·exit(SB),NOSPLIT|NOFRAME,$0-4
 	SVC
 	RET
 //--to
-TEXT runtime·exit_trampoline(SB),NOSPLIT|NOFRAME,$0
+TEXT runtime·exit_trampoline(SB),NOSPLIT,$0
 	MOVW	0(R0), R0
 	BL	hitsumabushi_exit(SB)
 	RET
@@ -92,7 +92,7 @@ done:
 	MOVW	R0, ret+16(FP)
 	RET
 //--to
-TEXT runtime·open_trampoline(SB),NOSPLIT|NOFRAME,$0
+TEXT runtime·open_trampoline(SB),NOSPLIT,$0
 	MOVW	8(R0), R1
 	MOVW	12(R0), R2
 	MOVD	0(R0), R0
@@ -110,7 +110,7 @@ done:
 	MOVW	R0, ret+8(FP)
 	RET
 //--to
-TEXT runtime·closefd_trampoline(SB),NOSPLIT|NOFRAME,$0-12
+TEXT runtime·closefd_trampoline(SB),NOSPLIT,$0-12
 	MOVW	0(R0), R0
 	BL	hitsumabushi_closefd(SB)
 	RET
@@ -124,7 +124,7 @@ TEXT runtime·write1(SB),NOSPLIT|NOFRAME,$0-28
 	MOVW	R0, ret+24(FP)
 	RET
 //--to
-TEXT runtime·write1_trampoline(SB),NOSPLIT|NOFRAME,$0-28
+TEXT runtime·write1_trampoline(SB),NOSPLIT,$0-28
 	MOVD	8(R0), R1
 	MOVW	16(R0), R2
 	MOVD	0(R0), R0
@@ -140,7 +140,7 @@ TEXT runtime·read(SB),NOSPLIT|NOFRAME,$0-28
 	MOVW	R0, ret+24(FP)
 	RET
 //--to
-TEXT runtime·read_trampoline(SB),NOSPLIT|NOFRAME,$0-28
+TEXT runtime·read_trampoline(SB),NOSPLIT,$0-28
 	MOVD	8(R0), R1
 	MOVW	16(R0), R2
 	MOVW	0(R0), R0
@@ -166,7 +166,7 @@ TEXT runtime·usleep(SB),NOSPLIT,$24-4
 	SVC
 	RET
 //--to
-TEXT runtime·usleep_trampoline(SB),NOSPLIT|NOFRAME,$0
+TEXT runtime·usleep_trampoline(SB),NOSPLIT,$0
 	MOVW	0(R0), R0
 	BL	hitsumabushi_usleep(SB)
 	RET
@@ -177,7 +177,7 @@ TEXT runtime·gettid(SB),NOSPLIT,$0-4
 	MOVW	R0, ret+0(FP)
 	RET
 //--to
-TEXT runtime·gettid_trampoline(SB),NOSPLIT|NOFRAME,$0
+TEXT runtime·gettid_trampoline(SB),NOSPLIT,$0
 	MOVD	R0, R19		// R19 is callee-save
 	BL	hitsumabushi_gettid(SB)
 	MOVW	R0, 0(R19)	// return value
@@ -291,7 +291,7 @@ finish:
 	MOVW	R5, nsec+8(FP)
 	RET
 //--to
-TEXT runtime·walltime1_trampoline(SB),NOSPLIT|NOFRAME,$0
+TEXT runtime·walltime1_trampoline(SB),NOSPLIT,$0
 	MOVD	8(R0), R1
 	MOVD	0(R0), R0
 	BL	hitsumabushi_walltime1(SB)
@@ -385,7 +385,7 @@ finish:
 	MOVD	R3, ret+0(FP)
 	RET
 //--to
-TEXT runtime·nanotime1_trampoline(SB),NOSPLIT|NOFRAME,$0
+TEXT runtime·nanotime1_trampoline(SB),NOSPLIT,$0
 	MOVD	R0, R19		// R19 is callee-save
 	BL	hitsumabushi_nanotime1(SB)
 	MOVD	R0, 0(R19)	// return value
@@ -403,7 +403,7 @@ TEXT runtime·futex(SB),NOSPLIT|NOFRAME,$0
 	MOVW	R0, ret+40(FP)
 	RET
 //--to
-TEXT runtime·futex_trampoline(SB),NOSPLIT|NOFRAME,$0
+TEXT runtime·futex_trampoline(SB),NOSPLIT,$0
 	MOVW	8(R0), R1
 	MOVW	12(R0), R2
 	MOVD	16(R0), R3
@@ -431,7 +431,7 @@ TEXT runtime·osyield(SB),NOSPLIT|NOFRAME,$0
 	SVC
 	RET
 //--to
-TEXT runtime·osyield_trampoline(SB),NOSPLIT|NOFRAME,$0
+TEXT runtime·osyield_trampoline(SB),NOSPLIT,$0
 	BL	hitsumabushi_osyield(SB)
 	RET
 //--from
@@ -444,51 +444,51 @@ TEXT runtime·sched_getaffinity(SB),NOSPLIT|NOFRAME,$0
 	MOVW	R0, ret+24(FP)
 	RET
 //--to
-TEXT runtime·sched_getaffinity_trampoline(SB),NOSPLIT|NOFRAME,$0-28
+TEXT runtime·sched_getaffinity_trampoline(SB),NOSPLIT,$0-28
 	MOVD	8(R0), R1
 	MOVD	16(R0), R2
 	MOVD	0(R0), R0
 	BL	hitsumabushi_sched_getaffinity(SB)
 	RET
 //--append
-TEXT runtime·sysAllocOS_trampoline(SB),NOSPLIT|NOFRAME,$0
+TEXT runtime·sysAllocOS_trampoline(SB),NOSPLIT,$0
 	MOVD	R0, R19		// R19 is callee-save
 	MOVD	0(R0), R0
 	BL	hitsumabushi_sysAllocOS(SB)
 	MOVD	R0, 8(R19)	// return value
 	RET
 
-TEXT runtime·sysUnusedOS_trampoline(SB),NOSPLIT|NOFRAME,$0
+TEXT runtime·sysUnusedOS_trampoline(SB),NOSPLIT,$0
 	MOVD	8(R0), R1
 	MOVD	0(R0), R0
 	BL	hitsumabushi_sysUnusedOS(SB)
 	RET
 
-TEXT runtime·sysUsedOS_trampoline(SB),NOSPLIT|NOFRAME,$0
+TEXT runtime·sysUsedOS_trampoline(SB),NOSPLIT,$0
 	MOVD	8(R0), R1
 	MOVD	0(R0), R0
 	BL	hitsumabushi_sysUsedOS(SB)
 	RET
 
-TEXT runtime·sysHugePageOS_trampoline(SB),NOSPLIT|NOFRAME,$0
+TEXT runtime·sysHugePageOS_trampoline(SB),NOSPLIT,$0
 	MOVD	8(R0), R1
 	MOVD	0(R0), R0
 	BL	hitsumabushi_sysHugePageOS(SB)
 	RET
 
-TEXT runtime·sysFreeOS_trampoline(SB),NOSPLIT|NOFRAME,$0
+TEXT runtime·sysFreeOS_trampoline(SB),NOSPLIT,$0
 	MOVD	8(R0), R1
 	MOVD	0(R0), R0
 	BL	hitsumabushi_sysFreeOS(SB)
 	RET
 
-TEXT runtime·sysFaultOS_trampoline(SB),NOSPLIT|NOFRAME,$0
+TEXT runtime·sysFaultOS_trampoline(SB),NOSPLIT,$0
 	MOVD	8(R0), R1
 	MOVD	0(R0), R0
 	BL	hitsumabushi_sysFaultOS(SB)
 	RET
 
-TEXT runtime·sysReserveOS_trampoline(SB),NOSPLIT|NOFRAME,$0
+TEXT runtime·sysReserveOS_trampoline(SB),NOSPLIT,$0
 	MOVD	R0, R19		// R19 is callee-save
 	MOVD	8(R0), R1
 	MOVD	0(R0), R0
@@ -496,13 +496,13 @@ TEXT runtime·sysReserveOS_trampoline(SB),NOSPLIT|NOFRAME,$0
 	MOVD	R0, 16(R19)	// return value
 	RET
 
-TEXT runtime·sysMapOS_trampoline(SB),NOSPLIT|NOFRAME,$0
+TEXT runtime·sysMapOS_trampoline(SB),NOSPLIT,$0
 	MOVD	8(R0), R1
 	MOVD	0(R0), R0
 	BL	hitsumabushi_sysMapOS(SB)
 	RET
 
-TEXT runtime·fcntl_trampoline(SB),NOSPLIT|NOFRAME,$0
+TEXT runtime·fcntl_trampoline(SB),NOSPLIT,$0
 	MOVD	R0, R19		// R19 is callee-save
 	MOVW	8(R0), R1
 	MOVW	16(R0), R2
@@ -511,7 +511,7 @@ TEXT runtime·fcntl_trampoline(SB),NOSPLIT|NOFRAME,$0
 	MOVW	R0, 24(R19)	// return value
 	RET
 
-TEXT runtime·fstat_trampoline(SB),NOSPLIT|NOFRAME,$0
+TEXT runtime·fstat_trampoline(SB),NOSPLIT,$0
 	MOVD	R0, R19		// R19 is callee-save
 	MOVD	8(R0), R1
 	MOVW	0(R0), R0
@@ -519,7 +519,7 @@ TEXT runtime·fstat_trampoline(SB),NOSPLIT|NOFRAME,$0
 	MOVW	R0, 16(R19)	// return value
 	RET
 
-TEXT runtime·lseek_trampoline(SB),NOSPLIT|NOFRAME,$0
+TEXT runtime·lseek_trampoline(SB),NOSPLIT,$0
 	MOVD	R0, R19		// R19 is callee-save
 	MOVD	8(R0), R1
 	MOVW	16(R0), R2
@@ -528,7 +528,7 @@ TEXT runtime·lseek_trampoline(SB),NOSPLIT|NOFRAME,$0
 	MOVW	R0, 24(R19)	// return value
 	RET
 
-TEXT runtime·renameat_trampoline(SB),NOSPLIT|NOFRAME,$0
+TEXT runtime·renameat_trampoline(SB),NOSPLIT,$0
 	MOVD	R0, R19		// R19 is callee-save
 	MOVD	8(R0), R1
 	MOVD	16(R0), R2
@@ -538,7 +538,7 @@ TEXT runtime·renameat_trampoline(SB),NOSPLIT|NOFRAME,$0
 	MOVW	R0, 32(R19)	// return value
 	RET
 
-TEXT runtime·fstatat_trampoline(SB),NOSPLIT|NOFRAME,$0
+TEXT runtime·fstatat_trampoline(SB),NOSPLIT,$0
 	MOVD	R0, R19		// R19 is callee-save
 	MOVD	8(R0), R1
 	MOVD	16(R0), R2
