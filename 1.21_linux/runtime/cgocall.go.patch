@@ -1,3 +1,20 @@
+//--from
+func cgocallbackg(fn, frame unsafe.Pointer, ctxt uintptr) {
+	gp := getg()
+	if gp != gp.m.curg {
+		println("runtime: bad g in cgocallback")
+		exit(2)
+	}
+//--to
+func cgocallbackg(fn, frame unsafe.Pointer, ctxt uintptr) {
+	gp := getg()
+	if gp != gp.m.curg {
+		println("runtime: bad g in cgocallback")
+		exit(2)
+	}
+	// This change is from https://go-review.googlesource.com/c/go/+/527715.
+	sp := gp.m.g0.sched.sp // system sp saved by cgocallback.
+	callbackUpdateSystemStack(gp.m, sp, false)
 //--append
 
 // This change is from https://go-review.googlesource.com/c/go/+/527715.
