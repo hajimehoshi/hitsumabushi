@@ -75,7 +75,6 @@ jobs:
         # math/rand's TestDefaultRace doesn't work well by default.
         # Set an environment to do the default tests.
         GO_RAND_TEST_HELPER_CODE=1 go run test.go -args="-test.run=^Test -test.v math/rand"
-        go run test.go -args="-test.run=^Test -test.v -test.short runtime"
         go run test.go -args="-test.run=^Test -test.v runtime/debug"
         go run test.go -args="-test.run=^Test -test.v runtime/internal/atomic"
         go run test.go -args="-test.run=^Test -test.v runtime/internal/math"
@@ -86,3 +85,9 @@ jobs:
         go run test.go -args="-test.run=^Test -test.v sync"
         go run test.go -args="-test.run=^Test -test.v sync/atomic"
         go run test.go -args="-test.run=^Test -test.v time"
+
+    - name: Test (amd64, runtime)
+      # Skip runtime tests with Go 1.19 and Windows, as there is an issue (probably golang/go#51007 and golang/go#57455).
+      if: ${{ runner.os != 'Windows' || !startsWith(matrix.go, '1.19.') }}
+      run: |
+        go run test.go -args="-test.run=^Test -test.v -test.short runtime"
