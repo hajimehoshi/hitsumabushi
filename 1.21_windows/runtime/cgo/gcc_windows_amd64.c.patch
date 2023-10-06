@@ -1,7 +1,4 @@
 //--from
-#include <stdio.h>
-//--to
-//--from
 static void
 threadentry(void *v)
 {
