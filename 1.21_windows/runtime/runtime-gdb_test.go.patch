@@ -1,0 +1,6 @@
+//--from
+package runtime_test
+//--to
+//go:build !windows
+
+package runtime_test
