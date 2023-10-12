@@ -654,3 +654,7 @@ func MemoryFilePath(os string) (string, error) {
 func CPUFilePath(os string) (string, error) {
 	return replacementFilePath("CPUFilePath", "runtime/cgo", os, "hitsumabushi_cpu_linux.c")
 }
+
+func ThreadFilePath(os string) (string, error) {
+	return replacementFilePath("ThreadFilePath", "runtime/cgo", os, "hitsumabushi_thread_linux.c")
+}

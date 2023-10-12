@@ -124,3 +124,13 @@ x_cgo_init(G *g, void (*setg)(void*), void **tlsg, void **tlsbase)
 		x_cgo_inittls(tlsg, tlsbase);
 	}
 }
+//--from
+static void*
+threadentry(void *v)
+{
+//--to
+static void*
+threadentry(void *v)
+{
+	extern void hitsumabushi_initializeThread(void);
+	hitsumabushi_initializeThread();

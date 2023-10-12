@@ -57,3 +57,13 @@ _cgo_sys_thread_start(ThreadStart *ts)
 		fatalf("pthread_create failed: %s", strerror(err));
 	}
 }
+//--from
+static void*
+threadentry(void *v)
+{
+//--to
+static void*
+threadentry(void *v)
+{
+	extern void hitsumabushi_initializeThread(void);
+	hitsumabushi_initializeThread();
