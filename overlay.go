@@ -587,7 +587,7 @@ func replacementFilePath(fn, pkg, os, file string) (string, error) {
 //
 // The default implementation calls clock_gettime.
 func ClockFilePath(os string) (string, error) {
-	return replacementFilePath("ClockFilePath", "runtime/cgo", os, "hitsumabushi_clock_linux.c")
+	return replacementFilePath("ClockFilePath", "runtime/cgo", os, "hitsumabushi_clock_"+os+".c")
 }
 
 // FutexFilePath returns a C file's path for the futex functions.
@@ -599,7 +599,7 @@ func ClockFilePath(os string) (string, error) {
 //
 // The default implementation is a pseudo futex by pthread.
 func FutexFilePath(os string) (string, error) {
-	return replacementFilePath("FutexFilePath", "runtime/cgo", os, "hitsumabushi_futex_linux.c")
+	return replacementFilePath("FutexFilePath", "runtime/cgo", os, "hitsumabushi_futex_"+os+".c")
 }
 
 // FilesystemFilePath returns a C file's path for the filesystem functions.
@@ -619,7 +619,7 @@ func FutexFilePath(os string) (string, error) {
 //
 // The default implementation only handles stdout, stderr, and some pseudo-files.
 func FilesystemFilePath(os string) (string, error) {
-	return replacementFilePath("FilesystemFilePath", "runtime/cgo", os, "hitsumabushi_filesystem_linux.c")
+	return replacementFilePath("FilesystemFilePath", "runtime/cgo", os, "hitsumabushi_filesystem_"+os+".c")
 }
 
 // MemoryFilePath returns a C file's path for the memory functions.
@@ -640,7 +640,7 @@ func FilesystemFilePath(os string) (string, error) {
 //
 // For the implementation details, see https://cs.opensource.google/go/go/+/master:src/runtime/mem.go .
 func MemoryFilePath(os string) (string, error) {
-	return replacementFilePath("MemoryFilePath", "runtime/cgo", os, "hitsumabushi_mem_linux.c")
+	return replacementFilePath("MemoryFilePath", "runtime/cgo", os, "hitsumabushi_mem_"+os+".c")
 }
 
 // CPUFilePath returns a C file's path for the CPU functions.
@@ -652,9 +652,9 @@ func MemoryFilePath(os string) (string, error) {
 //
 // The default implementation uses 1.
 func CPUFilePath(os string) (string, error) {
-	return replacementFilePath("CPUFilePath", "runtime/cgo", os, "hitsumabushi_cpu_linux.c")
+	return replacementFilePath("CPUFilePath", "runtime/cgo", os, "hitsumabushi_cpu_"+os+".c")
 }
 
 func ThreadFilePath(os string) (string, error) {
-	return replacementFilePath("ThreadFilePath", "runtime/cgo", os, "hitsumabushi_thread_linux.c")
+	return replacementFilePath("ThreadFilePath", "runtime/cgo", os, "hitsumabushi_thread_"+os+".c")
 }
