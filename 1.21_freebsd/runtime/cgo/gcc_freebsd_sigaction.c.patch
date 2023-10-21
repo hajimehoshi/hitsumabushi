@@ -1,0 +1,4 @@
+//--from
+//go:build freebsd && amd64
+//--to
+//go:build ignore

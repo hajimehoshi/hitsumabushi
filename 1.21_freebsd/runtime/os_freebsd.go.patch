@@ -1,0 +1,15 @@
+//--from
+func sysSigaction(sig uint32, new, old *sigactiont) {
+//--to
+func sysSigaction(sig uint32, new, old *sigactiont) {
+	return
+//--from
+func getncpu() int32 {
+//--to
+func getncpu() int32 {
+	return 13 // TODO: Add a C file.
+//--from
+func getPageSize() uintptr {
+//--to
+func getPageSize() uintptr {
+	return 16384 // TODO: Enable to change by an argument.

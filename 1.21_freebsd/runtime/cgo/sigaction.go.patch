@@ -1,0 +1,4 @@
+//--from
+//go:build (linux && amd64) || (freebsd && amd64) || (linux && arm64) || (linux && ppc64le)
+//--to
+//go:build (linux && amd64) || (linux && arm64) || (linux && ppc64le)

@@ -1,0 +1,5 @@
+//--append
+// Expose the entry point for some special environments.
+
+//go:cgo_export_static _rt0_amd64_freebsd_lib
+//go:cgo_export_dynamic _rt0_amd64_freebsd_lib
