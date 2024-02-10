@@ -1,0 +1,4 @@
+//--from
+//go:build cgo && !netgo && (darwin || (linux && !android) || netbsd || solaris)
+//--to
+//go:build ignore

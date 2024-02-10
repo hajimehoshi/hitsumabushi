@@ -1,0 +1,8 @@
+//--from
+	setenv(arg[0], arg[1], 1);
+//--to
+	// do nothing
+//--from
+	unsetenv(arg[0]);
+//--to
+	// do nothing
