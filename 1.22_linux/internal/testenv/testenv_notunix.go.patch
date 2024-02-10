@@ -1,0 +1,4 @@
+//--from
+//go:build windows || plan9 || (js && wasm) || wasip1
+//--to
+//go:build windows || plan9 || (js && wasm) || wasip1 || linux

@@ -1,0 +1,7 @@
+//--from
+			name: "runtime/debug.WriteHeapDump",
+			fn: func(t *testing.T) {
+//--to
+			name: "runtime/debug.WriteHeapDump",
+			fn: func(t *testing.T) {
+				t.Skip("debug.WriteHeapDump is not supported in this environment")

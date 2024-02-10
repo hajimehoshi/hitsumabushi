@@ -1,0 +1,5 @@
+//--from
+func TestEnvTZUsage(t *testing.T) {
+//--to
+func TestEnvTZUsage(t *testing.T) {
+	t.Skip("location is not supported in this environment")

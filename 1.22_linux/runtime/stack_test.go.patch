@@ -1,0 +1,10 @@
+//--from
+func TestDeferLeafSigpanic(t *testing.T) {
+//--to
+func TestDeferLeafSigpanic(t *testing.T) {
+	t.Skip("handling nil pointer access is not supported in this environment")
+//--from
+func TestStackWrapperStackPanic(t *testing.T) {
+//--to
+func TestStackWrapperStackPanic(t *testing.T) {
+	t.Skip("handling nil pointer access is not supported in this environment")

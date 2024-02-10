@@ -7,7 +7,7 @@ jobs:
     strategy:
       matrix:
         os: [ubuntu-latest, windows-latest]
-        go: ['1.19.13', '1.20.14', '1.21.7']
+        go: ['1.19.13', '1.20.14', '1.21.7', '1.22.0']
     name: Test with Go ${{ matrix.go }} on ${{ matrix.os }}
     runs-on: ${{ matrix.os }}
     defaults:
@@ -56,6 +56,7 @@ jobs:
         GOARCH=arm64 go run test.go -qemu -args="-test.run=^Test -test.v time"
 
     - name: Test (amd64)
+      if: ${{ runner.os == 'Linux' || (runner.os == 'Windows' && !startsWith(matrix.go, '1.22.')) }}
       run: |
         go run test.go -args="-test.run=^Test -test.v fmt"
         go run test.go -args="-test.run=^Test -test.v internal/abi"
@@ -84,6 +85,7 @@ jobs:
 
     - name: Test (amd64, runtime)
       # Skip runtime tests with Go 1.19 and Windows, as there is an issue (probably golang/go#51007 and golang/go#57455).
-      if: ${{ runner.os != 'Windows' || !startsWith(matrix.go, '1.19.') }}
+      # For Go 1.22, Windows is not supported yet.
+      if: ${{ runner.os != 'Windows' || (!startsWith(matrix.go, '1.19.') && !startsWith(matrix.go, '1.22.')) }}
       run: |
         go run test.go -args="-test.run=^Test -test.v -test.short runtime"

@@ -1,0 +1,15 @@
+//--from
+func TestCallersNilPointerPanic(t *testing.T) {
+//--to
+func TestCallersNilPointerPanic(t *testing.T) {
+	t.Skip("handling nil pointer access is not supported in this environment")
+//--from
+func TestCallersDeferNilFuncPanic(t *testing.T) {
+//--to
+func TestCallersDeferNilFuncPanic(t *testing.T) {
+	t.Skip("handling nil pointer access is not supported in this environment")
+//--from
+func TestCallersDeferNilFuncPanicWithLoop(t *testing.T) {
+//--to
+func TestCallersDeferNilFuncPanicWithLoop(t *testing.T) {
+	t.Skip("handling nil pointer access is not supported in this environment")
