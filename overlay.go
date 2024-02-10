@@ -132,11 +132,17 @@ func GenOverlayJSON(options ...Option) ([]byte, error) {
 	}
 
 	root := goVersion() + "_" + cfg.os
-	subFiles, err := fs.Sub(patchFiles, root)
+	dir, err := patchFiles.Open(root)
 	if err != nil {
 		if errors.Is(err, fs.ErrNotExist) {
 			return nil, fmt.Errorf("hitsumabushi: Hitsumabushi does not support the Go version %s and GOOS=%s", runtime.Version(), cfg.os)
 		}
+		return nil, err
+	}
+	dir.Close()
+
+	subFiles, err := fs.Sub(patchFiles, root)
+	if err != nil {
 		return nil, err
 	}
 
