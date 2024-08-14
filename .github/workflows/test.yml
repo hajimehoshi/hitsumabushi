@@ -15,7 +15,7 @@ jobs:
         shell: bash
     steps:
     - name: Checkout
-      uses: actions/checkout@v2
+      uses: actions/checkout@v4
 
     - name: Set up the prerequisites
       if: runner.os == 'Linux'
@@ -24,7 +24,7 @@ jobs:
         sudo apt-get install -y gcc-aarch64-linux-gnu qemu-user
 
     - name: Set up Go
-      uses: actions/setup-go@v3
+      uses: actions/setup-go@v5
       with:
         go-version: ${{ matrix.go }}
 
