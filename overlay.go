@@ -114,6 +114,13 @@ func goVersion() string {
 	return m[1]
 }
 
+func goMajorMinorVersion() (int, int) {
+	tokens := strings.Split(goVersion(), ".")
+	major, _ := strconv.Atoi(tokens[0])
+	minor, _ := strconv.Atoi(tokens[1])
+	return major, minor
+}
+
 // GenOverlayJSON generates a JSON file for go-build's `-overlay` option.
 // GenOverlayJSON returns a JSON file content, or an error if generating it fails.
 //
@@ -335,7 +342,27 @@ func init() {
 				return nil, err
 			}
 
-			if err := replace(tmpDir, replaces, "os", "exec_windows.go", `import (
+			major, minor := goMajorMinorVersion()
+			if major != 1 {
+				return nil, fmt.Errorf("hitsumabushi: unexpected major version: %d", major)
+			}
+			if minor >= 23 {
+				if err := replace(tmpDir, replaces, "os", "exec_windows.go", `import (
+	"errors"
+	"internal/syscall/windows"
+	"runtime"
+	"syscall"
+	"time"
+)`, `import (
+	"errors"
+	"runtime"
+	"syscall"
+	"time"
+)`, cfg.os); err != nil {
+					return nil, err
+				}
+			} else {
+				if err := replace(tmpDir, replaces, "os", "exec_windows.go", `import (
 	"errors"
 	"internal/syscall/windows"
 	"runtime"
@@ -349,7 +376,8 @@ func init() {
 	"syscall"
 	"time"
 )`, cfg.os); err != nil {
-				return nil, err
+					return nil, err
+				}
 			}
 		}
 
@@ -537,6 +565,10 @@ func replace(tmpDir string, replaces map[string]string, pkg string, filename str
 		return err
 	}
 	defer dst.Close()
+
+	if !strings.Contains(string(srcContent), old) {
+		return fmt.Errorf("hitsumabushi: replacing %s/%s failed: %s", pkg, filename, old)
+	}
 
 	replaced := strings.Replace(string(srcContent), old, new, 1)
 	if string(srcContent) == replaced {
