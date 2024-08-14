@@ -1,40 +1,4 @@
 //--from
-import (
-	"internal/itoa"
-	runtimesyscall "internal/runtime/syscall"
-	"runtime"
-	"unsafe"
-)
-//--to
-import (
-	"internal/itoa"
-	"runtime"
-	"unsafe"
-)
-//--from
-func RawSyscall(trap, a1, a2, a3 uintptr) (r1, r2 uintptr, err Errno) {
-	return RawSyscall6(trap, a1, a2, a3, 0, 0, 0)
-}
-//--to
-func RawSyscall(trap, a1, a2, a3 uintptr) (r1, r2 uintptr, err Errno) {
-	println("not implemented syscall at RawSyscall", trap)
-	panic("syscall.RawSyscall")
-	return 0, 0, ENOSYS
-}
-//--from
-func RawSyscall6(trap, a1, a2, a3, a4, a5, a6 uintptr) (r1, r2 uintptr, err Errno) {
-	var errno uintptr
-	r1, r2, errno = runtimesyscall.Syscall6(trap, a1, a2, a3, a4, a5, a6)
-	err = Errno(errno)
-	return
-}
-//--to
-func RawSyscall6(trap, a1, a2, a3, a4, a5, a6 uintptr) (r1, r2 uintptr, err Errno) {
-	println("not implemented syscall at RawSyscall6", trap)
-	panic("syscall.RawSyscall6")
-	return 0, 0, ENOSYS
-}
-//--from
 func Syscall(trap, a1, a2, a3 uintptr) (r1, r2 uintptr, err Errno) {
 	runtime_entersyscall()
 	// N.B. Calling RawSyscall here is unsafe with atomic coverage
