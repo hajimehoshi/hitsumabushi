@@ -1,0 +1,8 @@
+//--from
+func Syscall6(num, a1, a2, a3, a4, a5, a6 uintptr) (r1, r2, errno uintptr)
+//--to
+func Syscall6(num, a1, a2, a3, a4, a5, a6 uintptr) (r1, r2, errno uintptr) {
+	println("not implemented syscall at Syscall6", num)
+	panic("syscall.Syscall6")
+	return 0, 0, 0x26 // ENOSYS
+}

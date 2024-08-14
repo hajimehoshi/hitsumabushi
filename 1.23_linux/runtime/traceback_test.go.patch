@@ -1,0 +1,5 @@
+//--from
+func TestTracebackInlined(t *testing.T) {
+//--to
+func TestTracebackInlined(t *testing.T) {
+	t.Skip("handling nil pointer access is not supported in this environment")

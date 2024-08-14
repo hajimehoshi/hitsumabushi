@@ -7,7 +7,7 @@ jobs:
     strategy:
       matrix:
         os: [ubuntu-latest, windows-latest]
-        go: ['1.19.13', '1.20.14', '1.21.13', '1.22.6']
+        go: ['1.19.13', '1.20.14', '1.21.13', '1.22.6', '1.23.0']
     name: Test with Go ${{ matrix.go }} on ${{ matrix.os }}
     runs-on: ${{ matrix.os }}
     defaults:
@@ -45,7 +45,6 @@ jobs:
         GOARCH=arm64 go run test.go -qemu -args="-test.run=^Test -test.v math/rand"
         GOARCH=arm64 go run test.go -qemu -args="-test.run=^Test -test.v -test.short runtime"
         GOARCH=arm64 go run test.go -qemu -args="-test.run=^Test -test.v runtime/debug"
-        GOARCH=arm64 go run test.go -qemu -args="-test.run=^Test -test.v runtime/internal/atomic"
         GOARCH=arm64 go run test.go -qemu -args="-test.run=^Test -test.v runtime/internal/math"
         GOARCH=arm64 go run test.go -qemu -args="-test.run=^Test -test.v runtime/internal/sys"
         GOARCH=arm64 go run test.go -qemu -args="-test.run=^Test -test.v strconv"
@@ -55,8 +54,18 @@ jobs:
         GOARCH=arm64 go run test.go -qemu -args="-test.run=^Test -test.v sync/atomic"
         GOARCH=arm64 go run test.go -qemu -args="-test.run=^Test -test.v time"
 
+    - name: Test (Linux, arm64, Go <=1.22)
+      if: runner.os == 'Linux' && (startsWith(matrix.go, '1.19.') || startsWith(matrix.go, '1.20.') || startsWith(matrix.go, '1.21.') || startsWith(matrix.go, '1.22.'))
+      run: |
+        GOARCH=arm64 go run test.go -qemu -args="-test.run=^Test -test.v runtime/internal/atomic"
+
+    - name: Test (Linux, arm64, Go >=1.23)
+      if: runner.os == 'Linux' && startsWith(matrix.go, '1.23.')
+      run: |
+        GOARCH=arm64 go run test.go -qemu -args="-test.run=^Test -test.v internal/runtime/atomic"
+
     - name: Test (amd64)
-      if: ${{ runner.os == 'Linux' || (runner.os == 'Windows' && !startsWith(matrix.go, '1.22.')) }}
+      if: runner.os == 'Linux' || (runner.os == 'Windows' && !startsWith(matrix.go, '1.22.') && !startsWith(matrix.go, '1.23.'))
       run: |
         go run test.go -args="-test.run=^Test -test.v fmt"
         go run test.go -args="-test.run=^Test -test.v internal/abi"
@@ -73,7 +82,6 @@ jobs:
         # Set an environment to do the default tests.
         GO_RAND_TEST_HELPER_CODE=1 go run test.go -args="-test.run=^Test -test.v math/rand"
         go run test.go -args="-test.run=^Test -test.v runtime/debug"
-        go run test.go -args="-test.run=^Test -test.v runtime/internal/atomic"
         go run test.go -args="-test.run=^Test -test.v runtime/internal/math"
         go run test.go -args="-test.run=^Test -test.v runtime/internal/sys"
         go run test.go -args="-test.run=^Test -test.v strconv"
@@ -83,9 +91,19 @@ jobs:
         go run test.go -args="-test.run=^Test -test.v sync/atomic"
         go run test.go -args="-test.run=^Test -test.v time"
 
+    - name: Test (amd64, Go <=1.22)
+      if: (runner.os == 'Linux' || (runner.os == 'Windows' && !startsWith(matrix.go, '1.22.'))) && (startsWith(matrix.go, '1.19.') || startsWith(matrix.go, '1.20.') || startsWith(matrix.go, '1.21.') || startsWith(matrix.go, '1.22.'))
+      run: |
+        go run test.go -args="-test.run=^Test -test.v runtime/internal/atomic"
+
+    - name: Test (amd64, Go >=1.23)
+      if: (runner.os == 'Linux' || (runner.os == 'Windows' && !startsWith(matrix.go, '1.23.'))) && startsWith(matrix.go, '1.23.')
+      run: |
+        go run test.go -args="-test.run=^Test -test.v internal/runtime/atomic"
+
     - name: Test (amd64, runtime)
       # Skip runtime tests with Go 1.19 and Windows, as there is an issue (probably golang/go#51007 and golang/go#57455).
-      # For Go 1.22, Windows is not supported yet.
-      if: ${{ runner.os != 'Windows' || (!startsWith(matrix.go, '1.19.') && !startsWith(matrix.go, '1.22.')) }}
+      # For Go 1.22 and Go 1.23, Windows is not supported yet.
+      if: runner.os != 'Windows' || (!startsWith(matrix.go, '1.19.') && !startsWith(matrix.go, '1.22.') && !startsWith(matrix.go, '1.23.'))
       run: |
         go run test.go -args="-test.run=^Test -test.v -test.short runtime"

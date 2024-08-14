@@ -1,0 +1,5 @@
+//--from
+func TestMincoreErrorSign(t *testing.T) {
+//--to
+func TestMincoreErrorSign(t *testing.T) {
+	t.Skip("mincore is not supported in this environment")

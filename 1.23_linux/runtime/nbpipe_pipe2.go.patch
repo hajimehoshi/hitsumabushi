@@ -1,0 +1,4 @@
+//--from
+//go:build dragonfly || freebsd || linux || netbsd || openbsd || solaris
+//--to
+//go:build dragonfly || freebsd || netbsd || openbsd || solaris

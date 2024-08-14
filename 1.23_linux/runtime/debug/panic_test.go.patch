@@ -1,0 +1,5 @@
+//--from
+func TestPanicOnFault(t *testing.T) {
+//--to
+func TestPanicOnFault(t *testing.T) {
+	t.Skip("handling nil pointer access is not supported in this environment")

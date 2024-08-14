@@ -1,0 +1,5 @@
+//--from
+func TestLinkerGC(t *testing.T) {
+//--to
+func TestLinkerGC(t *testing.T) {
+	t.Skip("go tools are not supported in this environment")
