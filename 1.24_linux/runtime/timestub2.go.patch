@@ -1,0 +1,27 @@
+//--from
+//go:build !aix && !darwin && !freebsd && !openbsd && !solaris && !wasip1 && !windows && !(linux && amd64)
+//--to
+//go:build !aix && !darwin && !freebsd && !openbsd && !solaris && !wasip1 && !windows
+//--from
+package runtime
+//--to
+package runtime
+
+import (
+	"internal/abi"
+	"unsafe"
+)
+//--from
+func walltime() (sec int64, nsec int32)
+//--to
+func walltime() (sec int64, nsec int32) {
+	walltime1(&sec, &nsec)
+	return
+}
+
+//go:nosplit
+//go:cgo_unsafe_args
+func walltime1(sec *int64, nsec *int32) {
+	libcCall(unsafe.Pointer(abi.FuncPCABI0(walltime1_trampoline)), unsafe.Pointer(&sec))
+}
+func walltime1_trampoline(sec *int64, nsec *int32)

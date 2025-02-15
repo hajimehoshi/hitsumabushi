@@ -1,0 +1,5 @@
+//--from
+var tryExec = sync.OnceValue(func() error {
+//--to
+var tryExec = sync.OnceValue(func() error {
+	return fmt.Errorf("can't probe for exec support")

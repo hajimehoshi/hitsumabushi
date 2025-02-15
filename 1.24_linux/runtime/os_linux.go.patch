@@ -1,0 +1,320 @@
+//--from
+import (
+	"internal/abi"
+	"internal/goarch"
+	"internal/runtime/atomic"
+	"internal/runtime/syscall"
+	"unsafe"
+)
+//--to
+import (
+	"internal/abi"
+	"internal/runtime/atomic"
+	"internal/runtime/syscall"
+	"unsafe"
+)
+//--from
+//go:noescape
+func futex(addr unsafe.Pointer, op int32, val uint32, ts, addr2 unsafe.Pointer, val3 uint32) int32
+//--to
+//go:nosplit
+//go:cgo_unsafe_args
+func futex(addr unsafe.Pointer, op int32, val uint32, ts, addr2 unsafe.Pointer, val3 uint32) int32 {
+	ret := libcCall(unsafe.Pointer(abi.FuncPCABI0(futex_trampoline)), unsafe.Pointer(&addr))
+	return ret
+}
+func futex_trampoline(addr unsafe.Pointer, op int32, val uint32, ts, addr2 unsafe.Pointer, val3 uint32) int32
+//--from
+func sysargs(argc int32, argv **byte) {
+	n := argc + 1
+
+	// skip over argv, envp to get to auxv
+	for argv_index(argv, n) != nil {
+		n++
+	}
+
+	// skip NULL separator
+	n++
+
+	// now argv+n is auxv
+	auxvp := (*[1 << 28]uintptr)(add(unsafe.Pointer(argv), uintptr(n)*goarch.PtrSize))
+
+	if pairs := sysauxv(auxvp[:]); pairs != 0 {
+		auxv = auxvp[: pairs*2 : pairs*2]
+		return
+	}
+	// In some situations we don't get a loader-provided
+	// auxv, such as when loaded as a library on Android.
+	// Fall back to /proc/self/auxv.
+	fd := open(&procAuxv[0], 0 /* O_RDONLY */, 0)
+	if fd < 0 {
+		// On Android, /proc/self/auxv might be unreadable (issue 9229), so we fallback to
+		// try using mincore to detect the physical page size.
+		// mincore should return EINVAL when address is not a multiple of system page size.
+		const size = 256 << 10 // size of memory region to allocate
+		p, err := mmap(nil, size, _PROT_READ|_PROT_WRITE, _MAP_ANON|_MAP_PRIVATE, -1, 0)
+		if err != 0 {
+			return
+		}
+		var n uintptr
+		for n = 4 << 10; n < size; n <<= 1 {
+			err := mincore(unsafe.Pointer(uintptr(p)+n), 1, &addrspace_vec[0])
+			if err == 0 {
+				physPageSize = n
+				break
+			}
+		}
+		if physPageSize == 0 {
+			physPageSize = size
+		}
+		munmap(p, size)
+		return
+	}
+
+	n = read(fd, noescape(unsafe.Pointer(&auxvreadbuf[0])), int32(unsafe.Sizeof(auxvreadbuf)))
+	closefd(fd)
+	if n < 0 {
+		return
+	}
+	// Make sure buf is terminated, even if we didn't read
+	// the whole file.
+	auxvreadbuf[len(auxvreadbuf)-2] = _AT_NULL
+	pairs := sysauxv(auxvreadbuf[:])
+	auxv = auxvreadbuf[: pairs*2 : pairs*2]
+}
+//--to
+func sysargs(argc int32, argv **byte) {
+	// argc/argv is not reliable on some machines.
+	// Skip analysing them.
+
+	// In some situations we don't get a loader-provided
+	// auxv, such as when loaded as a library on Android.
+	// Fall back to /proc/self/auxv.
+	fd := open(&procAuxv[0], 0 /* O_RDONLY */, 0)
+	if fd < 0 {
+		// On Android, /proc/self/auxv might be unreadable (issue 9229), so we fallback to
+		// try using mincore to detect the physical page size.
+		// mincore should return EINVAL when address is not a multiple of system page size.
+		const size = 256 << 10 // size of memory region to allocate
+		p, err := mmap(nil, size, _PROT_READ|_PROT_WRITE, _MAP_ANON|_MAP_PRIVATE, -1, 0)
+		if err != 0 {
+			return
+		}
+		var n uintptr
+		for n = 4 << 10; n < size; n <<= 1 {
+			err := mincore(unsafe.Pointer(uintptr(p)+n), 1, &addrspace_vec[0])
+			if err == 0 {
+				physPageSize = n
+				break
+			}
+		}
+		if physPageSize == 0 {
+			physPageSize = size
+		}
+		munmap(p, size)
+		return
+	}
+
+	n := read(fd, noescape(unsafe.Pointer(&auxvreadbuf[0])), int32(unsafe.Sizeof(auxvreadbuf)))
+	closefd(fd)
+	if n < 0 {
+		return
+	}
+	// Make sure buf is terminated, even if we didn't read
+	// the whole file.
+	auxvreadbuf[len(auxvreadbuf)-2] = _AT_NULL
+	pairs := sysauxv(auxvreadbuf[:])
+	auxv = auxvreadbuf[: pairs*2 : pairs*2]
+}
+//--from
+var urandom_dev = []byte("/dev/urandom\x00")
+
+func readRandom(r []byte) int {
+	// Note that all supported Linux kernels should provide AT_RANDOM which
+	// populates startupRand, so this fallback should be unreachable.
+	fd := open(&urandom_dev[0], 0 /* O_RDONLY */, 0)
+	n := read(fd, unsafe.Pointer(&r[0]), int32(len(r)))
+	closefd(fd)
+	return int(n)
+}
+//--to
+//go:nosplit
+func readRandom(r []byte) int {
+	return 0
+}
+//--from
+func gettid() uint32
+//--to
+//go:nosplit
+//go:cgo_unsafe_args
+func gettid() (tid uint32) {
+	libcCall(unsafe.Pointer(abi.FuncPCABI0(gettid_trampoline)), unsafe.Pointer(&tid))
+	return
+}
+func gettid_trampoline() uint32
+//--from
+//go:noescape
+func sigaltstack(new, old *stackt)
+//--to
+func sigaltstack(new, old *stackt) {
+	// Do nothing.
+}
+//--from
+func sigprocmask(how int32, new, old *sigset) {
+	rtsigprocmask(how, new, old, int32(unsafe.Sizeof(*new)))
+}
+//--to
+func sigprocmask(how int32, new, old *sigset) {
+	// Do nothing.
+	// rtsigprocmask(how, new, old, int32(unsafe.Sizeof(*new)))
+}
+//--from
+func raise(sig uint32)
+//--to
+func raise(sig uint32) {
+	// Do nothing
+}
+//--from
+func raiseproc(sig uint32)
+//--to
+func raiseproc(sig uint32) {
+	// Do nothing
+}
+//--from
+//go:noescape
+func sched_getaffinity(pid, len uintptr, buf *byte) int32
+//--to
+//go:nosplit
+//go:cgo_unsafe_args
+func sched_getaffinity(pid, len uintptr, buf *byte) int32 {
+	return libcCall(unsafe.Pointer(abi.FuncPCABI0(sched_getaffinity_trampoline)), unsafe.Pointer(&pid))
+}
+func sched_getaffinity_trampoline(pid, len uintptr, buf *byte) int32
+//--from
+func osyield()
+//--to
+//go:nosplit
+//go:cgo_unsafe_args
+func osyield() {
+	libcCall(unsafe.Pointer(abi.FuncPCABI0(osyield_trampoline)), nil)
+}
+func osyield_trampoline()
+//--from
+func sysSigaction(sig uint32, new, old *sigactiont) {
+//--to
+func sysSigaction(sig uint32, new, old *sigactiont) {
+	// Do nothing.
+	return
+//--from
+func signalM(mp *m, sig int) {
+	tgkill(getpid(), int(mp.procid), sig)
+}
+//--to
+func signalM(mp *m, sig int) {
+	// Do nothiing.
+}
+//--from
+func runPerThreadSyscall() {
+	gp := getg()
+	if gp.m.needPerThreadSyscall.Load() == 0 {
+		return
+	}
+
+	args := perThreadSyscall
+	r1, r2, errno := syscall.Syscall6(args.trap, args.a1, args.a2, args.a3, args.a4, args.a5, args.a6)
+	if GOARCH == "ppc64" || GOARCH == "ppc64le" {
+		// TODO(https://go.dev/issue/51192 ): ppc64 doesn't use r2.
+		r2 = 0
+	}
+	if errno != 0 || r1 != args.r1 || r2 != args.r2 {
+		print("trap:", args.trap, ", a123456=[", args.a1, ",", args.a2, ",", args.a3, ",", args.a4, ",", args.a5, ",", args.a6, "]\n")
+		print("results: got {r1=", r1, ",r2=", r2, ",errno=", errno, "}, want {r1=", args.r1, ",r2=", args.r2, ",errno=0}\n")
+		fatal("AllThreadsSyscall6 results differ between threads; runtime corrupted")
+	}
+
+	gp.m.needPerThreadSyscall.Store(0)
+}
+//--to
+func runPerThreadSyscall() {
+	// Do nothing.
+	// needPerThreadSyscall should never be 1 as syscall_runtime_doAllThreadsSyscall is not available with Cgo.
+}
+//--append
+//go:linkname hitsumabushi_closefd hitsumabushi_closefd
+//go:cgo_import_static hitsumabushi_closefd
+var hitsumabushi_closefd byte
+
+//go:linkname hitsumabushi_exit hitsumabushi_exit
+//go:cgo_import_static hitsumabushi_exit
+var hitsumabushi_exit byte
+
+//go:linkname hitsumabushi_gettid hitsumabushi_gettid
+//go:cgo_import_static hitsumabushi_gettid
+var hitsumabushi_gettid byte
+
+//go:linkname hitsumabushi_nanotime1 hitsumabushi_nanotime1
+//go:cgo_import_static hitsumabushi_nanotime1
+var hitsumabushi_nanotime1 byte
+
+//go:linkname hitsumabushi_open hitsumabushi_open
+//go:cgo_import_static hitsumabushi_open
+var hitsumabushi_open byte
+
+//go:linkname hitsumabushi_osyield hitsumabushi_osyield
+//go:cgo_import_static hitsumabushi_osyield
+var hitsumabushi_osyield byte
+
+//go:linkname hitsumabushi_read hitsumabushi_read
+//go:cgo_import_static hitsumabushi_read
+var hitsumabushi_read byte
+
+//go:linkname hitsumabushi_sched_getaffinity hitsumabushi_sched_getaffinity
+//go:cgo_import_static hitsumabushi_sched_getaffinity
+var hitsumabushi_sched_getaffinity byte
+
+//go:linkname hitsumabushi_usleep hitsumabushi_usleep
+//go:cgo_import_static hitsumabushi_usleep
+var hitsumabushi_usleep byte
+
+//go:linkname hitsumabushi_walltime1 hitsumabushi_walltime1
+//go:cgo_import_static hitsumabushi_walltime1
+var hitsumabushi_walltime1 byte
+
+//go:linkname hitsumabushi_write1 hitsumabushi_write1
+//go:cgo_import_static hitsumabushi_write1
+var hitsumabushi_write1 byte
+
+//go:nosplit
+//go:cgo_unsafe_args
+func fcntl1(fd, cmd, arg int) int32 {
+	return libcCall(unsafe.Pointer(abi.FuncPCABI0(fcntl_trampoline)), unsafe.Pointer(&fd))
+}
+func fcntl_trampoline()
+
+//go:nosplit
+//go:cgo_unsafe_args
+func fstat1(fd int, stat unsafe.Pointer) int32 {
+	return libcCall(unsafe.Pointer(abi.FuncPCABI0(fstat_trampoline)), unsafe.Pointer(&fd))
+}
+func fstat_trampoline(fd int, stat unsafe.Pointer) int32
+
+//go:nosplit
+//go:cgo_unsafe_args
+func lseek1(fd int, offset int64, whence int) int32 {
+	return libcCall(unsafe.Pointer(abi.FuncPCABI0(lseek_trampoline)), unsafe.Pointer(&fd))
+}
+func lseek_trampoline()
+
+//go:nosplit
+//go:cgo_unsafe_args
+func renameat(fd1 int, name1 unsafe.Pointer, fd2 int, name2 unsafe.Pointer) int32 {
+	return libcCall(unsafe.Pointer(abi.FuncPCABI0(renameat_trampoline)), unsafe.Pointer(&fd1))
+}
+func renameat_trampoline()
+
+//go:nosplit
+//go:cgo_unsafe_args
+func fstatat(fd uintptr, name unsafe.Pointer, p unsafe.Pointer, n int32) int32 {
+	return libcCall(unsafe.Pointer(abi.FuncPCABI0(fstatat_trampoline)), unsafe.Pointer(&fd))
+}
+func fstatat_trampoline()

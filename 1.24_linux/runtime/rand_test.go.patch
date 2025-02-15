@@ -1,0 +1,5 @@
+//--from
+func TestReadRandom(t *testing.T) {
+//--to
+func TestReadRandom(t *testing.T) {
+	t.Skip("readRandom is not available in this environment")
