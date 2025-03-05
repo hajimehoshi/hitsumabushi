@@ -2,6 +2,7 @@
 static void
 threadentry(void *v)
 {
+	ThreadStart ts;
 //--to
 static int getproccount() {
 	static int proccount = 0;
@@ -16,4 +17,6 @@ static int getproccount() {
 static void
 threadentry(void *v)
 {
+	ThreadStart ts;
+
 	SetThreadAffinityMask(GetCurrentThread(), (1<<getproccount())-1);
