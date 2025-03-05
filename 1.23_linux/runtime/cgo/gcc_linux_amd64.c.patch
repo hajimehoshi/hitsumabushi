@@ -61,9 +61,12 @@ _cgo_sys_thread_start(ThreadStart *ts)
 static void*
 threadentry(void *v)
 {
+	ThreadStart ts;
 //--to
 static void*
 threadentry(void *v)
 {
+	ThreadStart ts;
+
 	extern void hitsumabushi_initializeThread(void);
 	hitsumabushi_initializeThread();

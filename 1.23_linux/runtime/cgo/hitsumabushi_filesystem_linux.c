@@ -32,10 +32,12 @@ static pthread_mutex_t* pseudo_file_mutex() {
 }
 
 static int32_t open_pseudo_file(const void* content, size_t content_size) {
-  pthread_mutex_lock(pseudo_file_mutex());
-
   int index = 0;
   int found = 0;
+  int32_t fd = 0;
+
+  pthread_mutex_lock(pseudo_file_mutex());
+
   for (int i = 0; i < sizeof(pseudo_files) / sizeof(pseudo_file); i++) {
     if (pseudo_files[i].fd == 0) {
       index = i;
@@ -48,7 +50,7 @@ static int32_t open_pseudo_file(const void* content, size_t content_size) {
     pthread_mutex_unlock(pseudo_file_mutex());
     return -1;
   }
-  int32_t fd = index + kFDOffset;
+  fd = index + kFDOffset;
   pseudo_files[index].content = content;
   pseudo_files[index].content_size = content_size;
   pseudo_files[index].current = 0;
@@ -59,11 +61,14 @@ static int32_t open_pseudo_file(const void* content, size_t content_size) {
 }
 
 static size_t read_pseudo_file(int32_t fd, void *p, int32_t n) {
+  int32_t index = fd - kFDOffset;
+  pseudo_file *file = NULL;
+  size_t rest = 0;
+
   pthread_mutex_lock(pseudo_file_mutex());
 
-  int32_t index = fd - kFDOffset;
-  pseudo_file *file = &pseudo_files[index];
-  size_t rest = file->content_size - file->current;
+  file = &pseudo_files[index];
+  rest = file->content_size - file->current;
   if (rest < n) {
     n = rest;
   }
@@ -75,9 +80,10 @@ static size_t read_pseudo_file(int32_t fd, void *p, int32_t n) {
 }
 
 static void close_pseudo_file(int32_t fd) {
+  int32_t index = fd - kFDOffset;
+
   pthread_mutex_lock(pseudo_file_mutex());
 
-  int32_t index = fd - kFDOffset;
   pseudo_files[index].content = NULL;
   pseudo_files[index].content_size = 0;
   pseudo_files[index].current = 0;
@@ -96,6 +102,8 @@ int32_t hitsumabushi_closefd(int32_t fd) {
 }
 
 int32_t hitsumabushi_open(char *name, int32_t mode, int32_t perm) {
+  const static int kENOENT = 0x2;
+
   if (strcmp(name, "/proc/self/auxv") == 0) {
     static const char auxv[] =
       "\x06\x00\x00\x00\x00\x00\x00\x00"  // _AT_PAGESZ tag (6)
@@ -110,16 +118,16 @@ int32_t hitsumabushi_open(char *name, int32_t mode, int32_t perm) {
     return open_pseudo_file(hpage_pmd_size, sizeof(hpage_pmd_size) / sizeof(char));
   }
   fprintf(stderr, "syscall open(%s, %d, %d) is not implemented\n", name, mode, perm);
-  const static int kENOENT = 0x2;
   return kENOENT;
 }
 
 int32_t hitsumabushi_read(int32_t fd, void *p, int32_t n) {
+  const static int kEBADF = 0x9;
+
   if (fd >= kFDOffset) {
     return read_pseudo_file(fd, p, n);
   }
   fprintf(stderr, "syscall read(%d, %p, %d) is not implemented\n", fd, p, n);
-  const static int kEBADF = 0x9;
   return kEBADF;
 }
 

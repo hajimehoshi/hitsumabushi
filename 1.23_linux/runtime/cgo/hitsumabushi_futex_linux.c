@@ -13,6 +13,7 @@ static const int kPseudoFutexWake = 1;
 static void pseudo_futex(uint32_t *uaddr, int mode, uint32_t val, const struct timespec *reltime) {
   static pthread_mutex_t mutex = PTHREAD_MUTEX_INITIALIZER;
   static pthread_cond_t cond = PTHREAD_COND_INITIALIZER;
+  int ret = 0;
 
   struct timespec abstime;
   if (reltime) {
@@ -28,7 +29,7 @@ static void pseudo_futex(uint32_t *uaddr, int mode, uint32_t val, const struct t
     }
   }
 
-  int ret = pthread_mutex_lock(&mutex);
+  ret = pthread_mutex_lock(&mutex);
   if (ret) {
     fprintf(stderr, "pthread_mutex_lock failed: %d\n", ret);
     abort();
@@ -64,7 +65,7 @@ static void pseudo_futex(uint32_t *uaddr, int mode, uint32_t val, const struct t
       abort();
     }
     // TODO: broadcasting is not efficient. Use a mutex for each uaddr.
-    int ret = pthread_cond_broadcast(&cond);
+    ret = pthread_cond_broadcast(&cond);
     if (ret) {
       fprintf(stderr, "pthread_cond_broadcast failed: %d\n", ret);
       abort();

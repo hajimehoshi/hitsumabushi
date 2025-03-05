@@ -53,10 +53,13 @@ _cgo_sys_thread_start(ThreadStart *ts)
 static void*
 threadentry(void *v)
 {
+	ThreadStart ts;
 //--to
 static void*
 threadentry(void *v)
 {
+	ThreadStart ts;
+
 	// Note that threadentry will also be defined in gcc_linux.go in Go 1.22.
 	extern void hitsumabushi_initializeThread(void);
 	hitsumabushi_initializeThread();
