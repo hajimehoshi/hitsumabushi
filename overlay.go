@@ -383,7 +383,13 @@ func init() {
 
 		// Replace loaded DLLs
 		if len(cfg.replaceDLLs) > 0 {
-			old := "func syscall_SyscallN(trap uintptr, args ...uintptr) (r1, r2, err uintptr) {"
+			var old string
+			_, minor := goMajorMinorVersion()
+			if minor <= 22 {
+				old = "func syscall_SyscallN(trap uintptr, args ...uintptr) (r1, r2, err uintptr) {"
+			} else {
+				old = "func syscall_SyscallN(fn uintptr, args ...uintptr) (r1, r2, err uintptr) {"
+			}
 			new := `func _toLower(x uint16) uint16 {
 	if 'A' <= x && x <= 'Z' {
 		return x - 'A' + 'a'
@@ -409,7 +415,9 @@ var _replacingDLLFroms = [][]uint16{
 var _replacingDLLTos = [][]uint16{
 	{{.Tos}}
 }
-
+`
+			if minor <= 22 {
+				new += `
 func syscall_SyscallN(trap uintptr, args ...uintptr) (r1, r2, err uintptr) {
 	if trap == getLoadLibrary() || trap == getLoadLibraryEx() {
 		for i, from := range _replacingDLLFroms {
@@ -419,6 +427,18 @@ func syscall_SyscallN(trap uintptr, args ...uintptr) (r1, r2, err uintptr) {
 			}
 		}
 	}`
+			} else {
+				new += `
+func syscall_SyscallN(fn uintptr, args ...uintptr) (r1, r2, err uintptr) {
+	if fn == uintptr(unsafe.Pointer(_LoadLibraryW)) || fn == uintptr(unsafe.Pointer(_LoadLibraryExW)) {
+		for i, from := range _replacingDLLFroms {
+			if _areUTF16StringsSame((*uint16)(unsafe.Pointer(args[0])), &from[0]) {
+				args[0] = uintptr(unsafe.Pointer(&_replacingDLLTos[i][0]))
+				break
+			}
+		}
+	}`
+			}
 			var froms []string
 			var tos []string
 			for _, replace := range cfg.replaceDLLs {

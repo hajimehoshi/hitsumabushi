@@ -63,6 +63,10 @@ func createJSON(args []string) (string, error) {
 		hitsumabushi.Args(args...),
 		hitsumabushi.TestPkg(args[len(args)-1]),
 	}
+	if runtime.GOOS == "windows" {
+		// TODO: Test with a real DLL.
+		options = append(options, hitsumabushi.ReplaceDLL("foofoo.dll", "barbar.dll"))
+	}
 	overlayJSON, err := hitsumabushi.GenOverlayJSON(options...)
 	if err != nil {
 		return "", err
