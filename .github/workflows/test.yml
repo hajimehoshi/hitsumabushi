@@ -74,8 +74,6 @@ jobs:
         GOARCH=arm64 go run test.go -qemu -args="-test.run=^Test -test.v internal/runtime/sys"
 
     - name: Test (amd64)
-      # Go 1.24 for Windows is not supported yet.
-      if: runner.os != 'Windows' || !startsWith(matrix.go, '1.24.')
       run: |
         go run test.go -args="-test.run=^Test -test.v fmt"
         go run test.go -args="-test.run=^Test -test.v internal/abi"
@@ -114,8 +112,7 @@ jobs:
         go run test.go -args="-test.run=^Test -test.v runtime/internal/sys"
 
     - name: Test (amd64, Go >= 1.24)
-      # Go 1.24 for Windows is not supported yet.
-      if: (runner.os != 'Windows') && startsWith(matrix.go, '1.24.')
+      if: startsWith(matrix.go, '1.24.')
       run: |
         go run test.go -args="-test.run=^Test -test.v internal/runtime/atomic"
         go run test.go -args="-test.run=^Test -test.v internal/runtime/math"
@@ -123,7 +120,6 @@ jobs:
 
     - name: Test (amd64, runtime)
       # Skip runtime tests with Go 1.19 and Windows, as there is an issue (probably golang/go#51007 and golang/go#57455).
-      # Go 1.24 for Windows is not supported yet.
-      if: runner.os != 'Windows' || (!startsWith(matrix.go, '1.19.') && !startsWith(matrix.go, '1.24.'))
+      if: runner.os != 'Windows' || !startsWith(matrix.go, '1.19.')
       run: |
         go run test.go -args="-test.run=^Test -test.v -test.short runtime"
