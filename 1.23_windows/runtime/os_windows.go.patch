@@ -5,6 +5,10 @@
 //go:cgo_import_dynamic runtime._SetConsoleCtrlHandler SetConsoleCtrlHandler%2 "kernel32.dll"
 //--to
 //--from
+//go:cgo_import_dynamic runtime._WerGetFlags WerGetFlags%2 "kernel32.dll"
+//go:cgo_import_dynamic runtime._WerSetFlags WerSetFlags%1 "kernel32.dll"
+//--to
+//--from
 //go:cgo_import_dynamic runtime._WriteConsoleW WriteConsoleW%5 "kernel32.dll"
 //--to
 //go:cgo_import_dynamic runtime._OutputDebugStringW OutputDebugStringW%1 "kernel32.dll"
@@ -13,6 +17,10 @@
 //--to
 //--from
 	_SetConsoleCtrlHandler,
+//--to
+//--from
+	_WerGetFlags,
+	_WerSetFlags,
 //--to
 //--from
 	_WriteConsoleW,
