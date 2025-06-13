@@ -1,0 +1,8 @@
+//--from
+#include <stdio.h>
+//--to
+//--append
+#define fprintf dummy_fprintf
+
+// TODO: Use OutputDebugMessage.
+#define dummy_fprintf(stream, format, ...)
