@@ -5,7 +5,7 @@ Hitsumabushi aims to make Go programs work on almost everywhere by overwriting s
 Now the generated JSON works only for Linux/Amd64, Linux/Arm64, and Windows/Amd64 so far.
 For GOOS=windows, Hitsumabushi replaces some functions that don't work on some special Windows-like systems.
 
-Go version: 1.19-1.21
+Go version: 1.19-1.24
 
 ## Example
 
