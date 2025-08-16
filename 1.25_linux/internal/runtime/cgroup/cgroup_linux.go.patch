@@ -1,0 +1,10 @@
+//--from
+func FindCPURelativePath(out []byte, scratch []byte) (int, Version, error) {
+//--to
+func FindCPURelativePath(out []byte, scratch []byte) (int, Version, error) {
+    return 0, 0, ErrNoCgroup
+//--from
+func FindCPUMountPoint(out []byte, scratch []byte) (int, error) {
+//--to
+func FindCPUMountPoint(out []byte, scratch []byte) (int, error) {
+    return 0, ErrNoCgroup

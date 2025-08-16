@@ -1,0 +1,22 @@
+//--from
+import (
+	"internal/runtime/syscall"
+	"testing"
+)
+//--to
+import (
+	"testing"
+)
+//--from
+func TestEpollctlErrorSign(t *testing.T) {
+	v := syscall.EpollCtl(-1, 1, -1, &syscall.EpollEvent{})
+
+	const EBADF = 0x09
+	if v != EBADF {
+		t.Errorf("epollctl = %v, want %v", v, EBADF)
+	}
+}
+//--to
+func TestEpollctlErrorSign(t *testing.T) {
+	t.Skip("Epollctl is not supported in this environment")
+}

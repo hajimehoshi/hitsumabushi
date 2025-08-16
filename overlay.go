@@ -697,6 +697,8 @@ func FilesystemFilePath(os string) (string, error) {
 // The default implementation is a pseudo allocation by calloc without free.
 //
 // For the implementation details, see https://cs.opensource.google/go/go/+/master:src/runtime/mem.go .
+//
+// Note that allocated memory address must be aligned to 1 << 9 bytes as of Go 1.25.
 func MemoryFilePath(os string) (string, error) {
 	return replacementFilePath("MemoryFilePath", "runtime/cgo", os, "hitsumabushi_mem_"+os+".c")
 }

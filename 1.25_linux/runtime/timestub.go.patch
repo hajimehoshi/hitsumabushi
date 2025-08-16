@@ -1,0 +1,4 @@
+//--from
+//go:build !faketime && !windows && !(linux && amd64) && !plan9
+//--to
+//go:build !faketime && !windows && !plan9

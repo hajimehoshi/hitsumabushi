@@ -7,7 +7,10 @@ jobs:
     strategy:
       matrix:
         os: [ubuntu-latest, windows-latest]
-        go: ['1.19.13', '1.20.14', '1.21.13', '1.22.12', '1.23.12', '1.24.6']
+        go: ['1.19.13', '1.20.14', '1.21.13', '1.22.12', '1.23.12', '1.24.6', '1.25.0']
+        exclude:
+          - os: windows-latest
+            go: '1.25.0'
     name: Test with Go ${{ matrix.go }} on ${{ matrix.os }}
     runs-on: ${{ matrix.os }}
     defaults:
@@ -67,7 +70,7 @@ jobs:
         GOARCH=arm64 go run test.go -qemu -args="-test.run=^Test -test.v runtime/internal/sys"
 
     - name: Test (Linux, arm64, Go >= 1.24)
-      if: runner.os == 'Linux' && startsWith(matrix.go, '1.24.')
+      if: runner.os == 'Linux' && (startsWith(matrix.go, '1.24.') || startsWith(matrix.go, '1.25.'))
       run: |
         GOARCH=arm64 go run test.go -qemu -args="-test.run=^Test -test.v internal/runtime/atomic"
         GOARCH=arm64 go run test.go -qemu -args="-test.run=^Test -test.v internal/runtime/math"
@@ -104,7 +107,7 @@ jobs:
         go run test.go -args="-test.run=^Test -test.v runtime/internal/math"
         go run test.go -args="-test.run=^Test -test.v runtime/internal/sys"
 
-    - name: Test (amd64, Go >= 1.23)
+    - name: Test (amd64, Go == 1.23)
       if: startsWith(matrix.go, '1.23.')
       run: |
         go run test.go -args="-test.run=^Test -test.v internal/runtime/atomic"
@@ -112,7 +115,7 @@ jobs:
         go run test.go -args="-test.run=^Test -test.v runtime/internal/sys"
 
     - name: Test (amd64, Go >= 1.24)
-      if: startsWith(matrix.go, '1.24.')
+      if: startsWith(matrix.go, '1.24.') || startsWith(matrix.go, '1.25.')
       run: |
         go run test.go -args="-test.run=^Test -test.v internal/runtime/atomic"
         go run test.go -args="-test.run=^Test -test.v internal/runtime/math"
