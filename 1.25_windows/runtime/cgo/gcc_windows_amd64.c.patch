@@ -1,0 +1,24 @@
+//--from
+static unsigned long
+__stdcall
+threadentry(void *v)
+{
+	ThreadStart ts;
+//--to
+static int getproccount() {
+	static int proccount = 0;
+	if (!proccount) {
+		SYSTEM_INFO info;
+		GetSystemInfo(&info);
+		proccount = info.dwNumberOfProcessors;
+	}
+	return proccount;
+}
+
+static unsigned long
+__stdcall
+threadentry(void *v)
+{
+	ThreadStart ts;
+
+	SetThreadAffinityMask(GetCurrentThread(), (1<<getproccount())-1);

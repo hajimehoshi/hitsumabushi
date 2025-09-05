@@ -1,0 +1,126 @@
+//--from
+//go:cgo_import_dynamic runtime._GetConsoleMode GetConsoleMode%2 "kernel32.dll"
+//--to
+//--from
+//go:cgo_import_dynamic runtime._SetConsoleCtrlHandler SetConsoleCtrlHandler%2 "kernel32.dll"
+//--to
+//--from
+//go:cgo_import_dynamic runtime._WerGetFlags WerGetFlags%2 "kernel32.dll"
+//go:cgo_import_dynamic runtime._WerSetFlags WerSetFlags%1 "kernel32.dll"
+//--to
+//--from
+//go:cgo_import_dynamic runtime._WriteConsoleW WriteConsoleW%5 "kernel32.dll"
+//--to
+//go:cgo_import_dynamic runtime._OutputDebugStringW OutputDebugStringW%1 "kernel32.dll"
+//--from
+	_GetConsoleMode,
+//--to
+//--from
+	_SetConsoleCtrlHandler,
+//--to
+//--from
+	_WerGetFlags,
+	_WerSetFlags,
+//--to
+//--from
+	_WriteConsoleW,
+//--to
+	_OutputDebugStringW,
+//--from
+	// We call these all the way here, late in init, so that malloc works
+	// for the callback functions these generate.
+	var fn any = ctrlHandler
+	ctrlHandlerPC := compileCallback(*efaceOf(&fn), true)
+	stdcall2(_SetConsoleCtrlHandler, ctrlHandlerPC, 1)
+//--to
+//--from
+func write1(fd uintptr, buf unsafe.Pointer, n int32) int32 {
+	const (
+		_STD_OUTPUT_HANDLE = ^uintptr(10) // -11
+		_STD_ERROR_HANDLE  = ^uintptr(11) // -12
+	)
+	var handle uintptr
+	switch fd {
+	case 1:
+		handle = stdcall1(_GetStdHandle, _STD_OUTPUT_HANDLE)
+	case 2:
+		handle = stdcall1(_GetStdHandle, _STD_ERROR_HANDLE)
+	default:
+		// assume fd is real windows handle.
+		handle = fd
+	}
+	isASCII := true
+	b := (*[1 << 30]byte)(buf)[:n]
+	for _, x := range b {
+		if x >= 0x80 {
+			isASCII = false
+			break
+		}
+	}
+
+	if !isASCII {
+		var m uint32
+		isConsole := stdcall2(_GetConsoleMode, handle, uintptr(unsafe.Pointer(&m))) != 0
+		// If this is a console output, various non-unicode code pages can be in use.
+		// Use the dedicated WriteConsole call to ensure unicode is printed correctly.
+		if isConsole {
+			return int32(writeConsole(handle, buf, n))
+		}
+	}
+	var written uint32
+	stdcall5(_WriteFile, handle, uintptr(buf), uintptr(n), uintptr(unsafe.Pointer(&written)), 0)
+	return int32(written)
+}
+//--to
+func write1(fd uintptr, buf unsafe.Pointer, n int32) int32 {
+	const (
+		_STD_OUTPUT_HANDLE = ^uintptr(10) // -11
+		_STD_ERROR_HANDLE  = ^uintptr(11) // -12
+	)
+	var handle uintptr
+	switch fd {
+	case 1:
+		handle = stdcall1(_GetStdHandle, _STD_OUTPUT_HANDLE)
+	case 2:
+		handle = stdcall1(_GetStdHandle, _STD_ERROR_HANDLE)
+	default:
+		// assume fd is real windows handle.
+		handle = fd
+	}
+	if fd == 1 || fd == 2 {
+		// Note that handle is not used anyway.
+		return int32(writeConsole(handle, buf, n))
+	}
+	var written uint32
+	stdcall5(_WriteFile, handle, uintptr(buf), uintptr(n), uintptr(unsafe.Pointer(&written)), 0)
+	return int32(written)
+}
+//--from
+func writeConsoleUTF16(handle uintptr, b []uint16) {
+	l := uint32(len(b))
+	if l == 0 {
+		return
+	}
+	var written uint32
+	stdcall5(_WriteConsoleW,
+		handle,
+		uintptr(unsafe.Pointer(&b[0])),
+		uintptr(l),
+		uintptr(unsafe.Pointer(&written)),
+		0,
+	)
+	return
+}
+//--to
+func writeConsoleUTF16(handle uintptr, b []uint16) {
+	b = b[:len(b)+1]
+	b[len(b)-1] = 0
+	l := uint32(len(b))
+	if l <= 1 {
+		return
+	}
+	stdcall1(_OutputDebugStringW,
+		uintptr(unsafe.Pointer(&b[0])),
+	)
+	return
+}
