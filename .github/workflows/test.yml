@@ -7,7 +7,7 @@ jobs:
     strategy:
       matrix:
         os: [ubuntu-latest, windows-latest]
-        go: ['1.19.13', '1.20.14', '1.21.13', '1.22.12', '1.23.12', '1.24.8', '1.25.2']
+        go: ['1.19.13', '1.20.14', '1.21.13', '1.22.12', '1.23.12', '1.24.13', '1.25.7']
     name: Test with Go ${{ matrix.go }} on ${{ matrix.os }}
     runs-on: ${{ matrix.os }}
     defaults:
