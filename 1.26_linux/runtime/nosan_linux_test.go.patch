@@ -1,0 +1,5 @@
+//--from
+func TestNewOSProc0(t *testing.T) {
+//--to
+func TestNewOSProc0(t *testing.T) {
+	t.Skip("newosproc0 is not supported in this environment")

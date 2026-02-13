@@ -1,0 +1,20 @@
+//--from
+import (
+	"unsafe"
+)
+//--to
+import (
+	"internal/abi"
+	"unsafe"
+)
+//--from
+//go:noescape
+func futex(addr unsafe.Pointer, op int32, val uint32, ts *timespec, addr2 unsafe.Pointer, val3 uint32) int32
+//--to
+//go:nosplit
+//go:cgo_unsafe_args
+func futex(addr unsafe.Pointer, op int32, val uint32, ts *timespec, addr2 unsafe.Pointer, val3 uint32) int32 {
+	ret := libcCall(unsafe.Pointer(abi.FuncPCABI0(futex_trampoline)), unsafe.Pointer(&addr))
+	return ret
+}
+func futex_trampoline(addr unsafe.Pointer, op int32, val uint32, ts *timespec, addr2 unsafe.Pointer, val3 uint32) int32

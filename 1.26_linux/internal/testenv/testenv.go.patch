@@ -1,0 +1,5 @@
+//--from
+func HasGoBuild() bool {
+//--to
+func HasGoBuild() bool {
+	return false

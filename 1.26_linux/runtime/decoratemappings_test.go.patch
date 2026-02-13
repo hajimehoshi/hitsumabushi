@@ -1,0 +1,5 @@
+//--from
+func TestDecorateMappings(t *testing.T) {
+//--to
+func TestDecorateMappings(t *testing.T) {
+    t.Skip("files are not supported in this environment")

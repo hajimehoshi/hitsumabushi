@@ -7,7 +7,7 @@ jobs:
     strategy:
       matrix:
         os: [ubuntu-latest, windows-latest]
-        go: ['1.19.13', '1.20.14', '1.21.13', '1.22.12', '1.23.12', '1.24.13', '1.25.7']
+        go: ['1.19.13', '1.20.14', '1.21.13', '1.22.12', '1.23.12', '1.24.13', '1.25.7', '1.26.0']
     name: Test with Go ${{ matrix.go }} on ${{ matrix.os }}
     runs-on: ${{ matrix.os }}
     defaults:
@@ -35,7 +35,6 @@ jobs:
         GOARCH=arm64 go run test.go -qemu -args="-test.run=^Test -test.v internal/abi"
         GOARCH=arm64 go run test.go -qemu -args="-test.run=^Test -test.v internal/cpu"
         GOARCH=arm64 go run test.go -qemu -args="-test.run=^Test -test.v internal/fmtsort"
-        GOARCH=arm64 go run test.go -qemu -args="-test.run=^Test -test.v internal/itoa"
         GOARCH=arm64 go run test.go -qemu -args="-test.run=^Test -test.v internal/reflectlite"
         GOARCH=arm64 go run test.go -qemu -args="-test.run=^Test -test.v internal/unsafeheader"
         GOARCH=arm64 go run test.go -qemu -args="-test.run=^Test -test.v math"
@@ -55,6 +54,7 @@ jobs:
     - name: Test (Linux, arm64, Go <= 1.22)
       if: runner.os == 'Linux' && (startsWith(matrix.go, '1.19.') || startsWith(matrix.go, '1.20.') || startsWith(matrix.go, '1.21.') || startsWith(matrix.go, '1.22.'))
       run: |
+        GOARCH=arm64 go run test.go -qemu -args="-test.run=^Test -test.v internal/itoa"
         GOARCH=arm64 go run test.go -qemu -args="-test.run=^Test -test.v runtime/internal/atomic"
         GOARCH=arm64 go run test.go -qemu -args="-test.run=^Test -test.v runtime/internal/math"
         GOARCH=arm64 go run test.go -qemu -args="-test.run=^Test -test.v runtime/internal/sys"
@@ -62,24 +62,35 @@ jobs:
     - name: Test (Linux, arm64, Go == 1.23)
       if: runner.os == 'Linux' && startsWith(matrix.go, '1.23.')
       run: |
+        GOARCH=arm64 go run test.go -qemu -args="-test.run=^Test -test.v internal/itoa"
         GOARCH=arm64 go run test.go -qemu -args="-test.run=^Test -test.v internal/runtime/atomic"
         GOARCH=arm64 go run test.go -qemu -args="-test.run=^Test -test.v runtime/internal/math"
         GOARCH=arm64 go run test.go -qemu -args="-test.run=^Test -test.v runtime/internal/sys"
 
-    - name: Test (Linux, arm64, Go >= 1.24)
+    - name: Test (Linux, arm64, Go >= 1.24 && <= 1.25)
       if: runner.os == 'Linux' && (startsWith(matrix.go, '1.24.') || startsWith(matrix.go, '1.25.'))
       run: |
+        GOARCH=arm64 go run test.go -qemu -args="-test.run=^Test -test.v internal/itoa"
+        GOARCH=arm64 go run test.go -qemu -args="-test.run=^Test -test.v internal/runtime/atomic"
+        GOARCH=arm64 go run test.go -qemu -args="-test.run=^Test -test.v internal/runtime/math"
+        GOARCH=arm64 go run test.go -qemu -args="-test.run=^Test -test.v internal/runtime/sys"
+
+    - name: Test (Linux, arm64, Go == 1.26)
+      if: runner.os == 'Linux' && startsWith(matrix.go, '1.26.')
+      run: |
+        GOARCH=arm64 go run test.go -qemu -args="-test.run=^Test -test.v internal/strconv"
         GOARCH=arm64 go run test.go -qemu -args="-test.run=^Test -test.v internal/runtime/atomic"
         GOARCH=arm64 go run test.go -qemu -args="-test.run=^Test -test.v internal/runtime/math"
         GOARCH=arm64 go run test.go -qemu -args="-test.run=^Test -test.v internal/runtime/sys"
 
     - name: Test (amd64)
+      # Go 1.26 is not supported on Windows.
+      if: runner.os == 'Linux' || !startsWith(matrix.go, '1.26.')
       run: |
         go run test.go -args="-test.run=^Test -test.v fmt"
         go run test.go -args="-test.run=^Test -test.v internal/abi"
         go run test.go -args="-test.run=^Test -test.v internal/cpu"
         go run test.go -args="-test.run=^Test -test.v internal/fmtsort"
-        go run test.go -args="-test.run=^Test -test.v internal/itoa"
         go run test.go -args="-test.run=^Test -test.v internal/reflectlite"
         go run test.go -args="-test.run=^Test -test.v internal/unsafeheader"
         go run test.go -args="-test.run=^Test -test.v math"
@@ -100,6 +111,7 @@ jobs:
     - name: Test (amd64, Go <= 1.22)
       if: startsWith(matrix.go, '1.19.') || startsWith(matrix.go, '1.20.') || startsWith(matrix.go, '1.21.') || startsWith(matrix.go, '1.22.')
       run: |
+        go run test.go -args="-test.run=^Test -test.v internal/itoa"
         go run test.go -args="-test.run=^Test -test.v runtime/internal/atomic"
         go run test.go -args="-test.run=^Test -test.v runtime/internal/math"
         go run test.go -args="-test.run=^Test -test.v runtime/internal/sys"
@@ -107,19 +119,31 @@ jobs:
     - name: Test (amd64, Go == 1.23)
       if: startsWith(matrix.go, '1.23.')
       run: |
+        go run test.go -args="-test.run=^Test -test.v internal/itoa"
         go run test.go -args="-test.run=^Test -test.v internal/runtime/atomic"
         go run test.go -args="-test.run=^Test -test.v runtime/internal/math"
         go run test.go -args="-test.run=^Test -test.v runtime/internal/sys"
 
-    - name: Test (amd64, Go >= 1.24)
+    - name: Test (amd64, Go >= 1.24 && <= 1.25)
       if: startsWith(matrix.go, '1.24.') || startsWith(matrix.go, '1.25.')
       run: |
+        go run test.go -args="-test.run=^Test -test.v internal/itoa"
+        go run test.go -args="-test.run=^Test -test.v internal/runtime/atomic"
+        go run test.go -args="-test.run=^Test -test.v internal/runtime/math"
+        go run test.go -args="-test.run=^Test -test.v internal/runtime/sys"
+
+    - name: Test (amd64, Go >= 1.26)
+      # strconv/ftoa.go is missing in 1.26.
+      if: runner.os == 'Linux' && startsWith(matrix.go, '1.26.')
+      run: |
+        go run test.go -args="-test.run=^Test -test.v internal/strconv"
         go run test.go -args="-test.run=^Test -test.v internal/runtime/atomic"
         go run test.go -args="-test.run=^Test -test.v internal/runtime/math"
         go run test.go -args="-test.run=^Test -test.v internal/runtime/sys"
 
     - name: Test (amd64, runtime)
       # Skip runtime tests with Go 1.19 and Windows, as there is an issue (probably golang/go#51007 and golang/go#57455).
-      if: runner.os != 'Windows' || !startsWith(matrix.go, '1.19.')
+      # Go 1.26 is not supported on Windows.
+      if: runner.os == 'Linux' || (!startsWith(matrix.go, '1.19.') && !startsWith(matrix.go, '1.26.'))
       run: |
         go run test.go -args="-test.run=^Test -test.v -test.short runtime"

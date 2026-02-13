@@ -1,0 +1,4 @@
+//--from
+//go:build darwin || openbsd
+//--to
+//go:build darwin || openbsd || linux
