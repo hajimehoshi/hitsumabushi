@@ -1,0 +1,13 @@
+//--from
+void
+x_cgo_clearenv(void **_unused)
+{
+	_cgo_tsan_acquire();
+	clearenv();
+	_cgo_tsan_release();
+}
+//--to
+void
+x_cgo_clearenv(void **_unused)
+{
+}
