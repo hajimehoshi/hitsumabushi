@@ -1,0 +1,5 @@
+//--from
+func TestNumCPU(t *testing.T) {
+//--to
+func TestNumCPU(t *testing.T) {
+	t.Skip("creating a new process with os.Args[0] doesn't work in this environment")

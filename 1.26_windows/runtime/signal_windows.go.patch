@@ -1,0 +1,18 @@
+//--from
+func preventErrorDialogs() {
+	errormode := stdcall(_GetErrorMode)
+	stdcall(_SetErrorMode, errormode|windows.SEM_FAILCRITICALERRORS|windows.SEM_NOGPFAULTERRORBOX|windows.SEM_NOOPENFILEERRORBOX)
+
+	// Disable WER fault reporting UI.
+	// Do this even if WER is disabled as a whole,
+	// as WER might be enabled later with setTraceback("wer")
+	// and we still want the fault reporting UI to be disabled if this happens.
+	var werflags uintptr
+	stdcall(_WerGetFlags, windows.CurrentProcess, uintptr(unsafe.Pointer(&werflags)))
+	stdcall(_WerSetFlags, werflags|windows.WER_FAULT_REPORTING_NO_UI)
+}
+//--to
+func preventErrorDialogs() {
+	errormode := stdcall(_GetErrorMode)
+	stdcall(_SetErrorMode, errormode|windows.SEM_FAILCRITICALERRORS|windows.SEM_NOGPFAULTERRORBOX|windows.SEM_NOOPENFILEERRORBOX)
+}
