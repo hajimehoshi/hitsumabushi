@@ -1,0 +1,5 @@
+//--from
+func TestEmbeddedTZData(t *testing.T) {
+//--to
+func TestEmbeddedTZData(t *testing.T) {
+	t.Skip("location is not supported in this environment")

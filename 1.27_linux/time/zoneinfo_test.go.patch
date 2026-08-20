@@ -1,0 +1,35 @@
+//--from
+func TestEnvVarUsage(t *testing.T) {
+//--to
+func TestEnvVarUsage(t *testing.T) {
+	t.Skip("location is not supported in this environment")
+//--from
+func TestBadLocationErrMsg(t *testing.T) {
+//--to
+func TestBadLocationErrMsg(t *testing.T) {
+	t.Skip("location is not supported in this environment")
+//--from
+func TestVersion3(t *testing.T) {
+//--to
+func TestVersion3(t *testing.T) {
+	t.Skip("location is not supported in this environment")
+//--from
+func TestFirstZone(t *testing.T) {
+//--to
+func TestFirstZone(t *testing.T) {
+	t.Skip("location is not supported in this environment")
+//--from
+func TestLoadLocationFromTZData(t *testing.T) {
+//--to
+func TestLoadLocationFromTZData(t *testing.T) {
+	t.Skip("location is not supported in this environment")
+//--from
+func TestEarlyLocation(t *testing.T) {
+//--to
+func TestEarlyLocation(t *testing.T) {
+	t.Skip("location is not supported in this environment")
+//--from
+func TestLoadLocationFromTZDataSlim(t *testing.T) {
+//--to
+func TestLoadLocationFromTZDataSlim(t *testing.T) {
+	t.Skip("location is not supported in this environment")

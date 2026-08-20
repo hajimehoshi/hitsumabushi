@@ -1,0 +1,12 @@
+//--from
+func Fcntl(fd int, cmd int, arg int) (int, error) {
+	val, errno := fcntl(int32(fd), int32(cmd), int32(arg))
+	if val == -1 {
+		return int(val), syscall.Errno(errno)
+	}
+	return int(val), nil
+}
+//--to
+func Fcntl(fd int, cmd int, arg int) (int, error) {
+	return 0, syscall.ENOSYS
+}

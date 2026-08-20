@@ -1,0 +1,5 @@
+//--from
+func TestSetCrashOutput(t *testing.T) {
+//--to
+func TestSetCrashOutput(t *testing.T) {
+    t.Skip("file is not supported in this environment")

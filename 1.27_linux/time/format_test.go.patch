@@ -1,0 +1,10 @@
+//--from
+func TestParseInLocation(t *testing.T) {
+//--to
+func TestParseInLocation(t *testing.T) {
+	t.Skip("location is not supported in this environment")
+//--from
+func TestLoadLocationZipFile(t *testing.T) {
+//--to
+func TestLoadLocationZipFile(t *testing.T) {
+	t.Skip("location is not supported in this environment")

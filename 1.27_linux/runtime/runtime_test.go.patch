@@ -1,0 +1,5 @@
+//--from
+func testSetPanicOnFault(t *testing.T, addr uintptr, nfault *int) {
+//--to
+func testSetPanicOnFault(t *testing.T, addr uintptr, nfault *int) {
+	t.Skip("catching faults is not supported in this environment")

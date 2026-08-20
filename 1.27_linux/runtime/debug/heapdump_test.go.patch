@@ -1,0 +1,15 @@
+//--from
+func TestWriteHeapDumpNonempty(t *testing.T) {
+//--to
+func TestWriteHeapDumpNonempty(t *testing.T) {
+	t.Skip("file is not supported in this environment")
+//--from
+func TestWriteHeapDumpFinalizers(t *testing.T) {
+//--to
+func TestWriteHeapDumpFinalizers(t *testing.T) {
+	t.Skip("file is not supported in this environment")
+//--from
+func TestWriteHeapDumpTypeName(t *testing.T) {
+//--to
+func TestWriteHeapDumpTypeName(t *testing.T) {
+	t.Skip("file is not supported in this environment")

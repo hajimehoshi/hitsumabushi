@@ -1,0 +1,70 @@
+//--from
+#include <pthread.h>
+#include <string.h>
+#include <signal.h>
+#include <errno.h>
+//--to
+#include <pthread.h>
+#include <string.h>
+#if !defined(__x86_64__)
+#include <signal.h>
+#endif
+#include <errno.h>
+//--from
+void
+_cgo_sys_thread_start(ThreadStart *ts)
+{
+	pthread_attr_t attr;
+	sigset_t ign, oset;
+	pthread_t p;
+	size_t size;
+	int err;
+
+	sigfillset(&ign);
+	pthread_sigmask(SIG_SETMASK, &ign, &oset);
+
+	pthread_attr_init(&attr);
+	pthread_attr_setdetachstate(&attr, PTHREAD_CREATE_DETACHED);
+//--to
+void
+_cgo_sys_thread_start(ThreadStart *ts)
+{
+	pthread_attr_t attr;
+#if !defined(__x86_64__)
+	sigset_t ign, oset;
+#endif
+	pthread_t p;
+	size_t size;
+	int err;
+
+#if !defined(__x86_64__)
+	sigfillset(&ign);
+	pthread_sigmask(SIG_SETMASK, &ign, &oset);
+#endif
+
+	pthread_attr_init(&attr);
+	pthread_attr_setdetachstate(&attr, PTHREAD_CREATE_DETACHED);
+#if defined(__aarch64__)
+	// Hack for some special environments
+	pthread_attr_setstacksize(&attr, 16 * 4096);
+#endif
+//--from
+	err = _cgo_try_pthread_create(&p, &attr, threadentry, ts);
+
+	pthread_sigmask(SIG_SETMASK, &oset, nil);
+
+	if (err != 0) {
+		fatalf("pthread_create failed: %s", strerror(err));
+	}
+}
+//--to
+	err = _cgo_try_pthread_create(&p, &attr, threadentry, ts);
+
+#if !defined(__x86_64__)
+	pthread_sigmask(SIG_SETMASK, &oset, nil);
+#endif
+
+	if (err != 0) {
+		fatalf("pthread_create failed: %s", strerror(err));
+	}
+}

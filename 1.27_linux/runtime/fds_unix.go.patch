@@ -1,0 +1,5 @@
+//--from
+func checkfds() {
+//--to
+func checkfds() {
+	return

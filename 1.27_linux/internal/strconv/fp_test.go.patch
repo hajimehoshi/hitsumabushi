@@ -1,0 +1,5 @@
+//--from
+func TestFp(t *testing.T) {
+//--to
+func TestFp(t *testing.T) {
+	t.Skip("file is not supported in this environment")

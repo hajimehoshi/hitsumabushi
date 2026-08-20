@@ -1,0 +1,13 @@
+//--from
+*/
+import "C"
+//--to
+#cgo !darwin LDFLAGS: -Wl,-unresolved-symbols=ignore-all
+#cgo darwin LDFLAGS: -Wl,-undefined,dynamic_lookup
+
+// Override -std=gnu90 that the Go standard library specifies for its own
+// portability. The C files replaceable via hitsumabushi's *FilePath functions
+// are written by users and can rely on newer C features.
+#cgo CFLAGS: -std=gnu11
+*/
+import "C"

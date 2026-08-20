@@ -1,0 +1,5 @@
+//--from
+func TestDefaultRace(t *testing.T) {
+//--to
+func TestDefaultRace(t *testing.T) {
+	t.Skip("os.Getenv and creating processes are not supported in this environment")

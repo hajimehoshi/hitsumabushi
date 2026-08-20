@@ -1,0 +1,4 @@
+//--from
+//go:build aix || darwin || dragonfly || freebsd || linux || netbsd || openbsd || plan9
+//--to
+//go:build aix || darwin || dragonfly || freebsd || netbsd || openbsd || plan9

@@ -7,7 +7,7 @@ jobs:
     strategy:
       matrix:
         os: [ubuntu-latest, windows-latest]
-        go: ['1.19.13', '1.20.14', '1.21.13', '1.22.12', '1.23.12', '1.24.13', '1.25.14', '1.26.7']
+        go: ['1.19.13', '1.20.14', '1.21.13', '1.22.12', '1.23.12', '1.24.13', '1.25.14', '1.26.7', '1.27.0']
     name: Test with Go ${{ matrix.go }} on ${{ matrix.os }}
     runs-on: ${{ matrix.os }}
     defaults:
@@ -75,8 +75,8 @@ jobs:
         GOARCH=arm64 go run test.go -qemu -args="-test.run=^Test -test.v internal/runtime/math"
         GOARCH=arm64 go run test.go -qemu -args="-test.run=^Test -test.v internal/runtime/sys"
 
-    - name: Test (Linux, arm64, Go == 1.26)
-      if: runner.os == 'Linux' && startsWith(matrix.go, '1.26.')
+    - name: Test (Linux, arm64, Go >= 1.26)
+      if: runner.os == 'Linux' && (startsWith(matrix.go, '1.26.') || startsWith(matrix.go, '1.27.'))
       run: |
         GOARCH=arm64 go run test.go -qemu -args="-test.run=^Test -test.v internal/strconv"
         GOARCH=arm64 go run test.go -qemu -args="-test.run=^Test -test.v internal/runtime/atomic"
@@ -84,6 +84,8 @@ jobs:
         GOARCH=arm64 go run test.go -qemu -args="-test.run=^Test -test.v internal/runtime/sys"
 
     - name: Test (amd64)
+      # Go 1.27 is not supported on Windows.
+      if: runner.os == 'Linux' || !startsWith(matrix.go, '1.27.')
       run: |
         go run test.go -args="-test.run=^Test -test.v fmt"
         go run test.go -args="-test.run=^Test -test.v internal/abi"
@@ -132,7 +134,8 @@ jobs:
 
     - name: Test (amd64, Go >= 1.26)
       # strconv/ftoa.go is missing in 1.26.
-      if: startsWith(matrix.go, '1.26.')
+      # Go 1.27 is not supported on Windows.
+      if: startsWith(matrix.go, '1.26.') || (runner.os == 'Linux' && startsWith(matrix.go, '1.27.'))
       run: |
         go run test.go -args="-test.run=^Test -test.v internal/strconv"
         go run test.go -args="-test.run=^Test -test.v internal/runtime/atomic"
@@ -141,6 +144,7 @@ jobs:
 
     - name: Test (amd64, runtime)
       # Skip runtime tests with Go 1.19 and Windows, as there is an issue (probably golang/go#51007 and golang/go#57455).
-      if: runner.os == 'Linux' || !startsWith(matrix.go, '1.19.')
+      # Go 1.27 is not supported on Windows.
+      if: runner.os == 'Linux' || (!startsWith(matrix.go, '1.19.') && !startsWith(matrix.go, '1.27.'))
       run: |
         go run test.go -args="-test.run=^Test -test.v -test.short runtime"

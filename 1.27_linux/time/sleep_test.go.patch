@@ -1,0 +1,10 @@
+//--from
+func TestSleep(t *testing.T) {
+//--to
+func TestSleep(t *testing.T) {
+	t.Skip("Interrupt (syscall.Kill) is not supported in this environment")
+//--from
+func TestIssue5745(t *testing.T) {
+//--to
+func TestIssue5745(t *testing.T) {
+	t.Skip("handling nil pointer access is not supported in this environment")

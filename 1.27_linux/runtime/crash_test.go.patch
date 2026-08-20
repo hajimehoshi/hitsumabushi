@@ -1,0 +1,10 @@
+//--from
+func buildTestProg(t *testing.T, binary string, flags ...string) (string, error) {
+//--to
+func buildTestProg(t *testing.T, binary string, flags ...string) (string, error) {
+	t.Skip("buildTestProg is not supported in this environment")
+//--from
+func TestPanicInlined(t *testing.T) {
+//--to
+func TestPanicInlined(t *testing.T) {
+	t.Skip("handling nil pointer access is not supported in this environment")
